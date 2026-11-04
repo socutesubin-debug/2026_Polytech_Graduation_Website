@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>BEYOND THE FRAME — 2026 시각디자인 졸업전시</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/intro.css">
+  <link rel="stylesheet" href="css/lobby.css">
+  <link rel="stylesheet" href="css/gallery.css">
+  <link rel="stylesheet" href="css/detail.css">
+  <link rel="stylesheet" href="css/list.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+<main id="app">
+
+  <!-- ① 인트로: 티켓 → 길거리 포스터  (css/intro.css, js/intro.js) -->
+  <section class="screen intro" id="intro" aria-label="인트로">
+    <div class="cam" id="street-cam">
+      <div class="stage" id="street-stage">
+        <div class="tilt">
+          <div class="layer" data-depth="1">
+            <img class="plate" data-asset="street" alt="" style="width:1740px;height:980px">
+            <div class="street-glow"></div>
+            <button class="street-poster" id="poster" type="button" aria-label="2026 졸업전시 포스터. 눌러서 전시장으로 들어가기"><img data-asset="poster" alt=""></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="ticket" id="ticket" type="button" aria-label="티켓 뜯기"><img data-asset="ticket" alt="2026 시각디자인과 졸업전시 티켓"></button>
+    <div class="torn-ticket" aria-hidden="true"><img data-asset="torn" alt=""></div>
+    <button class="skip" type="button" data-skip>건너뛰기 →</button>
+  </section>
+
+  <!-- ② 인트로: 금색 액자 → 와장창  (css/intro.css, js/intro.js) -->
+  <section class="screen intro-frame" id="intro-frame" aria-label="인트로">
+    <div class="if-light"></div>
+    <div class="if-floor"></div>
+    <div class="if-frame" aria-hidden="true"><div class="if-orn"></div><div class="if-detail"></div></div>
+    <div class="if-content">
+      <div class="if-eyebrow">2026 GRADUATION PORTFOLIO</div>
+      <h1 class="if-title"><span>프레임 너머</span><span>우리를 만나다</span></h1>
+      <p class="if-sub">26년도 한국폴리텍대학 정수캠퍼스<br>시각디자인과 졸업작품 포트폴리오</p>
+    </div>
+    <div class="if-grain"></div>
+  </section>
+
+  <!-- ③ 로비: 액자 3개 = 전시실 입구  (css/lobby.css, js/lobby.js) -->
+  <section class="screen" id="lobby" aria-label="로비">
+    <div class="cam" id="lobby-cam">
+      <div class="pearl" aria-hidden="true"></div>
+      <div class="stage" id="lobby-stage">
+        <div class="tilt">
+          <div class="layer" data-depth=".55">
+            <img class="plate" data-asset="arch" alt="" style="width:2000px;height:1128px">
+            <div class="sun"></div>
+            <div id="lobby-spots"></div>
+          </div>
+          <div class="layer" data-depth="1" id="lobby-front">
+            <div id="windows"></div>
+            <img class="plate" data-asset="frames" alt="" style="width:2000px;height:1128px">
+            <div id="frame-btns"></div>
+          </div>
+        </div>
+        <canvas class="dust"></canvas>
+      </div>
+    </div>
+    <div class="screen-copy"><h2>세 개의 공간, 서로 다른 시선</h2></div>
+  </section>
+
+  <!-- ④ 전시실 GALLERY 01~03: 석고상  (css/gallery.css, js/gallery.js) -->
+  <section class="screen" id="gallery" aria-label="전시실">
+    <div class="cam" id="gallery-cam">
+      <div class="pearl" aria-hidden="true"></div>
+      <div class="stage" id="gallery-stage" data-room="0">
+        <div class="tilt">
+          <div class="layer tint" data-depth="1" id="gallery-back">
+            <img class="plate" id="room-bg" alt="" style="width:2000px;height:1126px">
+            <div id="gallery-spots"></div>
+          </div>
+          <div class="layer tint" data-depth="1">
+            <img class="plate" id="room-statues" alt="" style="width:2000px">
+            <div id="shadows"></div>
+          </div>
+        </div>
+
+        <div class="tilt"><div class="layer" data-depth="1" id="hots"></div></div>
+        <canvas class="dust"></canvas>
+      </div>
+    </div>
+    <div class="screen-copy"><h2 id="g-title">GALLERY 01</h2></div>
+    <button class="room-arrow prev" id="room-prev" type="button" aria-label="이전 전시실">←</button>
+    <button class="room-arrow next" id="room-next" type="button" aria-label="다음 전시실">→</button>
+  </section>
+
+  <!-- ⑤ 작가 목록 LIST  (css/list.css, js/list.js) -->
+  <section class="screen list" id="list" aria-label="작가 목록">
+    <div class="list-inner">
+      <h2>LIST</h2>
+      <div class="tools">
+        <label class="search-box" for="search">
+          <span class="sr">학생 이름 검색</span>
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <input class="search" id="search" type="search" placeholder="학생 이름 검색" autocomplete="off">
+        </label>
+        <label class="filter-label" for="gallery-filter">전시실
+          <select id="gallery-filter"><option value="-1">전체</option><option value="0">GALLERY 01</option><option value="1">GALLERY 02</option><option value="2">GALLERY 03</option></select>
+        </label>
+        <span class="total" id="total"></span>
+      </div>
+      <div class="grid" id="grid"></div>
+      <p class="empty-msg" id="empty" hidden>찾는 이름이 없어요. 이름을 다시 확인해 주세요.</p>
+    </div>
+  </section>
+
+  <!-- 공통: 상단 메뉴, 안내 문구, 화면 전환 효과  (css/common.css, js/screens.js) -->
+  <nav class="topbar" id="topbar" aria-label="전시 메뉴">
+    <button class="brand" id="brand" type="button" title="인트로 다시 보기">BEYOND THE FRAME</button>
+    <div class="pill">
+      <button type="button" data-go="lobby">HOME</button>
+      <button type="button" data-room="0">GALLERY 01</button>
+      <button type="button" data-room="1">GALLERY 02</button>
+      <button type="button" data-room="2">GALLERY 03</button>
+      <button type="button" data-go="list">LIST</button>
+    </div>
+  </nav>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="veil" id="veil"></div>
+  <div class="shards" id="shards" aria-hidden="true"></div>
+  <div class="portal" id="portal" aria-hidden="true"></div>
+  <!-- 공통 학생 상세 팝업  (css/detail.css, js/detail.js) -->
+  <div class="detail" id="detail" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="d-name">
+      <button class="d-close" id="d-close" type="button" aria-label="닫기">×</button>
+      <button class="d-nav prev" id="d-prev" type="button" aria-label="이전 학생">←</button>
+      <button class="d-nav next" id="d-next" type="button" aria-label="다음 학생">→</button>
+      <div class="d-stage">
+        <div class="d-model" id="d-model"></div>
+      </div>
+      <div class="d-card">
+        <div class="d-top"><span id="d-room"></span><span id="d-count"></span></div>
+        <h3 id="d-name"></h3>
+        <div class="d-slogan" id="d-slogan"></div>
+        <p id="d-desc"></p>
+        <a class="portfolio" id="d-portfolio" target="_blank" rel="noopener">포트폴리오 열기 ↗</a>
+      </div>
+    </div>
+</main>
+
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/models3d.js"></script>
+<script src="js/intro.js"></script>
+<script src="js/lobby.js"></script>
+<script src="js/gallery.js"></script>
+<script src="js/detail.js"></script>
+<script src="js/list.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

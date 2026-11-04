@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+node_modules/
+# 더블클릭(file://)용 3D 파일 사본 — GitHub Pages(https)에서는 안 쓰므로 저장소에는 올리지 않음 (zip에만 포함)
+assets/models/*.glb.js

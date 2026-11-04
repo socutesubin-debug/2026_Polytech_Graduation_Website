@@ -1,0 +1,31 @@
+/* 전시실 GALLERY 01~03: 석고상 자리, 이름표, 전시실 색감, 좌우 화살표 */
+.statues{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;transition:opacity .5s}
+#gallery .plate{object-fit:cover}
+#room-statues{height:auto}
+
+.cshadow{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(60,38,18,.4),transparent);pointer-events:none}
+.hot{position:absolute;border-radius:10px}
+.hot{cursor:pointer}
+.hot.has{cursor:grab;touch-action:none}
+.hot.has:active{cursor:grabbing}
+.stage.explore{cursor:grab}
+.stage.explore.grabbing{cursor:grabbing}
+.stand{position:absolute;left:50%;top:0;aspect-ratio:200/260;transform:translateX(-50%);transition:opacity .6s;pointer-events:none}
+.stand .bust{display:block;width:100%;height:100%;filter:drop-shadow(0 10px 14px rgba(60,40,20,.25))}
+.hot.ready .stand{opacity:0}
+.tag{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:.6em;white-space:nowrap;font-size:calc(10.5px / var(--s,1));letter-spacing:.06em;padding:.5em 1.1em .5em .5em;border-radius:99px;background:rgba(252,248,240,.86);color:var(--ink);box-shadow:0 .5em 1.4em rgba(60,40,20,.2);transition:transform .3s,background-color .3s}
+.tag i{display:grid;place-items:center;width:1.8em;height:1.8em;border-radius:50%;background:var(--ink);color:var(--paper);font-style:normal;font-size:.95em}
+.hot:hover .tag,.hot:focus-visible .tag{transform:translateX(-50%) translateY(-.4em);background:#fff}
+.hot.empty .tag{background:rgba(252,248,240,.6);color:var(--ink-soft)}
+.hot.empty .tag i{background:rgba(46,38,29,.45)}
+.stage[data-room="1"] .tint{filter:hue-rotate(-7deg) saturate(1.1) brightness(.98)}
+.stage[data-room="2"] .tint{filter:sepia(.18) brightness(.92) contrast(1.06)}
+.cam.switching{opacity:0;transition:opacity .35s}
+.room-arrow{position:absolute;z-index:6;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--g-bg);border:1px solid var(--g-line);backdrop-filter:var(--g-blur);-webkit-backdrop-filter:var(--g-blur);box-shadow:var(--g-shadow);font-size:16px;transition:background .25s,opacity .25s}
+.room-arrow:hover{background:var(--g-bg-hi)}
+.room-arrow:disabled{opacity:0;pointer-events:none}
+.room-arrow.prev{left:clamp(12px,2.5vw,32px)}.room-arrow.next{right:clamp(12px,2.5vw,32px)}
+
+@media(max-width:760px){
+  .room-arrow{top:auto;bottom:calc(60px + env(safe-area-inset-bottom,0px));transform:none}
+}

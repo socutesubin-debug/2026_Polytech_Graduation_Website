@@ -1,0 +1,17 @@
+/* 로비: 아치 배경, 햇살, 전시실 입구 액자 3개 */
+.sun{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,222,160,.5) 45%,transparent 60%);background-size:260% 100%;mix-blend-mode:soft-light;animation:sun 16s ease-in-out infinite alternate;pointer-events:none}
+@keyframes sun{from{background-position:100% 0}to{background-position:0 0}}
+
+.window{position:absolute;overflow:hidden;background:#cdb894}
+.window .view{position:absolute;inset:-14%;background:var(--img-gallery) center/cover;transition:filter .5s}
+.window .view::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,240,215,.35),transparent 40%,rgba(60,40,20,.25))}
+.window[data-r="1"] .view{background-position:30% 50%;filter:hue-rotate(-8deg) saturate(1.08)}
+.window[data-r="2"] .view{background-position:75% 50%;filter:sepia(.2) brightness(.9) contrast(1.05)}
+.window .wl{position:absolute;left:0;right:0;bottom:9%;text-align:center;font-family:var(--serif);font-size:calc(15px / var(--s,1));letter-spacing:.2em;color:#fff;text-shadow:0 1px 10px rgba(60,40,20,.5)}
+.layer:has(.frame-btn[data-r="0"]:hover) .window[data-r="0"] .view,
+.layer:has(.frame-btn[data-r="1"]:hover) .window[data-r="1"] .view,
+.layer:has(.frame-btn[data-r="2"]:hover) .window[data-r="2"] .view{filter:brightness(1.15)}
+.frame-btn{position:absolute;border-radius:2px}
+.flabel{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap;font-size:calc(11px / var(--s,1));line-height:1.7;color:var(--ink);pointer-events:none}
+.flabel b{display:block;font-weight:500;letter-spacing:.3em;font-size:1.05em}
+.flabel span{color:var(--ink-soft);letter-spacing:.04em}
