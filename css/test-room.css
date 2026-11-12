@@ -1,0 +1,26 @@
+/* 시험 방 (#test-room): 스크롤 길이 = 비행 길이. 화면(tr-view)은 붙어 있고 아래 길(tr-track)만 스크롤됨 */
+.test-room{overflow-y:auto;overflow-x:hidden;background:#dcd6cc;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.tr-track{position:relative;height:700vh}
+.tr-view{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
+.tr-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+.tr-tags{position:absolute;inset:0;pointer-events:none}
+.tr-tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:8px;padding:7px 14px 7px 8px;border-radius:99px;white-space:nowrap;
+  background:rgba(255,255,255,.72);border:1px solid rgba(46,38,29,.18);box-shadow:0 6px 18px rgba(60,40,20,.12);font-size:12.5px;font-weight:500;color:var(--ink);
+  opacity:0;visibility:hidden;pointer-events:auto;transition:opacity .35s,visibility 0s linear .35s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.tr-tag.on{opacity:1;visibility:visible;transition:opacity .35s,visibility 0s}
+.tr-tag i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-style:normal;font-size:13px}
+.tr-tag em{font-style:normal;font-size:10.5px;color:var(--ink-soft);letter-spacing:.04em}
+.tr-hud{position:absolute;left:clamp(16px,3vw,36px);right:clamp(16px,3vw,36px);bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:18px;flex-wrap:wrap;pointer-events:none}
+.tr-hud>*{pointer-events:auto}
+.tr-title{margin:0;font-size:11px;letter-spacing:.3em;color:var(--ink)}
+.tr-title span{margin-left:8px;letter-spacing:.05em;color:var(--ink-soft)}
+.tr-hint{margin:0;font-size:12px;color:var(--ink-soft)}
+.tr-steps{display:flex;gap:8px;margin-left:auto}
+.tr-steps button,.tr-fail button{padding:8px 14px;border-radius:99px;background:rgba(255,255,255,.7);border:1px solid rgba(46,38,29,.24);font-size:12px}
+.tr-steps button:hover,.tr-fail button:hover{background:#fff}
+.tr-bar{flex-basis:100%;height:2px;background:rgba(46,38,29,.14);border-radius:2px;overflow:hidden}
+.tr-bar i{display:block;height:100%;background:var(--ink);transform:scaleX(0);transform-origin:left}
+.tr-fail{position:absolute;inset:0;display:grid;place-content:center;gap:16px;text-align:center;background:#e4dfd6;z-index:2}
+.tr-fail p{margin:0;font-size:15px}
+.tr-fail div{display:flex;gap:10px;justify-content:center}
+@media (max-width:760px){.tr-hint{display:none}}
