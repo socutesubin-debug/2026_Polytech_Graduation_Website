@@ -22,6 +22,9 @@ addEventListener('keydown', (e) => {
   } else if (page === 'test-room') {
     if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); trJump(1); }
     if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); trJump(-1); }
+  } else if (HALLS[page]) {
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); hallJump(HALLS[page], 1); }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); hallJump(HALLS[page], -1); }
   } else if (page === 'gallery') {
     if (e.key === 'ArrowLeft') changeRoom(room - 1);
     if (e.key === 'ArrowRight') changeRoom(room + 1);
@@ -46,6 +49,7 @@ function tick(t) {
     drawDust(galleryDust, gallery, t);
   }
   if (screens['test-room'].classList.contains('on')) renderTestRoom(t);
+  for (const H of Object.values(HALLS)) if (H.root.classList.contains('on')) renderHall(H, t);
   if (detail >= 0) renderDetail3D(t, dt);
   requestAnimationFrame(tick);
 }
@@ -59,6 +63,7 @@ requestAnimationFrame(tick);
 if (start === 'lobby') go('lobby');
 else if (start === 'list') go('list');
 else if (start === 'test-room') go('test-room');
+else if (HALLS[start]) go(start);
 else if (/^gallery-[123]$/.test(start)) { setRoom(+start.slice(-1) - 1); go('gallery'); }
 else if (matchMedia('(max-width: 760px)').matches) go('list');
 else playIntro();

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/detail.css">
   <link rel="stylesheet" href="css/list.css">
   <link rel="stylesheet" href="css/test-room.css">
+  <link rel="stylesheet" href="css/hall.css">
   <script type="importmap">
   {
     "imports": {
@@ -150,6 +151,10 @@
     </div>
   </section>
 
+  <!-- ⑦ V2 전시관: UX/UI · Visual. 안쪽 내용은 js/hall.js가 채움 (css/hall.css) — 주소 끝 #hall-uxui, #hall-visual -->
+  <section class="screen test-room hall" id="hall-uxui" aria-label="UX/UI · 웹 전시관" tabindex="-1"></section>
+  <section class="screen test-room hall" id="hall-visual" aria-label="Visual 전시관" tabindex="-1"></section>
+
   <!-- 공통: 상단 메뉴, 안내 문구, 화면 전환 효과  (css/common.css, js/screens.js) -->
   <nav class="topbar" id="topbar" aria-label="전시 메뉴">
     <button class="brand" id="brand" type="button" title="인트로 다시 보기">BEYOND THE FRAME</button>
@@ -196,6 +201,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="js/test-room.js"></script>
+<script src="js/hall.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
