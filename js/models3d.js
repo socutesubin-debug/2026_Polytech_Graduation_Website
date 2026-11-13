@@ -8,19 +8,22 @@ function three() {
 }
 const modelCache = new Map();
 
-function parseGLB(url, GLTFLoader, MeshoptDecoder) {
+function parseGLB(buffer, GLTFLoader, MeshoptDecoder) {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  if (!url.startsWith('data:')) return loader.loadAsync(url);
-  const raw = atob(url.slice(url.indexOf(',') + 1)), bin = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
   return new Promise((res, rej) => {
     const cib = window.createImageBitmap;
-    try { window.createImageBitmap = undefined; loader.parse(bin.buffer, '', res, rej); } finally { window.createImageBitmap = cib; }
+    try { window.createImageBitmap = undefined; loader.parse(buffer, '', res, rej); } finally { window.createImageBitmap = cib; }
   });
+}
+function dataUrlToBuffer(url) {
+  const raw = atob(url.slice(url.indexOf(',') + 1)), bin = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bin[i] = raw.charCodeAt(i);
+  return bin.buffer;
 }
 
 /* 더블클릭(file://)으로 열면 브라우저가 .glb 파일 읽기를 막음.
-   스크립트 파일은 읽을 수 있어서, 같은 내용을 담아 둔 '01.glb.js' 같은 파일을 대신 불러옴 (build.ps1이 만듦) */
+   스크립트 파일은 읽을 수 있어서, 같은 내용을 담아 둔 '01.model.js' 같은 파일을 대신 불러옴.
+   웹 서버(닷홈, python -m http.server)에서는 .glb를 바로 받음: .model.js보다 25% 작음 */
 const GLB_DATA = {};
 function glbFromScript(url) {
   return new Promise((res, rej) => {
@@ -32,10 +35,18 @@ function glbFromScript(url) {
   });
 }
 
+/* .glb 내용 받기: 서버면 .glb 그대로, 실패하거나 더블클릭(file://)이면 .model.js로 */
+async function readGLB(url) {
+  if (url.startsWith('data:')) return dataUrlToBuffer(url);
+  if (location.protocol !== 'file:') {
+    try { const r = await fetch(url); if (r.ok) return await r.arrayBuffer(); } catch (e) { /* 아래 .model.js로 */ }
+  }
+  return dataUrlToBuffer(await glbFromScript(url));
+}
+
 function loadModel(url) {
   if (!modelCache.has(url)) modelCache.set(url, three().then(async ({ THREE, GLTFLoader, MeshoptDecoder }) => {
-    const src = !url.startsWith('data:') ? await glbFromScript(url) : url;
-    const gltf = await parseGLB(src, GLTFLoader, MeshoptDecoder);
+    const gltf = await parseGLB(await readGLB(url), GLTFLoader, MeshoptDecoder);
     const m = gltf.scene;
 
     m.traverse((o) => {

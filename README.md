@@ -88,6 +88,33 @@ JavaScript 파일들은 모듈(`import`)이 아니라 `index.html`에서 차례�
 
 주소 끝에 `#lobby`, `#list`, `#gallery-1` ~ `#gallery-3` 를 붙이면 인트로 없이 해당 화면으로 바로 갑니다.
 
+## 석고상 파일 줄이기 (2026-11-13)
+
+석고상 15개는 `assets/models/01.glb`~`15.glb`에 있어요. 원래는 면이 50만~100만 개라 너무 무거워서, **면 10만 개**로 줄였어요 (얼굴 확대 비교로 원본과 가장 비슷한 수). 01·02·04는 원래 가벼워서 그대로 뒀어요.
+
+| | 예전 | 지금 |
+|---|---|---|
+| `.glb` 15개 합계 | 약 53MB | 약 14MB |
+| `.model.js` 15개 합계 | 약 28MB | 약 19MB |
+
+- 웹 서버(닷홈, `python -m http.server`)에서는 `.glb`를 바로 받아요. 더블클릭(file://)으로 열 때만 `.model.js`를 읽어요 (`js/models3d.js`의 `readGLB`).
+- 원본(줄이기 전) 파일은 git 기록에 남아 있어요: `git show 6074be9:assets/models/03.glb > 03-원본.glb`
+
+새 석고상을 넣거나 다시 줄일 때 (Node.js 필요, 작업 폴더 밖에서):
+
+```
+npm i @gltf-transform/cli@4.5.1
+node tools/simplify-bust.mjs 원본.glb 줄인.glb 100000 0.01 1
+npx gltf-transform optimize 줄인.glb assets/models/03.glb --compress meshopt --texture-compress false --simplify false
+```
+
+그다음 `.model.js`도 다시 만들어요 (PowerShell):
+
+```
+$b=[Convert]::ToBase64String([IO.File]::ReadAllBytes("assets/models/03.glb"))
+"GLB_DATA['assets/models/03.glb'] = 'data:model/gltf-binary;base64,$b';" | Set-Content assets/models/03.model.js -NoNewline
+```
+
 ## 내 컴퓨터에서 실행하기
 
 폴더 압축을 풀고 `index.html`을 **더블클릭해서 열면** 3D 석고상까지 나옵니다 (three.js와 글꼴을 인터넷에서 불러오므로 인터넷 연결은 필요).
