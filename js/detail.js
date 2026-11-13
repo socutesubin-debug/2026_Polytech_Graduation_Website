@@ -59,14 +59,15 @@ function openDetail(i) {
       ? listRows().map((s) => s.no - 1)
       : page === 'test-room' ? trStudents().map((s) => s.no - 1)
       : HALLS[page] ? HALLS[page].students.map((s) => s.no - 1)
+      : page === 'special' ? STUDENTS.map((s) => s.no - 1)
       : STUDENTS.filter((s) => s.room === room).map((s) => s.no - 1);
     modalBackground = [...new Set([...Object.values(screens), topbar])].map((el) => [el, el.inert]);
     for (const [el] of modalBackground) el.inert = true;
   }
   detail = i;
-  $('#d-room').textContent = page === 'test-room' || HALLS[page]
-    ? (FIELD_LABEL[s.field] || '분야 확인 중')
-    : `${['첫번째', '두번째', '세번째'][s.room]} 전시실`;
+  $('#d-room').textContent = page === 'gallery'
+    ? `${['첫번째', '두번째', '세번째'][s.room]} 전시실`
+    : (FIELD_LABEL[s.field] || '분야 확인 중');
   $('#d-count').textContent = `${pad(detailOrder.indexOf(i) + 1)} / ${pad(detailOrder.length)}`;
   $('#d-name').textContent = s.name;
   $('#d-slogan').textContent = s.slogan || '';

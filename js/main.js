@@ -2,11 +2,7 @@
 $$('.pill button').forEach((b) => b.addEventListener('click', () => {
   cancelTransition();
   closeDetail(true);
-  if (b.dataset.room) {
-    const r = +b.dataset.room;
-    if (page === 'gallery') { changeRoom(r); return; }
-    setRoom(r); go('gallery'); arrive(galleryCam);
-  } else { go(b.dataset.go); if (b.dataset.go === 'lobby') arrive($('#lobby-cam')); }
+  go(b.dataset.go);
 }));
 
 addEventListener('keydown', (e) => {
@@ -15,6 +11,9 @@ addEventListener('keydown', (e) => {
     e.preventDefault();
     if (screens.intro === introFrame) shatter();
     else intro.classList.contains('home') ? enterPoster() : tear();
+  } else if (page === 'opening' && detail < 0) {
+    if (e.key === 'Escape') opSkip();
+    else if ((e.key === 'Enter' || e.key === ' ') && e.target === document.body && op.copy.classList.contains('on')) { e.preventDefault(); opEnter(); }
   } else if (detail >= 0) {
     if (e.key === 'Escape') closeDetail();
     if (e.key === 'ArrowLeft') stepDetail(-1);
@@ -25,6 +24,8 @@ addEventListener('keydown', (e) => {
   } else if (HALLS[page]) {
     if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); hallJump(HALLS[page], 1); }
     if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); hallJump(HALLS[page], -1); }
+  } else if (page === 'special') {
+    if (!e.target.closest('button') || e.key.startsWith('Arrow') || e.key === 'Escape') { if (specialKey(e)) e.preventDefault(); }
   } else if (page === 'gallery') {
     if (e.key === 'ArrowLeft') changeRoom(room - 1);
     if (e.key === 'ArrowRight') changeRoom(room + 1);
@@ -50,6 +51,8 @@ function tick(t) {
   }
   if (screens['test-room'].classList.contains('on')) renderTestRoom(t);
   for (const H of Object.values(HALLS)) if (H.root.classList.contains('on')) renderHall(H, t);
+  if (screens.lobby3d.classList.contains('on')) renderLobby3D(t);
+  if (screens.special.classList.contains('on')) renderSpecial(t);
   if (detail >= 0) renderDetail3D(t, dt);
   requestAnimationFrame(tick);
 }
@@ -61,9 +64,9 @@ $$('[data-asset]').forEach((img) => { img.src = ASSETS[img.dataset.asset]; });
 const start = location.hash.slice(1);
 requestAnimationFrame(tick);
 if (start === 'lobby') go('lobby');
-else if (start === 'list') go('list');
+else if (start === 'list' || start === 'lobby3d' || start === 'special') go(start);
 else if (start === 'test-room') go('test-room');
 else if (HALLS[start]) go(start);
 else if (/^gallery-[123]$/.test(start)) { setRoom(+start.slice(-1) - 1); go('gallery'); }
-else if (matchMedia('(max-width: 760px)').matches) go('list');
-else playIntro();
+else if (start === 'intro') playIntro(); // 옛 V1 인트로 (티켓 → 포스터 → 액자)
+else playOpening();

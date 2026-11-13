@@ -1,0 +1,61 @@
+/* V2 스페셜룸 (#special) — 스토리보드 s7-③ 짙은 방 + 금 액자, s7-② 휘어진 띠(모아 보기) */
+.special{background:#120e0a;color:#f1e8d8;overflow:hidden}
+.sp-room{position:absolute;inset:0;display:grid;place-items:center;padding:calc(84px + env(safe-area-inset-top,0px)) 20px calc(26px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(ellipse 46% 60% at 50% 40%,#4a3a28 0%,#2a2017 42%,#120e0a 78%)}
+/* 위에서 작품을 비추는 조명 */
+.sp-beam{position:absolute;left:50%;top:-6%;width:min(900px,120vw);height:86%;transform:translateX(-50%);pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,232,190,.2),rgba(255,232,190,.05) 60%,rgba(255,232,190,0));clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);filter:blur(14px)}
+.sp-room::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22%;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55));pointer-events:none}
+.sp-stage{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:clamp(12px,2vh,20px);width:100%;max-height:100%}
+
+/* 금 액자 */
+.sp-frame{position:relative;height:min(52vh,560px);aspect-ratio:4/5;max-width:86vw;padding:clamp(14px,2.2vh,24px);cursor:pointer;
+  background:linear-gradient(135deg,#f0d59a 0%,#b98d48 22%,#f6e2b0 45%,#9a7334 68%,#e3c283 100%);
+  box-shadow:0 0 0 2px #6e5226,inset 0 0 0 3px rgba(255,244,214,.55),inset 0 0 0 9px rgba(110,82,38,.55),0 40px 70px rgba(0,0,0,.6),0 0 90px rgba(255,220,160,.16)}
+.sp-work{position:relative;width:100%;height:100%;overflow:hidden;background:#8d8478;box-shadow:inset 0 0 0 2px #5c4420,inset 0 6px 22px rgba(0,0,0,.35)}
+.sp-work.in{animation:spIn .8s cubic-bezier(.2,.7,.2,1) both}
+@keyframes spIn{from{opacity:0;filter:brightness(1.8) blur(6px)}to{opacity:1;filter:none}}
+.sp-work img,.sp-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+/* 대표 작품이 아직 없을 때의 회색 임시 카드 */
+.sp-temp{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:10%;color:#2a2622;text-align:left;
+  background:linear-gradient(160deg,#b9b1a4,#8f867a)}
+.sp-temp em{position:absolute;left:10%;top:8%;font-style:normal;font-size:clamp(11px,1.4vh,14px);letter-spacing:.2em}
+.sp-temp b{font-size:clamp(22px,4.2vh,42px);font-weight:700;letter-spacing:-.02em;line-height:1}
+.sp-temp small{font-size:clamp(10px,1.4vh,13px);letter-spacing:.06em;opacity:.75}
+
+.sp-caption{text-align:center}
+.sp-no{margin:0;font-size:10.5px;letter-spacing:.28em;color:#bda98a}
+.sp-caption h2{margin:6px 0 0;font-family:var(--sans);font-weight:700;font-size:clamp(22px,3.2vh,32px);letter-spacing:-.01em}
+.sp-title{margin:6px auto 0;max-width:34em;font-size:13px;line-height:1.55;color:#cdbfa8}
+.sp-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.sp-actions button,.sp-back{height:44px;padding:0 20px;border-radius:99px;border:1px solid rgba(241,232,216,.45);font-size:13px;letter-spacing:.04em;color:#f1e8d8;transition:background .2s,color .2s}
+.sp-actions button:hover,.sp-back:hover{background:rgba(241,232,216,.12)}
+.sp-actions button.main{min-width:140px;background:#e3c283;border-color:#e3c283;color:#1b140c;font-weight:700;letter-spacing:.18em}
+.sp-actions button.main:hover{background:#f3d9a4}
+.sp-hint{margin:0;font-size:11px;color:rgba(241,232,216,.45)}
+
+/* 모아 보기: 15점이 휘어진 띠로 */
+.sp-ring-wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:calc(84px + env(safe-area-inset-top,0px)) 20px 26px;
+  background:radial-gradient(ellipse 70% 60% at 50% 50%,#2a2017 0%,#120e0a 80%)}
+.sp-ring-title{margin:0;font-size:12px;letter-spacing:.12em;color:#bda98a}
+.sp-ring-scene{position:relative;width:100%;height:min(52vh,460px);perspective:1500px;perspective-origin:50% 42%}
+.sp-ring{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;--r:440px}
+.sp-card{position:absolute;left:-75px;top:-100px;width:150px;height:200px;overflow:hidden;border-radius:3px;background:#8d8478;backface-visibility:hidden;
+  transform:rotateY(var(--a)) translateZ(var(--r)) translateY(var(--y));box-shadow:0 0 0 3px #b98d48,0 16px 30px rgba(0,0,0,.5);transition:box-shadow .2s}
+.sp-card:hover,.sp-card:focus-visible{box-shadow:0 0 0 3px #f6e2b0,0 0 0 6px rgba(246,226,176,.3),0 16px 30px rgba(0,0,0,.5);outline:none}
+.sp-card .sp-temp b{font-size:20px}
+.sp-card .sp-temp small{font-size:9.5px}
+.sp-card-name{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 7px;font-size:11px;color:#fff;text-align:center;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.6))}
+.sp-card .sp-temp + .sp-card-name{display:none}
+
+/* 움직임 줄이기·모바일: 도는 띠 대신 가만히 있는 카드 묶음 */
+.special.flat .sp-ring-wrap{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.special.flat .sp-ring-scene{height:auto;perspective:none}
+.special.flat .sp-ring{position:static;width:auto;height:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;max-width:900px;margin:0 auto;transform:none!important}
+.special.flat .sp-card{position:relative;left:auto;top:auto;width:auto;height:auto;aspect-ratio:3/4;transform:none}
+
+@media(max-width:760px){
+  .sp-frame{height:min(44vh,420px)}
+  .sp-hint{display:none}
+  .sp-actions button{height:42px;padding:0 16px}
+}

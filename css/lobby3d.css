@@ -1,0 +1,41 @@
+/* V2 로비 (#lobby3d) — 스토리보드 s5.
+   .is3d = 3D 아치가 켜진 상태(데스크톱): 버튼 3개가 각 아치 아래 이름표가 됨
+   .is3d가 없으면(모바일·3D 실패): 버튼 3개가 아치 모양 카드가 됨 */
+.lobby3d{background:#ece6da;color:var(--ink)}
+.lb-view{position:absolute;inset:0}
+.lb-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lb-copy{position:absolute;z-index:2;left:clamp(16px,4vw,56px);top:calc(92px + env(safe-area-inset-top,0px));pointer-events:none;animation:rise 1.2s .3s cubic-bezier(.2,.7,.2,1) both}
+.lb-copy p{margin:0;font-size:10px;letter-spacing:.34em;color:var(--ink-soft)}
+.lb-copy h2{margin:10px 0 0;font-family:var(--sans);font-weight:500;font-size:clamp(22px,2.4vw,32px);letter-spacing:-.02em}
+.lb-door small{font-size:10px;letter-spacing:.26em;color:var(--ink-soft)}
+.lb-door b{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.lb-door span{font-size:12px;color:var(--ink-soft)}
+.lb-all{position:absolute;z-index:3;right:clamp(16px,3vw,36px);bottom:calc(22px + env(safe-area-inset-bottom,0px));height:42px;padding:0 20px;border-radius:99px;background:rgba(255,255,255,.72);border:1px solid rgba(46,38,29,.3);font-size:13px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.lb-all:hover{background:#fff}
+
+/* 3D 로비: 이름표 */
+.lobby3d.is3d .lb-doors{position:absolute;inset:0;z-index:2;pointer-events:none}
+.lobby3d.is3d .lb-door{position:absolute;transform:translate(-50%,-40%);display:flex;flex-direction:column;align-items:center;gap:4px;min-width:150px;padding:12px 20px 13px;border-radius:14px;text-align:center;pointer-events:auto;
+  background:rgba(255,255,255,.62);border:1px solid rgba(46,38,29,.16);box-shadow:0 8px 24px rgba(60,40,20,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  transition:background .3s,box-shadow .3s,margin-top .3s,opacity .4s}
+.lobby3d.is3d .lb-door i{display:none}
+.lobby3d.is3d .lb-door.lit{background:#fff;box-shadow:0 0 0 1px rgba(46,38,29,.5),0 14px 34px rgba(60,40,20,.2);margin-top:-6px}
+.lobby3d.is3d.flying .lb-door,.lobby3d.is3d.flying .lb-copy,.lobby3d.is3d.flying .lb-all{opacity:0;transition:opacity .35s}
+
+/* 카드 로비 (모바일·3D 실패) */
+.lobby3d:not(.is3d){overflow-y:auto;-webkit-overflow-scrolling:touch}
+.lobby3d:not(.is3d) .lb-view{display:none}
+.lobby3d:not(.is3d) .lb-copy{position:static;padding:calc(92px + env(safe-area-inset-top,0px)) 20px 0;animation:none}
+.lobby3d:not(.is3d) .lb-doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:980px;margin:0 auto;padding:26px 20px 0}
+.lobby3d:not(.is3d) .lb-door{display:flex;flex-direction:column;align-items:center;gap:5px;padding:18px 12px 20px;border-radius:16px;background:#f6f1e8;border:1px solid rgba(46,38,29,.14);text-align:center}
+.lobby3d:not(.is3d) .lb-door i{position:relative;display:block;width:min(150px,70%);aspect-ratio:3/4;margin-bottom:10px;border-radius:999px 999px 0 0;background:linear-gradient(180deg,#fffdf8,#e6dccb);box-shadow:inset 0 0 0 6px #fbf7ef,inset 0 0 0 7px rgba(46,38,29,.14)}
+.lobby3d:not(.is3d) .lb-door i::after{content:"";position:absolute;left:50%;top:24%;width:18%;aspect-ratio:1;border-radius:50%;transform:translateX(-50%);background:#fff3d6;box-shadow:0 0 18px 8px rgba(255,236,196,.9)}
+.lobby3d:not(.is3d) .lb-door[data-door="1"] i{background:linear-gradient(180deg,#f7f9f9,#d9dddd)}
+.lobby3d:not(.is3d) .lb-door[data-door="2"] i{background:linear-gradient(180deg,#3a2f24,#16110b)}
+.lobby3d:not(.is3d) .lb-all{position:static;display:block;margin:22px auto 40px;background:#2a2622;border-color:#2a2622;color:#fbf6ec;height:48px;padding:0 26px;font-size:14px}
+@media(max-width:560px){
+  .lobby3d:not(.is3d) .lb-doors{grid-template-columns:1fr;gap:12px}
+  .lobby3d:not(.is3d) .lb-door{display:grid;grid-template-columns:64px 1fr;column-gap:16px;row-gap:3px;align-items:center;justify-items:start;padding:14px 16px;text-align:left}
+  .lobby3d:not(.is3d) .lb-door i{grid-column:1;grid-row:1 / span 3;width:64px;height:84px;aspect-ratio:auto;margin:0}
+  .lobby3d:not(.is3d) .lb-door small,.lobby3d:not(.is3d) .lb-door b,.lobby3d:not(.is3d) .lb-door span{grid-column:2}
+}
