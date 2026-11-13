@@ -46,7 +46,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  const phase=()=>p.locator('#special').getAttribute('data-phase');
  const scrollTo=async(u)=>{await p.evaluate((u)=>{const r=document.querySelector('#special');r.scrollTop=u*(r.scrollHeight-r.clientHeight);},u);await p.waitForFunction((u)=>Math.abs(sp.target-u)<0.01&&Math.abs(sp.progress-sp.target)<1e-3,u,{timeout:8000});};
  await p.waitForFunction(()=>document.querySelector('#special').dataset.phase==='sphere');
- assert.equal(await p.locator('.sp-card').count(),60);assert.equal(await p.locator('#sp-stage').evaluate(el=>el.inert),true,'구 장면에서는 액자가 숨어 있음');
+ assert.equal(await p.locator('.sp-card').count(),15);assert.equal(await p.locator('#sp-stage').evaluate(el=>el.inert),true,'구 장면에서는 액자가 숨어 있음');
  assert.equal(await p.locator('#topbar').getAttribute('data-theme'),'light');
  // 구일 때 썸네일은 위아래로 넓게, 도넛일 때는 가운데 띠로 모임
  const spread=()=>p.evaluate(()=>{const ys=[...document.querySelectorAll('.sp-card')].map(el=>{const r=el.getBoundingClientRect();return r.top+r.height/2;});return Math.max(...ys)-Math.min(...ys);});
@@ -63,7 +63,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  for(let i=0;i<40;i++){await p.mouse.wheel(0,400);await p.waitForTimeout(120);names.add(await name());}
  assert(names.size>=8,`계속 스크롤하면 여러 작품이 나와야 함 (${names.size}명)`);assert.equal(await phase(),'frame','끝까지 내려도 액자 장면에 머묾');
  // [다른 작품]: 연달아 같은 작품 없음, 15번 누르면 15명 모두 한 번씩
- await p.evaluate(()=>{sp.bag=[];});
+ await p.evaluate(()=>{sp.bag=[];sp.next=-1;});
  const seen=[];for(let i=0;i<15;i++){await p.locator('#sp-next').click();seen.push(await name());}
  assert.equal(new Set(seen).size,15,'15번 안에 15명이 모두 나와야 함');
  for(let i=0;i<20;i++){const before=await name();await p.locator('#sp-next').click();assert.notEqual(await name(),before,'같은 작품이 연달아 나오면 안 됨');}
@@ -85,6 +85,11 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
   const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2,name:STUDENTS[+el.dataset.i].name};});
  await p.mouse.click(picked.x,picked.y);
  await p.waitForFunction(()=>document.querySelector('#special').dataset.phase==='frame',null,{timeout:8000});assert.equal(await name(),picked.name);
+ // 액자 양옆의 연한 썸네일: 오른쪽(다음 작품)을 누르면 그 작품이 걸리고, 왼쪽(방금 본 작품)을 누르면 되돌아감. 떠 있던 썸네일은 모두 숨음
+ await p.waitForFunction(()=>Math.abs(sp.progress-sp.target)<1e-3&&!document.querySelector('#sp-stage').inert,null,{timeout:8000});
+ assert.equal(await p.evaluate(()=>[...document.querySelectorAll('.sp-card')].filter(c=>getComputedStyle(c).visibility!=='hidden').length),0,'액자 장면에는 떠 있는 썸네일이 없어야 함');
+ const nextName=await p.evaluate(()=>STUDENTS[sp.next].name);await p.locator('#sp-peek-next').click();assert.equal(await name(),nextName);
+ await p.locator('#sp-peek-prev').click();assert.equal(await name(),picked.name);
  // [모아 보기] → 도넛으로 돌아감
  await p.waitForFunction(()=>Math.abs(sp.progress-sp.target)<1e-3&&!document.querySelector('#sp-stage').inert,null,{timeout:8000});
  await p.locator('#sp-all').click();await p.waitForFunction(()=>document.querySelector('#special').dataset.phase==='ring',null,{timeout:8000});
@@ -115,7 +120,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.equal(await p.locator('#lobby3d.is3d').count(),0);assert.equal(await p.locator('#lobby3d canvas').count(),0,'모바일 로비는 3D를 불러오지 않음');
  assert.equal(await p.locator('.lb-door:visible').count(),3);
  await p.locator('#lb-all').tap();assert.equal(await state(p),'list');assert.equal(await p.locator('.card').count(),15);
- await p.locator('.pill [data-go="special"]').tap();assert.equal(await state(p),'special');assert.equal(await p.locator('.sp-card').count(),36);
+ await p.locator('.pill [data-go="special"]').tap();assert.equal(await state(p),'special');assert.equal(await p.locator('.sp-card').count(),12);
  await p.locator('.pill [data-go="lobby3d"]').tap();await p.locator('.lb-door[data-door="0"]').tap();assert.equal(await state(p),'hall-uxui');
  console.log('mobile ok');
  await p.context().close();

@@ -37,14 +37,25 @@
 
 /* ③ 금 액자 */
 .sp-stage{position:absolute;z-index:3;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,1.8vh,18px);
-  padding:calc(78px + env(safe-area-inset-top,0px)) 20px calc(30px + env(safe-area-inset-bottom,0px));color:#f1e8d8;opacity:0;visibility:hidden;pointer-events:none}
+  padding:calc(78px + env(safe-area-inset-top,0px)) 20px calc(30px + env(safe-area-inset-bottom,0px));color:#f1e8d8;opacity:0;visibility:hidden;pointer-events:none;--fw:min(75vh,780px,62vw)}
 .sp-stage>*{pointer-events:auto}
-.sp-frame{position:relative;height:min(50vh,520px);aspect-ratio:3/2;max-width:88vw;padding:clamp(12px,2vh,22px);cursor:pointer;
+.sp-frame{position:relative;width:var(--fw);aspect-ratio:3/2;padding:clamp(12px,2vh,22px);cursor:pointer;
   background:linear-gradient(135deg,#f0d59a 0%,#b98d48 22%,#f6e2b0 45%,#9a7334 68%,#e3c283 100%);
   box-shadow:0 0 0 2px #6e5226,inset 0 0 0 3px rgba(255,244,214,.55),inset 0 0 0 9px rgba(110,82,38,.55),0 40px 70px rgba(0,0,0,.6),0 0 90px rgba(255,220,160,.16)}
 .sp-work{position:relative;width:100%;height:100%;overflow:hidden;background:#8d8478;box-shadow:inset 0 0 0 2px #5c4420,inset 0 6px 22px rgba(0,0,0,.35)}
-.sp-work.in{animation:spIn .7s cubic-bezier(.2,.7,.2,1) both}
-@keyframes spIn{from{opacity:0;filter:brightness(1.8) blur(6px)}to{opacity:1;filter:none}}
+.sp-work.in>*{animation:spIn .6s cubic-bezier(.2,.7,.2,1) both} /* 새 작품은 오른쪽에서 들어옴 (이전 작품으로 갈 때는 왼쪽에서) */
+.sp-work.in.back>*{animation-name:spInBack}
+@keyframes spIn{from{opacity:.2;transform:translateX(60%)}to{opacity:1;transform:none}}
+@keyframes spInBack{from{opacity:.2;transform:translateX(-60%)}to{opacity:1;transform:none}}
+/* 액자 양옆의 연한 썸네일: 다음 작품이 옆에서 나온다는 것을 알려 줌 */
+.sp-wall{position:relative;display:flex;justify-content:center;width:100%}
+.sp-peek{position:absolute;top:50%;width:calc(var(--fw) * .46);aspect-ratio:3/2;overflow:hidden;transform:translateY(-50%);opacity:.22;background:#8d8478;
+  box-shadow:0 0 0 1px rgba(227,194,131,.5);transition:opacity .25s}
+.sp-peek[hidden]{display:none}
+.sp-peek:hover,.sp-peek:focus-visible{opacity:.5}
+.sp-peek-prev{right:calc(50% + var(--fw) / 2 + clamp(18px,4vw,72px))}
+.sp-peek-next{left:calc(50% + var(--fw) / 2 + clamp(18px,4vw,72px))}
+.sp-peek .sp-temp em{font-size:11px}.sp-peek .sp-temp b{font-size:clamp(14px,2vw,26px)}.sp-peek .sp-temp small{display:none}
 .sp-caption{text-align:center}
 .sp-no{margin:0;font-size:10.5px;letter-spacing:.28em;color:#bda98a}
 .sp-caption h2{margin:6px 0 0;font-family:var(--sans);font-weight:700;font-size:clamp(22px,3.2vh,32px);letter-spacing:-.01em}
@@ -69,8 +80,8 @@
 .special.still .sp-steps,.special.still #sp-all,.special.still .sp-hint{display:none}
 
 @media(max-width:760px){
-  .sp-frame{height:auto;width:min(88vw,520px)}
+  .sp-stage{--fw:min(72vw,520px)}
   .sp-actions button{height:42px;padding:0 16px}
   .sp-intro{bottom:calc(28px + env(safe-area-inset-bottom,0px))}
 }
-@media(prefers-reduced-motion:reduce){.sp-intro button{animation:none}}
+@media(prefers-reduced-motion:reduce){.sp-intro button,.sp-work.in>*{animation:none}}

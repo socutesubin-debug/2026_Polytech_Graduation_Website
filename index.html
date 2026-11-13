@@ -238,7 +238,11 @@
           <button type="button" id="sp-start">스크롤을 내려 보세요 ↓</button>
         </div>
         <div class="sp-stage" id="sp-stage">
-          <div class="sp-frame" id="sp-frame"><div class="sp-work" id="sp-work"></div></div>
+          <div class="sp-wall">
+            <button type="button" class="sp-peek sp-peek-prev" id="sp-peek-prev" hidden></button>
+            <div class="sp-frame" id="sp-frame"><div class="sp-work" id="sp-work"></div></div>
+            <button type="button" class="sp-peek sp-peek-next" id="sp-peek-next" hidden></button>
+          </div>
           <div class="sp-caption" aria-live="polite">
             <p class="sp-no" id="sp-no"></p>
             <h2 id="sp-name"></h2>
@@ -249,7 +253,7 @@
             <button type="button" id="sp-select" class="main">SELECT</button>
             <button type="button" id="sp-all">모아 보기</button>
           </div>
-          <p class="sp-hint">계속 스크롤하면 작품이 랜덤으로 바뀌어요</p>
+          <p class="sp-hint">계속 스크롤하면 다음 작품이 옆에서 들어와요</p>
         </div>
         <div class="sp-steps" id="sp-steps" role="group" aria-label="스페셜룸 장면 이동">
           <button type="button" aria-label="구 모양으로 보기" aria-current="true"></button>
