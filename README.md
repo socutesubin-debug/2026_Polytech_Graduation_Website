@@ -19,13 +19,13 @@ CSS와 JavaScript는 **화면(방)별로 파일을 나눠** 두었습니다.
 | s1~s3 오프닝 | (없음) | `⑧ V2 오프닝` | `css/opening.css` | `js/opening.js` | 맨 위 `OPENING` |
 | s5 로비 | `#lobby3d` | `⑨ V2 로비` | `css/lobby3d.css` | `js/lobby3d.js` | 맨 위 `LOBBY3D` |
 | s6 전시관 | `#hall-uxui`, `#hall-visual` | `⑦ V2 전시관` | `css/hall.css` | `js/hall.js` | 맨 위 `HALL_LAYOUT`, `HALL_THEMES` |
-| s7 스페셜룸 | `#special` | `⑩ V2 스페셜룸` | `css/special.css` | `js/special.js` | 맨 위 `SPECIAL` |
+| s7 스페셜룸 (스크롤: 구 → 도넛 → 금 액자 + 랜덤 작품) | `#special` | `⑩ V2 스페셜룸` | `css/special.css` | `js/special.js` | 맨 위 `SPECIAL` |
 | s8 학생 목록 | `#list` | `⑤ 학생 목록` | `css/list.css` | `js/list.js` | |
 
 **아직 임시인 것 (자료를 받으면 바꾸는 곳)**
 
 - 오프닝 영상: 지금은 코드로 그린 임시 그림이에요. 힉스필드 영상을 `assets/video/intro.webm`(+ `.mp4`)로 넣고 `js/opening.js`의 `OPENING.video`에 파일 이름을 적으면 영상이 대신 나와요. 영상 마지막 2초가 반복되면서 [입장하기]가 떠요.
-- 대표 작품 15점: `js/data.js`에서 학생마다 `work: { src: 'assets/works/01.webp', title: '작품 제목' }`을 채우면 스페셜룸 액자에 걸려요. 비어 있으면 이름이 적힌 회색 카드가 나와요.
+- 대표 작품 15점: `js/data.js`에서 학생마다 `work: { src: 'assets/works/01.webp', title: '작품 제목' }`을 채우면 스페셜룸의 떠 있는 썸네일과 액자에 그 그림이 나와요 (가로로 긴 3:2 그림이 잘 맞아요). 비어 있으면 이름이 적힌 회색 카드가 나와요.
 - 분야 미정 4명(김준서·김우선·조민영·조예빈): `js/data.js`의 `field`를 `'uxui'` 또는 `'visual'`로 적으면 전시관에 나타나요. 목록에는 지금도 보여요.
 - s4 슬로건 모션: 만들면 `js/opening.js`의 `OPENING.next`를 그 화면 이름으로 바꾸면 [입장하기] 다음에 나와요.
 
