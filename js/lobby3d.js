@@ -52,7 +52,7 @@ function lobbyBuild({ THREE }) {
   const wallMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(wall, { depth: C.depth, bevelEnabled: false, curveSegments: 40 }), stoneM);
   wallMesh.position.z = -C.depth; wallMesh.castShadow = true; wallMesh.receiveShadow = true; scene.add(wallMesh);
   // 위쪽 띠(처마)와 아래 걸레받이
-  const band = new THREE.Mesh(new THREE.BoxGeometry(C.wallW, 0.22, 0.3), trimM); band.position.set(0, 5.75, 0.12); band.castShadow = true; scene.add(band);
+  const band = new THREE.Mesh(new THREE.BoxGeometry(C.wallW, 0.22, 0.3), trimM); band.position.set(0, 6.2, 0.12); band.castShadow = true; scene.add(band);
   const base = new THREE.Mesh(new THREE.BoxGeometry(C.wallW, 0.3, 0.16), trimM); base.position.set(0, 0.15, 0.06);
   // 걸레받이는 아치 구멍 앞을 막지 않도록 조각으로 나눔
   const edges = [-C.wallW / 2, ...C.archX.flatMap((x) => [x - half - 0.24, x + half + 0.24]), C.wallW / 2];
@@ -70,7 +70,7 @@ function lobbyBuild({ THREE }) {
     const lamp = new THREE.Mesh(new THREE.SphereGeometry(C.lamp.r, 32, 24), lampM); lamp.position.set(x, C.lamp.y, -C.depth / 2); scene.add(lamp);
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.0, 8), mat(0x6b6258)); cord.position.set(x, C.lamp.y + C.lamp.r + 0.5, -C.depth / 2); scene.add(cord);
     const light = new THREE.PointLight(k === 2 ? 0xffd9a0 : 0xfff0d2, C.lamp.idle, 9, 1.6); light.position.set(x, C.lamp.y - 0.1, -C.depth / 2 - 0.4); scene.add(light);
-    const halo = new THREE.Mesh(new THREE.SphereGeometry(C.lamp.r * 2.6, 24, 16), new THREE.MeshBasicMaterial({ color: 0xfff1d2, transparent: true, opacity: 0.1, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.copy(lamp.position); scene.add(halo);
+    const halo = new THREE.Mesh(new THREE.SphereGeometry(C.lamp.r * 1.9, 24, 16), new THREE.MeshBasicMaterial({ color: 0xfff1d2, transparent: true, opacity: 0.1, depthWrite: false, blending: THREE.AdditiveBlending })); halo.position.copy(lamp.position); scene.add(halo);
     lb.lamps[k] = { light, halo, glow: 0 };
     // 마우스가 닿는지 재는 투명 문
     const hit = new THREE.Mesh(new THREE.PlaneGeometry(C.archW + 0.5, C.archStraight + half + 0.3), new THREE.MeshBasicMaterial({ visible: false }));
@@ -127,7 +127,7 @@ function renderLobby3D(t) {
   lb.lamps.forEach((L, k) => {
     L.glow += ((k === on ? 1 : 0) - L.glow) * (reduce ? 1 : 0.12);
     L.light.intensity = C.lamp.idle + (C.lamp.hover - C.lamp.idle) * L.glow;
-    L.halo.material.opacity = 0.1 + 0.3 * L.glow; L.halo.scale.setScalar(1 + 0.25 * L.glow);
+    L.halo.material.opacity = 0.05 + 0.05 * L.glow; L.halo.scale.setScalar(1 + 0.15 * L.glow);
   });
   lb.doors.forEach((b, k) => b.classList.toggle('lit', k === on));
   lb.r.render(lb.scene, lb.cam);
