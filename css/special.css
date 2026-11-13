@@ -1,4 +1,4 @@
-/* V2 스페셜룸 (#special) — 스토리보드 s7. 스크롤하면 ① 구(공) → ② 도넛 → ③ 금 액자
+/* V2 갤러리 (#special, 옛 이름: 스페셜룸) — 스토리보드 s7. 스크롤하면 ① 구(공) → ② 도넛 → ③ 금 액자
    --a = 구→도넛 진행(0~1), --b = 도넛→액자 진행(0~1). js/special.js가 스크롤에 맞춰 바꿔 줌 */
 .special{background:#fbfaf7;color:#2a2622;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .sp-track{position:relative;height:520vh}
@@ -12,8 +12,10 @@
 
 /* 떠 있는 썸네일들 */
 .sp-scene{position:absolute;inset:0;perspective:1400px;perspective-origin:50% 50%;overflow:hidden}
-.sp-cloud{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform} /* 여기에 opacity를 주면 3D가 납작해지니 주의 */
-.sp-card{position:absolute;left:calc(var(--cw) / -2);top:calc(var(--cw) * -.375);width:var(--cw);height:calc(var(--cw) * .75);overflow:hidden;border-radius:2px;background:#9a9186;
+.sp-space{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform} /* 큰 글자와 카드가 같은 3D 공간에 있어서, 카드가 글자 앞뒤로 지나감 */
+.sp-cloud{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.sp-word{position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-family:var(--sans);font-weight:700;font-size:clamp(72px,17vw,250px);letter-spacing:-.045em;line-height:1;color:#111} /* 여기에 opacity를 주면 3D가 납작해지니 주의 */
+.sp-card{position:absolute;left:calc(var(--cw) / -2);top:calc(var(--cw) * -.375);width:var(--cw);height:calc(var(--cw) * .75);overflow:hidden;border-radius:calc(var(--cw) * .07);background:#9a9186;
   box-shadow:0 6px 18px rgba(30,20,10,.18);will-change:transform;cursor:pointer}
 .sp-card:hover{outline:2px solid #2f6bff;outline-offset:2px}
 .sp-work img,.sp-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -29,8 +31,7 @@
 
 /* ① 구 장면의 제목 */
 .sp-intro{position:absolute;z-index:2;left:clamp(16px,4vw,56px);bottom:calc(40px + env(safe-area-inset-bottom,0px));pointer-events:none}
-.sp-intro p{margin:0;font-size:10px;letter-spacing:.34em;color:#6b5d4b}
-.sp-intro h2{margin:10px 0 14px;font-family:var(--sans);font-weight:700;font-size:clamp(30px,4.4vw,64px);letter-spacing:-.03em;line-height:1}
+.sp-intro p{margin:0 0 14px;font-size:10px;letter-spacing:.34em;color:#6b5d4b}
 .sp-intro button{pointer-events:auto;height:40px;padding:0 18px;border-radius:99px;border:1px solid rgba(46,38,29,.4);background:rgba(255,255,255,.7);font-size:13px;animation:spBob 1.8s ease-in-out infinite}
 @keyframes spBob{0%,100%{transform:none}50%{transform:translateY(5px)}}
 .special:not([data-phase="sphere"]) .sp-intro{visibility:hidden}

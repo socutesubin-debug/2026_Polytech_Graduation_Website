@@ -1,5 +1,6 @@
-/* V2 스페셜룸 (#special) — 스토리보드 s7. 스크롤 하나로 세 장면이 이어짐
-   ① 구(공): 들어오면 프로젝트 썸네일들이 공 모양으로 넓게 떠서 천천히 돎 (s7-①)
+/* V2 갤러리 (#special, 옛 이름: 스페셜룸) — 스토리보드 s7. 스크롤 하나로 세 장면이 이어짐
+   ① 구(공): 가운데 큰 글자 "Gallery" 둘레로 프로젝트 썸네일 카드들이 공 모양으로 떠다님 (s7-①)
+            카드마다 따로 둥둥 움직이고, 마우스를 움직이면 그쪽으로 기울고 휙 돎
    ② 도넛: 스크롤하면 썸네일들이 모여서 도넛(고리) 모양이 됨 (s7-②)
    ③ 액자: 더 스크롤하면 썸네일들이 사라지고 벽에 금 액자 하나만 남음 (s7-③)
             액자 양옆에는 연한 썸네일이 살짝 보임 (왼쪽 = 방금 본 작품, 오른쪽 = 다음에 나올 작품)
@@ -16,12 +17,14 @@ const SPECIAL = {
   reveal: [0.52, 0.76],          // 이 구간에서 도넛 → 액자
   randomFrom: 0.80, randomStep: 0.035, // 액자 장면: 이만큼 스크롤할 때마다 작품이 바뀜
   stops: [0, 0.47, 0.84],        // 장면별 멈춤 자리 (구, 도넛, 액자)
-  spin: 5,                       // 저절로 도는 속도 (도/초)
+  spin: 7,                       // 저절로 도는 속도 (도/초)
+  float: 1,                      // 카드가 따로따로 둥둥 움직이는 정도 (0 = 안 움직임, 2 = 두 배)
+  mouseTilt: 14, mouseSpin: 0.22, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 휙 도는 힘
   perspective: 1400,
 };
 const sp = {
-  root: $('#special'), track: $('#sp-track'), view: $('#sp-view'), cloud: $('#sp-cloud'), stage: $('#sp-stage'), intro: $('#sp-intro'),
-  at: -1, prev: -1, next: -1, bag: [], cards: [], built: false, progress: 0, target: 0, angle: 0, lastT: 0, zone: -1, phase: '', still: false, w: 0, h: 0,
+  root: $('#special'), track: $('#sp-track'), view: $('#sp-view'), space: $('#sp-space'), word: $('#sp-word'), cloud: $('#sp-cloud'), stage: $('#sp-stage'), intro: $('#sp-intro'),
+  at: -1, prev: -1, next: -1, bag: [], cards: [], built: false, progress: 0, target: 0, angle: 0, lastT: 0, zone: -1, phase: '', still: false, w: 0, h: 0, mx: 0, my: 0, tmx: 0, tmy: 0, vel: 0,
 };
 const spSmooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const spLerp = (a, b, t) => a + (b - a) * t;
@@ -68,7 +71,9 @@ function spBuild() {
   const n = matchMedia('(max-width: 760px)').matches ? SPECIAL.cardsMobile : SPECIAL.cards, deg = 180 / Math.PI;
   const list = Array.from({ length: n }, (_, i) => {
     const y = 1 - (2 * (i + 0.5)) / n;
-    return { i: i % STUDENTS.length, ts: (i * 137.508) % 360, ps: Math.asin(y) * deg * 0.92 };
+    // sz = 카드 크기(조금씩 다르게), f1·f2·p1·p2 = 카드마다 다른 둥둥 움직임의 빠르기와 시작 위치
+    return { i: i % STUDENTS.length, ts: (i * 137.508) % 360, ps: Math.asin(y) * deg * 0.92,
+      sz: 0.72 + ((i * 7) % 5) * 0.14, f1: 0.5 + ((i * 3) % 7) * 0.09, f2: 0.4 + ((i * 5) % 6) * 0.11, p1: i * 1.7, p2: i * 2.9 };
   });
   // 도넛 자리는 공에서의 방향 순서대로 나눠 줌 → 모일 때 멀리 돌아가지 않고 가까운 자리로 감
   [...list].sort((a, b) => a.ts - b.ts).forEach((c, k) => { c.tr = (k / n) * 360; c.pr = 0; });
@@ -122,21 +127,34 @@ function renderSpecial(t) {
   sp.stage.style.opacity = show.toFixed(3); sp.stage.style.transform = `translateY(${((1 - show) * 30).toFixed(1)}px) scale(${(0.94 + 0.06 * show).toFixed(3)})`;
   sp.stage.inert = show < 0.5; sp.stage.style.visibility = show < 0.02 ? 'hidden' : 'visible';
 
-  // 구름(썸네일 묶음) 전체: 돌기, 기울기, 앞뒤 자리
-  if (!reduce && detail < 0) sp.angle += C.spin * (1 - 0.55 * b) * dt / 1000;
-  const Rs = Math.min(W * 0.5, H * 0.42), Rr = Math.min(W * 0.36, H * 0.6);
+  // 가운데 큰 글자: 구 장면에서만 보이고, 카드가 모이기 시작하면 사라짐
+  const wordOp = 1 - spSmooth(0.04, 0.26, p);
+  sp.word.style.opacity = wordOp.toFixed(3); sp.word.style.visibility = wordOp < 0.02 ? 'hidden' : 'visible';
+
+  // 구름(썸네일 묶음) 전체: 돌기, 기울기, 앞뒤 자리 + 마우스 따라 기울기
+  const live = !reduce && detail < 0, ease = 1 - Math.exp(-dt / 260);
+  sp.mx += (sp.tmx - sp.mx) * ease; sp.my += (sp.tmy - sp.my) * ease;
+  if (live) { sp.angle += (C.spin * (1 - 0.55 * b) + sp.vel) * dt / 1000; sp.vel *= Math.exp(-dt / 700); }
+  const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4), Rr = Math.min(W * 0.36, H * 0.6);
   const R = spLerp(Rs, Rr, a) * (1 + 0.5 * b);                              // 액자 장면: 고리가 넓어지면서 사라짐
   const cz = spLerp(-Rs * 0.35, -Rr * 0.6, a) - Rr * 0.8 * b;
-  const tilt = spLerp(spLerp(-6, -24, a), -8, b), roll = spLerp(8 * a, 0, b);
-  const spinY = sp.angle + p * 140;
-  sp.cloud.style.transform = `translate3d(0,0,${cz.toFixed(1)}px) rotateZ(${roll.toFixed(2)}deg) rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
-  const cw = clamp(W * 0.11, 96, 176), scale = spLerp(0.8, 1, a);
+  const mt = C.mouseTilt * (1 - b);
+  const tilt = spLerp(spLerp(-6, -24, a), -8, b) - sp.my * mt * 0.7, roll = spLerp(8 * a, 0, b);
+  const spinY = sp.angle + p * 140 + sp.mx * mt;
+  sp.space.style.transform = `translate3d(0,0,${cz.toFixed(1)}px)`;
+  sp.cloud.style.transform = `rotateZ(${roll.toFixed(2)}deg) rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
+  const cw = clamp(W * 0.12, 104, 190), rad = Math.PI / 180, ts = t / 1000;
   if (cw !== sp.cw) { sp.cw = cw; sp.view.style.setProperty('--cw', cw.toFixed(0) + 'px'); }
   // 액자 장면에서는 떠 있는 썸네일을 모두 지움 → 벽에는 액자(와 양옆의 연한 썸네일)만 남음
   const op = 1 - spSmooth(0, 0.7, b);
+  const wob = reduce ? 0 : C.float * (1 - 0.6 * a) * (1 - b);                // 도넛에서는 조금만 흔들림
   for (const c of sp.cards) {
-    const th = spLerp(c.ts, c.tr, a), ph = spLerp(c.ps, c.pr, a);
-    c.el.style.transform = `rotateY(${th.toFixed(2)}deg) rotateX(${ph.toFixed(2)}deg) translateZ(${R.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+    const th = spLerp(c.ts, c.tr, a) + Math.sin(ts * c.f1 + c.p1) * 6 * wob;
+    const ph = spLerp(c.ps, c.pr, a) + Math.cos(ts * c.f2 + c.p2) * 5 * wob;
+    const r = R * (1 + Math.sin(ts * c.f2 + c.p1) * 0.07 * wob);
+    const sway = Math.sin(ts * c.f1 * 0.8 + c.p2) * 7 * wob;                  // 카드가 제자리에서 살짝 갸웃거림
+    const face = Math.cos((th + spinY) * rad) < 0 ? 180 : 0;                 // 뒤쪽 카드는 뒤집어서 글자·그림이 거꾸로 보이지 않게
+    c.el.style.transform = `rotateY(${th.toFixed(2)}deg) rotateX(${ph.toFixed(2)}deg) translateZ(${r.toFixed(1)}px) rotateY(${face}deg) rotateZ(${sway.toFixed(2)}deg) scale(${spLerp(c.sz, 1, a).toFixed(3)})`;
     if (Math.abs(op - (c.op ?? 1)) > 0.01 || (op === 0 && c.op !== 0)) { c.op = op; c.el.style.opacity = op.toFixed(2); c.el.style.visibility = op < 0.03 ? 'hidden' : 'visible'; }
   }
 }
@@ -160,6 +178,14 @@ function specialKey(e) {
   return false;
 }
 ['wheel', 'touchstart'].forEach((ev) => sp.root.addEventListener(ev, () => { sp.hold = null; }, { passive: true }));
+/* 마우스: 있는 쪽으로 카드 묶음이 기울고, 옆으로 움직이면 그 방향으로 휙 돎 */
+sp.view.addEventListener('pointermove', (e) => {
+  if (e.pointerType !== 'mouse' || reduce) return;
+  const r = sp.view.getBoundingClientRect();
+  sp.tmx = ((e.clientX - r.left) / r.width - 0.5) * 2; sp.tmy = ((e.clientY - r.top) / r.height - 0.5) * 2;
+  sp.vel = clamp(sp.vel + e.movementX * SPECIAL.mouseSpin, -90, 90);
+});
+sp.view.addEventListener('pointerleave', () => { sp.tmx = sp.tmy = 0; });
 $('#sp-next').addEventListener('click', spNext);
 $('#sp-peek-next').addEventListener('click', spNext);
 $('#sp-peek-prev').addEventListener('click', spPrev);

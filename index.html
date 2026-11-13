@@ -219,22 +219,21 @@
     <div class="lb-doors" id="lb-doors">
       <button class="lb-door" type="button" data-door="0" data-go="hall-uxui"><i aria-hidden="true"></i><small>GALLERY 01</small><b>UX/UI의 방</b><span id="lb-count-0"></span></button>
       <button class="lb-door" type="button" data-door="1" data-go="hall-visual"><i aria-hidden="true"></i><small>GALLERY 02</small><b>비주얼의 방</b><span id="lb-count-1"></span></button>
-      <button class="lb-door" type="button" data-door="2" data-go="special"><i aria-hidden="true"></i><small>GALLERY 03</small><b>스페셜룸</b><span id="lb-count-2"></span></button>
+      <button class="lb-door" type="button" data-door="2" data-go="special"><i aria-hidden="true"></i><small>GALLERY 03</small><b>갤러리</b><span id="lb-count-2"></span></button>
     </div>
     <button class="lb-all" id="lb-all" type="button">전체 학생 바로가기 →</button>
   </section>
 
-  <!-- ⑩ V2 스페셜룸 — 스토리보드 s7: 스크롤하면 구(공) → 도넛 → 금 액자 + 랜덤 작품  (css/special.css, js/special.js) — 주소 끝 #special
+  <!-- ⑩ V2 갤러리(옛 이름: 스페셜룸) — 스토리보드 s7: 스크롤하면 구(공) → 도넛 → 금 액자 + 랜덤 작품  (css/special.css, js/special.js) — 주소 끝 #special
        sp-track = 스크롤 길이, sp-view = 화면에 붙어 있는 무대. 떠 있는 썸네일(sp-cloud 안)은 js/special.js가 만듦 -->
-  <section class="screen special" id="special" aria-label="스페셜룸: 대표 작품" tabindex="-1">
+  <section class="screen special" id="special" aria-label="갤러리: 대표 작품" tabindex="-1">
     <div class="sp-track" id="sp-track">
       <div class="sp-view" id="sp-view">
         <div class="sp-bg sp-bg-mid" aria-hidden="true"></div>
         <div class="sp-bg sp-bg-dark" aria-hidden="true"><div class="sp-beam"></div></div>
-        <div class="sp-scene" aria-hidden="true"><div class="sp-cloud" id="sp-cloud"></div></div>
+        <div class="sp-scene" aria-hidden="true"><div class="sp-space" id="sp-space"><div class="sp-word" id="sp-word">Gallery</div><div class="sp-cloud" id="sp-cloud"></div></div></div>
         <div class="sp-intro" id="sp-intro">
-          <p>GALLERY 03 · SPECIAL ROOM</p>
-          <h2>우리의 프로젝트</h2>
+          <p>GALLERY 03 · 우리의 프로젝트</p>
           <button type="button" id="sp-start">스크롤을 내려 보세요 ↓</button>
         </div>
         <div class="sp-stage" id="sp-stage">
@@ -255,7 +254,7 @@
           </div>
           <p class="sp-hint">계속 스크롤하면 다음 작품이 옆에서 들어와요</p>
         </div>
-        <div class="sp-steps" id="sp-steps" role="group" aria-label="스페셜룸 장면 이동">
+        <div class="sp-steps" id="sp-steps" role="group" aria-label="갤러리 장면 이동">
           <button type="button" aria-label="구 모양으로 보기" aria-current="true"></button>
           <button type="button" aria-label="도넛 모양으로 보기" aria-current="false"></button>
           <button type="button" aria-label="액자로 보기" aria-current="false"></button>

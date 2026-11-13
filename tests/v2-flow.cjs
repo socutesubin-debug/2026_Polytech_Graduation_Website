@@ -29,7 +29,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  // 2) 로비: 입구 3개(버튼)와 학생 수, 3D 아치가 켜짐, 전체 학생 바로가기
  await p.waitForSelector('#lobby3d[data-ready="1"]',{timeout:60000});
  assert.equal(await p.locator('#lobby3d.is3d canvas').count(),1);
- assert.deepEqual(await p.locator('.lb-door b').allTextContents(),['UX/UI의 방','비주얼의 방','스페셜룸']);
+ assert.deepEqual(await p.locator('.lb-door b').allTextContents(),['UX/UI의 방','비주얼의 방','갤러리']);
  assert.equal(await p.locator('#lb-count-0').textContent(),'7명의 석고상');assert.equal(await p.locator('#lb-count-1').textContent(),'4명의 석고상');
  // 키보드로 가운데 방 고르기 → Visual 전시관으로 날아 들어감
  await p.locator('.lb-door[data-door="1"]').focus();await p.keyboard.press('Enter');
