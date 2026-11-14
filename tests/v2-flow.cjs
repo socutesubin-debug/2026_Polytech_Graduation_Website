@@ -61,7 +61,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.waitForFunction(()=>Math.abs(pj.k-3)<0.02,null,{timeout:6000});
  // 맨 앞 카드를 누르면 그 작품 상세, Enter 키도 같음
  const who3=await nameOf(3);
- await p.locator('.pj-card').nth(3).click({force:true});await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
+ await p.waitForFunction(()=>Math.abs(pj.k-3)<0.002&&Math.abs(pj.mx-pj.tmx)<0.002,null,{timeout:6000}); await p.locator('.pj-card').nth(3).click({force:true});await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
  await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
  await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
  await p.keyboard.press('Escape');await p.waitForTimeout(400);

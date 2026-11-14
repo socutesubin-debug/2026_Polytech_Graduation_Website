@@ -20,12 +20,24 @@ const PROJECT = {
   spin: 7,                        // 공일 때 저절로 도는 속도 (도/초)
   float: 1,                       // 카드가 따로따로 둥둥 움직이는 정도 (0 = 안 움직임)
   mouseTilt: 14, mouseSpin: 0.22, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 휙 도는 힘
+  // 도넛 보기 방식: 2 = 가까이에서 크게 (카드가 화면 가장자리까지 둘러쌈), 1 = 멀리서 작은 도넛 (예전)
+  // 주소 끝에 ?v=1 을 붙이면 (예: index.html?v=1#project) 예전 버전으로 비교해 볼 수 있음
+  version: 2,
+  near: {                         // 버전 2 숫자 (화면 너비 W에 대한 비율)
+    radius: 0.62, radiusMobile: 1.2,  // 도넛 반지름
+    card: 0.19, cardMobile: 0.4,      // 도넛일 때 카드 너비
+    camera: 0.6,                      // 도넛 안쪽으로 다가가는 정도 (클수록 가까움)
+    perspective: 1000,                // 원근 (작을수록 가까운 카드가 더 크게 휘어 보임)
+    tilt: -12, roll: -5,              // 위에서 내려다보는 각도, 비스듬히 기울인 각도
+    lift: 0.14,                       // 도넛을 위로 올리는 정도 (화면 높이 비율)
+  },
 };
 const pj = {
-  root: $('#project'), track: $('#pj-track'), hero: $('#pj-hero'), space: $('#pj-space'), cloud: $('#pj-cloud'),
+  root: $('#project'), track: $('#pj-track'), hero: $('#pj-hero'), scene: $('#pj-hero .pj-scene'), space: $('#pj-space'), cloud: $('#pj-cloud'),
   live: $('#pj-live'), grid: $('#pj-grid'), view: $('#pj-detail'),
   cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, field: 'all', at: -1, back: null,
   u: 0, k: 0, ringBase: 0, front: -1, snapT: 0,
+  ver: /[?&]v=1\b/.test(location.search) ? 1 : PROJECT.version,
 };
 const pjSmooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const pjLerp = (a, b, t) => a + (b - a) * t;
@@ -127,14 +139,21 @@ function renderProject(t) {
   if (a < 0.01) pj.ringBase = 360 * Math.round(pj.angle / 360);                // 도넛으로 바뀌기 시작할 때의 기준 각도
   const step = 360 / n, mt = C.mouseTilt * (1 - 0.7 * a);
   const spinY = pjLerp(pj.angle, pj.ringBase - pj.k * step, a) + pj.mx * mt;   // 도넛: k번째 작품이 맨 앞(0도)
-  const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4), Rr = W < 760 ? W * 0.4 : Math.min(W * 0.36, H * 0.46);
-  const R = pjLerp(Rs, Rr, a);
-  const tilt = pjLerp(-6, -13, a) - pj.my * mt * 0.7;
-  const cy = 0;                                                                // 도넛은 화면 한가운데
-  pj.space.style.transform = `translate3d(0,${cy.toFixed(1)}px,${(-R * 0.35).toFixed(1)}px)`;
-  pj.cloud.style.transform = `rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
-  const cw = W < 760 ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), rad = Math.PI / 180, ts = t / 1000, wob = live ? C.float * (1 - 0.85 * a) : 0;
+  const V2 = pj.ver === 2, N = C.near, mob = W < 760;
+  const cw = mob ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), rad = Math.PI / 180, ts = t / 1000, wob = live ? C.float * (1 - 0.85 * a) : 0;
   if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px'); }
+  // 도넛일 때의 모양: 버전 1 = 멀리서 작은 도넛, 버전 2 = 가까이에서 크게
+  const ring = V2
+    ? { R: W * (mob ? N.radiusMobile : N.radius), z: -(mob ? 0.55 : N.camera), tilt: N.tilt, roll: N.roll, persp: mob ? 760 : N.perspective,
+        y: -H * (mob ? 0.04 : N.lift), sc: (W * (mob ? N.cardMobile : N.card)) / cw, fs: 1.05, fo: 0.06, dimBack: 0.35, dimSide: 0.08 }
+    : { R: mob ? W * 0.4 : Math.min(W * 0.36, H * 0.46), y: 0, z: -0.35, tilt: -13, roll: 0, persp: 1400, sc: 0.9, fs: C.focusScale, fo: C.focusOut, dimBack: 0.55, dimSide: 0.25 };
+  const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4);
+  const R = pjLerp(Rs, ring.R, a);
+  const tilt = pjLerp(-6, ring.tilt, a) - pj.my * mt * 0.7;
+  const persp = pjLerp(1400, ring.persp, a);
+  if (Math.abs(persp - (pj.persp || 0)) > 0.5) { pj.persp = persp; pj.scene.style.perspective = persp.toFixed(0) + 'px'; }
+  pj.space.style.transform = `translate3d(0,${(ring.y * a).toFixed(1)}px,${(R * pjLerp(-0.35, ring.z, a)).toFixed(1)}px)`;
+  pj.cloud.style.transform = `rotateZ(${(ring.roll * a).toFixed(2)}deg) rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
   for (const c of pj.cards) {
     const th = pjLerp(c.th, c.tr, a) + Math.sin(ts * c.f1 + c.p1) * 6 * wob;
     const ph = pjLerp(c.ph, 0, a) + Math.cos(ts * c.f2 + c.p2) * 5 * wob;
@@ -142,9 +161,9 @@ function renderProject(t) {
     const ang = ((th + spinY) % 360 + 540) % 360 - 180;                       // 맨 앞에서 얼마나 돌아가 있는지 (-180~180도)
     const near = Math.max(0, 1 - Math.abs(ang) / step) * a;                    // 맨 앞 작품일수록 1
     const face = Math.cos(ang * rad) < 0 ? 180 : 0;                            // 뒤쪽 카드는 뒤집어서 글자가 거꾸로 보이지 않게
-    const sc = pjLerp(c.sz, 0.9, a) * (1 + (C.focusScale - 1) * near);
-    c.el.style.transform = `rotateY(${th.toFixed(2)}deg) rotateX(${ph.toFixed(2)}deg) translateZ(${(r + R * C.focusOut * near).toFixed(1)}px) rotateY(${face}deg) rotateZ(${sway.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
-    const op = 1 - a * 0.55 * (1 - Math.cos(ang * rad)) / 2 - a * 0.25 * (1 - near); // 도넛 뒤쪽 카드는 흐리게
+    const sc = pjLerp(c.sz, ring.sc, a) * (1 + (ring.fs - 1) * near);
+    c.el.style.transform = `rotateY(${th.toFixed(2)}deg) rotateX(${ph.toFixed(2)}deg) translateZ(${(r + R * ring.fo * near).toFixed(1)}px) rotateY(${face}deg) rotateZ(${sway.toFixed(2)}deg) scale(${sc.toFixed(3)})`;
+    const op = 1 - a * ring.dimBack * (1 - Math.cos(ang * rad)) / 2 - a * ring.dimSide * (1 - near); // 도넛 뒤쪽 카드는 흐리게
     if (Math.abs(op - (c.op ?? 1)) > 0.01) { c.op = op; c.el.style.opacity = op.toFixed(2); }
   }
   // 맨 앞 작품 (화면에는 글자 없이, 화면 읽기 프로그램에만 알림)
