@@ -65,11 +65,11 @@ float fbm(vec2 p){ float a = .5, s = 0.; for(int i=0;i<4;i++){ s += a*vnoise(p);
 const WING_COMMON = `
 const vec2 ROOT_F = vec2(0., .10);
 const vec2 ROOT_H = vec2(0., -.02);
-float lobeR(float th, float dir, float mL, float mT, float pw, float R){
-  float d = th - dir;
-  float c = cos(clamp(d*(d>0. ? mL : mT), -1.5707, 1.5707));
-  return R*pow(max(c, 1e-4), pw);
-}
+uniform float uRF[64]; uniform float uRH[64];
+const vec2 RNG_F = vec2(-.70, 1.10);   /* 앞날개 각도 범위(rad) */
+const vec2 RNG_H = vec2(-1.62, .50);   /* 뒷날개 각도 범위(rad) */
+float foreR(float th){ float u = clamp((th - RNG_F.x)/(RNG_F.y - RNG_F.x), 0., 1.)*63.; int i = int(min(floor(u), 62.)); return mix(uRF[i], uRF[i+1], u - float(i)); }
+float hindR(float th){ float u = clamp((th - RNG_H.x)/(RNG_H.y - RNG_H.x), 0., 1.)*63.; int i = int(min(floor(u), 62.)); return mix(uRH[i], uRH[i+1], u - float(i)); }
 float flapAngle(float ph){ return mix(-.38, 1.22, .5-.5*cos(ph)); }
 `;
 const WING_VS = `#version 300 es
@@ -122,12 +122,12 @@ void main(){
   vec2 qf = vP - ROOT_F, qh = vP - ROOT_H;
   float thf = atan(qf.y, qf.x), thh = atan(qh.y, qh.x);
   float rf = length(qf), rh = length(qh);
-  float Rf = lobeR(thf, .58, 2.3, .9, .75, 1.15);
-  float Rh = lobeR(thh, -.87, 1.35, 1.4, .5, .80)*(1. + .035*cos(thh*24.)*smoothstep(-.3, -.9, thh));
+  float Rf = foreR(thf);
+  float Rh = hindR(thh)*(1. + .03*cos(thh*30.)*smoothstep(-.35, -.6, thh)*smoothstep(-1.3, -1.05, thh));
   float tf = rf/Rf, th_ = rh/Rh;
   vec3 c = vec3(0.);
-  if (tf < 1.18) c += shade(qf, tf, thf, rf, 3.6, 0.);
-  if (th_ < 1.18) c += shade(qh + 3.7, th_, thh, rh, 3.2, 1.)*(tf < 1. ? .55 : 1.);
+  if (tf < 1.18) c += shade(qf, tf, thf, rf, 7.5, 0.);
+  if (th_ < 1.18) c += shade(qh + 3.7, th_, thh, rh, 4.2, 1.)*(tf < 1. ? .55 : 1.);
   c *= smoothstep(0., .03, vP.x);
   o = vec4(c, 1.);
 }`;
@@ -283,15 +283,28 @@ const butterflies = OPT.trio ? [
   { tint: 'white', pos: [1.15, -.5, .2],   scale: .7,  view: 'sideR', seed: 8.4, off: 3.1 },
 ] : [{ tint: OPT.tint, pos: [0, 0, 0], scale: 1, view: OPT.view, seed: 1.3, off: 0 }];
 
-function lobeR(th, dir, mL, mT, pw, R) {
-  const d = th - dir, c = Math.cos(Math.max(-1.5707, Math.min(1.5707, d*(d > 0 ? mL : mT))));
-  return R*Math.pow(Math.max(c, 1e-4), pw);
+/* 날개 윤곽: 레퍼런스에서 딴 (각도°, 반지름) 점들을 64칸 표로 만든다 */
+const RNG_F = [-.70, 1.10], RNG_H = [-1.62, .50];
+const FORE_PTS = [[-40,.02],[-30,.08],[-22,.19],[-16,.39],[-11,.62],[-1.8,.76],[7.4,.83],[17,.98],[26,1.12],[33,1.13],[36.4,.91],[39,.68],[42,.50],[45,.38],[50,.22],[58,.05],[63,.02]];
+const HIND_PTS = [[-93,.02],[-86,.08],[-80,.18],[-74,.38],[-69,.60],[-63,.72],[-52,.76],[-41,.75],[-27,.75],[-16,.72],[-5,.62],[10,.35],[20,.12],[28,.02]];
+function makeTable(pts, rng) {
+  const t = new Float32Array(64);
+  for (let i = 0; i < 64; i++) {
+    const deg = (rng[0] + (rng[1] - rng[0])*i/63)*180/Math.PI;
+    let r = .02;
+    for (let k = 0; k < pts.length - 1; k++) if (deg >= pts[k][0] && deg <= pts[k+1][0]) { const f = (deg - pts[k][0])/(pts[k+1][0] - pts[k][0]); r = pts[k][1] + (pts[k+1][1] - pts[k][1])*f; }
+    t[i] = r;
+  }
+  for (let pass = 0; pass < 2; pass++) { const c = t.slice(); for (let i = 1; i < 63; i++) t[i] = .25*c[i-1] + .5*c[i] + .25*c[i+1]; }
+  return t;
 }
+const TAB_F = makeTable(FORE_PTS, RNG_F), TAB_H = makeTable(HIND_PTS, RNG_H);
+function tabR(tab, rng, th) { const u = Math.max(0, Math.min(1, (th - rng[0])/(rng[1] - rng[0])))*63, i = Math.min(Math.floor(u), 62); return tab[i] + (tab[i+1] - tab[i])*(u - i); }
 const flapAngle = ph => -.38 + 1.6*(.5 - .5*Math.cos(ph));
 function edgePoint() { /* 날개 가장자리의 임의 지점 (날개 좌표) */
   const k = .86 + Math.random()*.2;
-  if (Math.random() < .55) { const th = .58 + (Math.random() + Math.random() - 1)*.75, r = lobeR(th, .58, 2.3, .9, .75, 1.15)*k; return [r*Math.cos(th), .10 + r*Math.sin(th)]; }
-  const th = -1.0 + (Math.random() + Math.random() - 1)*.75, r = lobeR(th, -.87, 1.35, 1.4, .5, .80)*k; return [r*Math.cos(th), -.02 + r*Math.sin(th)];
+  if (Math.random() < .55) { const th = .42 + (Math.random() + Math.random() - 1)*.5, r = tabR(TAB_F, RNG_F, th)*k; return [r*Math.cos(th), .10 + r*Math.sin(th)]; }
+  const th = -.8 + (Math.random() + Math.random() - 1)*.6, r = tabR(TAB_H, RNG_H, th)*k; return [r*Math.cos(th), -.02 + r*Math.sin(th)];
 }
 function wingLocal(x, y, side, phase) {
   const a = flapAngle(phase - .55*(.3 - y) - .55*x);
@@ -300,7 +313,7 @@ function wingLocal(x, y, side, phase) {
 function modelOf(b, t) {
   const tt = t + b.off*3;
   let yaw, pitch = -.62, roll = .06*Math.sin(tt*.9);
-  if (b.view === 'front') yaw = .12*Math.sin(tt*.5);
+  if (b.view === 'front') { yaw = .12*Math.sin(tt*.5); pitch = -.3; }
   else if (b.view === 'side' || b.view === 'sideR') yaw = 1.05 + .12*Math.sin(tt*.5);
   else if (b.view === 'sideL') yaw = -1.05 + .12*Math.sin(tt*.5);
   else yaw = .95*Math.sin(tt*.33);
@@ -390,6 +403,7 @@ function draw() {
     gl.useProgram(pWing.p); gl.bindVertexArray(wingVAO);
     gl.uniformMatrix4fv(pWing.u.uMVP, false, MVP);
     gl.uniform1f(pWing.u.uPhase, b.phase); gl.uniform1f(pWing.u.uTime, simT);
+    gl.uniform1fv(pWing.u['uRF[0]'], TAB_F); gl.uniform1fv(pWing.u['uRH[0]'], TAB_H);
     gl.uniform3fv(pWing.u.uWarm, T.warm); gl.uniform3fv(pWing.u.uCool, T.cool);
     for (const side of [-1, 1]) {
       gl.uniform1f(pWing.u.uSide, side); gl.uniform1f(pWing.u.uSeed, b.seed + (side > 0 ? 0 : 17.3));
@@ -402,7 +416,7 @@ function draw() {
     const sl = Math.hypot(...sx) || 1, al = Math.hypot(...ax);
     sx = sx.map(v => v/sl*al);
     const quad = [[-.6, -.85], [.6, -.85], [.6, .9], [-.6, -.85], [.6, .9], [-.6, .9]];
-    quad.forEach(([u, v], i) => { for (let a = 0; a < 3; a++) bodyData[i*5+a] = o[a] + sx[a]*u + ax[a]*v; bodyData[i*5+3] = u; bodyData[i*5+4] = v; });
+    quad.forEach(([u, v], i) => { for (let a = 0; a < 3; a++) bodyData[i*5+a] = o[a] + (sx[a]*u + ax[a]*v)*.72 + ax[a]*.03; bodyData[i*5+3] = u; bodyData[i*5+4] = v; });
     gl.useProgram(pBody.p); gl.bindVertexArray(bodyVAO);
     gl.bindBuffer(gl.ARRAY_BUFFER, bodyBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, bodyData);
     gl.uniformMatrix4fv(pBody.u.uVP, false, VP);
