@@ -57,9 +57,9 @@ void main(){
 const WING_FS = `#version 300 es
 precision highp float;
 in vec2 vP; out vec4 o;
-uniform float uTime, uSeed; uniform vec3 uWarm, uCool;
+uniform float uTime, uSeed, uDense; uniform vec3 uWarm, uCool;
 ${NOISE}${WING_COMMON}
-vec3 shade(vec2 q, float t, float th, float r, float veinN, float hind){
+vec4 shade(vec2 q, float t, float th, float r, float veinN, float hind){
   /* 번져 사라지는 가장자리 */
   float patchy = fbm(q*5.5 + uSeed + vec2(0., uTime*.07));
   float region = smoothstep(.38, .62, fbm(q*1.7 + uSeed*2.));    /* 흩어지는 구역 */
@@ -98,9 +98,9 @@ vec3 shade(vec2 q, float t, float th, float r, float veinN, float hind){
   float rimMod = .25 + .75*smoothstep(.3, .65, fbm(vec2(th*5., uSeed*3.)));
   float rim = .3*smoothstep(.8, 1., t) + .9*smoothstep(.955, .992, t)*rimMod;
   float sheen = .3*smoothstep(.5, 1., sin(th*2.5 + r*4. - uTime*.8 + cloud*4.));
-  float I = body*(mem + goldFill + .42*veins + rim + sheen*mem) + dust*1.3;
+  float I = body*(mem + uDense*(.42 + .2*cloud) + goldFill + .42*veins + rim + sheen*mem) + dust*1.3;
   float warm = clamp(.02 + .98*smoothstep(.45, 1., t) + .5*(cloud - .5) - .8*exp(-r*3.) - .5*spots - .3*hl, 0., 1.);
-  return mix(uCool, uWarm, warm)*I;
+  return vec4(mix(uCool, uWarm, warm)*I, body);
 }
 void main(){
   vec2 qf = vP - ROOT_F, qh = vP - ROOT_H;
@@ -109,11 +109,11 @@ void main(){
   float Rf = foreR(thf);
   float Rh = hindR(thh)*(1. + .03*cos(thh*30.)*smoothstep(-.35, -.6, thh)*smoothstep(-1.3, -1.05, thh));
   float tf = rf/Rf, th_ = rh/Rh;
-  vec3 c = vec3(0.);
+  vec4 c = vec4(0.);
   if (tf < 1.32) c += shade(qf, tf, thf, rf, 7.5, 0.);
   if (th_ < 1.32) c += shade(qh + 3.7, th_, thh, rh, 4.2, 1.)*(tf < 1. ? .55 : 1.);
   c *= smoothstep(0., .03, vP.x);
-  o = vec4(c, 1.);
+  o = vec4(c.rgb, min(c.a, 1.));   /* 알파 = 날개 막이 덮은 정도 */
 }`;
 const BODY_VS = `#version 300 es
 precision highp float;
@@ -142,7 +142,7 @@ void main(){
   float dl = min(curve(ap, vec2(.03, .05), vec2(.16, .02), vec2(.2, -.14)), curve(ap, vec2(.03, -.02), vec2(.14, -.1), vec2(.15, -.26)));
   float legs = .45*smoothstep(.006, .0, dl);
   vec3 c = mix(uCool, vec3(1.), .7)*(core*1.2 + glow) + mix(uCool, uWarm, .5)*(ant*.8 + legs);
-  o = vec4(c, 1.);
+  o = vec4(c, core);
 }`;
 const PT_VS = `#version 300 es
 precision highp float;
@@ -162,7 +162,7 @@ in float vA; in float vW; out vec4 o; uniform vec3 uWarm, uCool;
 void main(){
   vec2 d = gl_PointCoord - .5; float r = length(d)*2.;
   float a = smoothstep(1., .0, r); a *= a;
-  o = vec4(mix(uCool, uWarm, vW)*a*vA*1.4, 1.);
+  o = vec4(mix(uCool, uWarm, vW)*a*vA*1.4, 0.);
 }`;
 const FS_VS = `#version 300 es
 precision highp float;
@@ -179,15 +179,18 @@ void main(){
 }`;
 const COMP_FS = `#version 300 es
 precision highp float;
-in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque;
+in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque, uDense;
 void main(){
-  vec3 c = texture(uScene, vUv).rgb + texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.65;
+  vec4 sc = texture(uScene, vUv);
+  vec3 c = sc.rgb + (texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.65)*(1. - .6*uDense*(1. - uOpaque));
   c = 1. - exp(-c*1.15);
   float m = max(c.r, max(c.g, c.b));
-  /* 밝은 배경 위: 중간 밝기는 호박빛 유리처럼 진하게, 밝은 곳은 흰 빛 그대로 */
+  /* 밝은 배경 위(투명 모드): 중간 밝기는 호박빛 유리처럼, 밝은 곳은 흰 빛 그대로 */
   vec3 onLight = c*mix(vec3(1., .84, .56), vec3(1.), smoothstep(.4, .85, m));
-  float a = mix(clamp(m*1.2, 0., 1.), 1., uOpaque);
-  o = vec4(mix(onLight, c, uOpaque), a);
+  /* uDense = 1 이면 날개가 덮은 곳만 배경을 가리고, 빛 번짐과 가루는 빛으로만 더해진다 (어두운 테두리 없음) */
+  float aGlass = clamp(m*1.2, 0., 1.), aSolid = clamp(sc.a, 0., 1.)*.82;
+  float a = mix(mix(aGlass, aSolid, uDense), 1., uOpaque);
+  o = vec4(mix(onLight, c, max(uOpaque, uDense)), a);
 }`;
 
 function prog(vs, fs) {
@@ -361,7 +364,7 @@ function stepParticles(dt, t) {
     pVel[i*3] += fx*.16*dt; pVel[i*3+1] += (fy*.16 - .03)*dt; pVel[i*3+2] += fz*.16*dt;
     const dr = Math.exp(-.4*dt);
     pVel[i*3] *= dr; pVel[i*3+1] *= dr; pVel[i*3+2] *= dr;
-    pPos[i*3] = x + pVel[i*3]*dt; pPos[i*3+1] = y + pVel[i*3+1]*dt; pPos[i*3+2] = z + pVel[i*3+2]*dt;
+    pPos[i*3] = x + (pVel[i*3] + api.wind[0])*dt; pPos[i*3+1] = y + (pVel[i*3+1] + api.wind[1])*dt; pPos[i*3+2] = z + (pVel[i*3+2] + api.wind[2])*dt;
     pInfo[i*3] = Math.min(pLife[i], 1);
   }
 }
@@ -404,14 +407,14 @@ function draw() {
   const asp = W/H;
   const VP = M.mul(M.persp(cam.fov, asp, .1, 50), M.trans(0, 0, -cam.z));
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbScene.fb); gl.viewport(0, 0, W, H);
-  gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
   gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
 
   for (const b of butterflies) {
     const T = TINTS[b.tint] || TINTS.gold, MVP = M.mul(VP, b.m);
     gl.useProgram(pWing.p); gl.bindVertexArray(wingVAO);
     gl.uniformMatrix4fv(pWing.u.uMVP, false, MVP);
-    gl.uniform1f(pWing.u.uPhase, b.phase); gl.uniform1f(pWing.u.uTime, simT);
+    gl.uniform1f(pWing.u.uPhase, b.phase); gl.uniform1f(pWing.u.uDense, api.dense); gl.uniform1f(pWing.u.uTime, simT);
     gl.uniform1fv(pWing.u['uRF[0]'], TAB_F); gl.uniform1fv(pWing.u['uRH[0]'], TAB_H);
     gl.uniform3fv(pWing.u.uWarm, T.warm); gl.uniform3fv(pWing.u.uCool, T.cool);
     for (const side of [-1, 1]) {
@@ -449,10 +452,12 @@ function draw() {
   blur(fbB2, fbA2, 2.6/fbA2.w, 0);    blur(fbA2, fbB2, 0, 2.6/fbB2.h);
   fsPass(pComp, null, () => {
     bindTex(0, fbScene.tex, pComp.u.uScene); bindTex(1, fbB1.tex, pComp.u.uB1); bindTex(2, fbB2.tex, pComp.u.uB2);
-    gl.uniform1f(pComp.u.uOpaque, OPT.sky ? 0 : 1);
+    gl.uniform1f(pComp.u.uOpaque, OPT.sky ? 0 : 1); gl.uniform1f(pComp.u.uDense, api.dense);
   });
 }
 const api = {
+  dense: OPT.dense || 0,   /* 0 = 투명한 유리, 1 = 불투명에 가까운 날개 */
+  wind: [0, 0, 0],          /* 가루 전체를 밀어내는 바람 */
   butterflies, simulate, draw, resize,
   /* 화면 픽셀 좌표를 나비가 있는 평면(z=0)의 좌표로 바꾼다 */
   toWorld(px, py) { const hh = cam.z*Math.tan(cam.fov/2), cw = canvas.clientWidth || innerWidth, ch = canvas.clientHeight || innerHeight;

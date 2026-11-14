@@ -5,39 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Beyond the Frame · 인트로 시험</title>
 <style>
-  :root { --wall: #d2c9c2; --ink: #5f4a30; }
+  :root { --ink: #5f4a30; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: #fff; }
   body { height: 700vh; font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
   #stage { position: fixed; inset: 0; overflow: hidden; background: #cfe0f0; }
   .layer { position: absolute; inset: 0; }
   #s1 { background: url("assets/images/intro/s1-sky.jpg") center / cover no-repeat; }
-  /* scene 2: sky + ground behind, and the poster wall as one flat plane we can turn */
-  #s2 { opacity: 0; background: linear-gradient(to bottom, #a9c6e3 0%, #e4edf5 60%, #d9d2c7 60%, #c9c1b6 100%); }
-  #cam { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 50%; }
-  #wall { position: absolute; left: -400vw; top: -100vh; width: 650vw; height: 300vh; background: var(--wall);
-          transform-origin: 450vw 150vh; }
-  #wall .img { position: absolute; left: 400vw; top: 100vh; width: 100vw; height: 100vh;
-          background: url("assets/images/intro/s2-poster-wall.jpg") center / cover no-repeat;
-          -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
-          -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
-          mask-composite: intersect; }
+  /* scene 3: a tunnel of tilted frames leading to a bright doorway */
+  #s3 { opacity: 0; background: radial-gradient(circle at 50% 52%, #fff 0, #fbf8f2 30%, #efe9df 100%); perspective: 900px; perspective-origin: 50% 52%; overflow: hidden; }
+  #tun { position: absolute; left: 50%; top: 52%; width: 0; height: 0; transform-style: preserve-3d; }
+  .fr { position: absolute; will-change: transform; backface-visibility: hidden; }
+  #door { position: absolute; background: #fff; box-shadow: 0 0 120px 80px #fff; }
   /* butterfly */
   #fx { position: absolute; inset: 0; pointer-events: none; }
   #gl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  #bf .persp { display: none; }  /* 임시 벡터 나비는 WebGL 나비로 교체됨 */
-  #bf { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
-  #bf .persp { position: absolute; left: 0; top: 0; perspective: 700px; transform-style: preserve-3d; }
-  #bf .rot { position: absolute; left: 0; top: 0; transform-style: preserve-3d; will-change: transform; }
-  .wing { position: absolute; top: -78px; width: 96px; height: 140px; will-change: transform; }
-  .wing svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .wing.l { left: -96px; transform-origin: 100% 55%; }
-  .wing.r { left: 0; transform-origin: 0% 55%; }
-  .body { position: absolute; left: -3px; top: -34px; width: 6px; height: 62px; border-radius: 4px; background: #4a3a26; }
-  .glow { position: absolute; left: -46px; top: -46px; width: 92px; height: 92px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,255,255,.95) 0, rgba(255,246,225,.6) 28%, rgba(255,240,210,0) 70%); }
-  .dot { position: absolute; border-radius: 50%; background: #9a7a4c; pointer-events: none; }
-  .ring { position: absolute; border: 1px solid rgba(150,118,70,.75); pointer-events: none; }
+  .ring { position: absolute; border: 1px solid rgba(150,118,70,.6); pointer-events: none; }
   #white { background: #fff; opacity: 0; }
   #title { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; color: var(--ink); text-align: center; letter-spacing: .32em; }
   #title b { display: block; font-weight: 300; font-size: clamp(22px, 4.2vw, 56px); }
@@ -50,150 +33,135 @@
 <body>
 <div id="stage">
   <div id="s1" class="layer"></div>
-  <div id="s2" class="layer"><div id="cam"><div id="wall"><div class="img"></div></div></div></div>
+  <div id="s3" class="layer"><div id="tun"><div id="door"></div></div></div>
   <div id="fx" class="layer"></div>
   <canvas id="gl"></canvas>
-  <div id="bf"><div class="glow"></div><div class="persp"><div class="rot">
-    <div class="wing l"><svg viewBox="0 0 96 140"><use href="#wingShape"/></svg></div>
-    <div class="wing r"><svg viewBox="0 0 96 140" style="transform:scaleX(-1)"><use href="#wingShape"/></svg></div>
-    <div class="body"></div>
-  </div></div></div>
   <div id="white" class="layer"></div>
   <div id="title"><div><b>BEYOND THE FRAME</b><span>프레임 너머, 우리를 만나다</span></div></div>
   <div id="hint">SCROLL<i></i></div>
 </div>
 
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <linearGradient id="wg" x1="1" y1="0.4" x2="0" y2="0.6">
-      <stop offset="0" stop-color="#f6e7c8"/><stop offset=".35" stop-color="#b98f55"/><stop offset=".8" stop-color="#6b4f2c"/><stop offset="1" stop-color="#4a3620"/>
-    </linearGradient>
-    <pattern id="ht" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.25" fill="#fff"/></pattern>
-    <radialGradient id="edge" cx="1" cy=".55" r="1.05"><stop offset=".55" stop-color="#fff"/><stop offset=".8" stop-color="#777"/><stop offset="1" stop-color="#000"/></radialGradient>
-    <mask id="solid"><rect width="96" height="140" fill="url(#edge)"/></mask>
-    <radialGradient id="edge2" cx="1" cy=".55" r="1.05"><stop offset=".5" stop-color="#000"/><stop offset=".75" stop-color="#fff"/><stop offset="1" stop-color="#fff"/></radialGradient>
-    <mask id="dots"><rect width="96" height="140" fill="url(#edge2)"/><rect width="96" height="140" fill="url(#ht)" style="mix-blend-mode:multiply"/></mask>
-    <g id="wingShape">
-      <!-- fore wing + hind wing, hinge on the right edge -->
-      <path id="wp" d="M96 74 C84 40 62 8 30 2 C12 -1 2 10 6 28 C10 48 40 66 96 78 Z M96 80 C60 78 30 82 20 100 C12 116 26 136 44 132 C66 127 86 104 96 84 Z"/>
-      <use href="#wp" fill="url(#wg)" mask="url(#solid)"/>
-      <g mask="url(#dots)"><use href="#wp" fill="#8a6a3e"/></g>
-      <path d="M96 76 C70 52 44 26 18 14 M96 76 C64 60 36 44 10 30 M96 82 C70 92 46 104 28 122" stroke="#f3e2c0" stroke-opacity=".55" stroke-width=".8" fill="none"/>
-    </g>
-  </defs>
-</svg>
-
 <script src="js/butterfly-gl.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var s1 = $('s1'), s2 = $('s2'), wall = $('wall'), bf = $('bf'), rot = bf.querySelector('.rot'),
-      wl = bf.querySelector('.wing.l'), wr = bf.querySelector('.wing.r'), glow = bf.querySelector('.glow'),
+  var s1 = $('s1'), s3 = $('s3'), tun = $('tun'), door = $('door'), glc = $('gl'),
       white = $('white'), title = $('title'), hint = $('hint'), fx = $('fx');
-  var GL = window.createButterflyGL ? createButterflyGL($('gl'), { sky: true }) : null, glB = GL && GL.butterflies[0], lastX = null;
+  // knobs
+  var CFG = {
+    size: .105,        // butterfly size (share of the shorter screen side)
+    dense: 1,          // 0 = see-through glass wings, 1 = nearly solid
+    dust: .08,         // how much gold dust (1 = a lot)
+    frames: 9, gap: 520, first: 330   // tunnel: number of frames, distance between them, distance to the first
+  };
+  var GL = window.createButterflyGL ? createButterflyGL(glc, { sky: true, dense: CFG.dense }) : null, glB = GL && GL.butterflies[0], lastX = null;
   var W = innerWidth, H = innerHeight;
-  addEventListener('resize', function () { W = innerWidth; H = innerHeight; });
 
   function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   function seg(p, a, b) { return clamp((p - a) / (b - a)); }
   function ease(u) { return u * u * (3 - 2 * u); }
   function lerp(a, b, u) { return a + (b - a) * u; }
+  function hex(a, b, u) { return 'rgb(' + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], u)); }).join(',') + ')'; }
+
+  // ---- tunnel: each frame is a big wall with a rectangular opening, plus a darker copy just behind it for thickness ----
+  var frames = [], TILT = [0, -7, 9, -12, 6, -9, 13, -6, 8, -11, 7, -5];
+  for (var i = 0; i < CFG.frames; i++) for (var j = 0; j < 2; j++) {
+    var d = document.createElement('div'); d.className = 'fr'; tun.appendChild(d);
+    frames.push({ el: d, i: i, back: j === 1, z: CFG.first + i * CFG.gap + (j ? 70 : 0), tilt: TILT[i % TILT.length],
+                  ox: i ? ((i * 37) % 9 - 4) * .012 : 0, oy: i ? ((i * 53) % 7 - 3) * .012 : 0 });
+  }
+  var endZ = CFG.first + CFG.frames * CFG.gap;
+  function layout() {
+    W = innerWidth; H = innerHeight;
+    var u = Math.min(W, H), S = Math.max(W, H) * 5, ow = .58 * u, oh = .84 * u;
+    frames.forEach(function (f) {
+      var k = f.back ? .93 : 1, w = ow * k, h = oh * k, x0 = S / 2 - w / 2, x1 = S / 2 + w / 2, y0 = S / 2 - h / 2, y1 = S / 2 + h / 2;
+      var e = f.el.style; e.width = e.height = S + 'px'; e.left = e.top = -S / 2 + 'px';
+      e.clipPath = 'polygon(evenodd, 0 0, ' + S + 'px 0, ' + S + 'px ' + S + 'px, 0 ' + S + 'px, 0 0, ' + x0 + 'px ' + y0 + 'px, ' + x1 + 'px ' + y0 + 'px, ' + x1 + 'px ' + y1 + 'px, ' + x0 + 'px ' + y1 + 'px, ' + x0 + 'px ' + y0 + 'px)';
+      var far = f.i / (CFG.frames - 1), shade = f.i % 2 ? 1 : 0;
+      var lite = Math.pow(far, .8), top, bot;      // further in = closer to the light = brighter
+      if (f.back) { top = hex([176, 166, 152], [226, 220, 210], lite); bot = hex([158, 149, 136], [214, 207, 196], lite); }
+      else { top = hex([lerp(236, 216, shade), lerp(231, 209, shade), lerp(223, 198, shade)], [251, 249, 244], lite);
+             bot = hex([lerp(214, 196, shade), lerp(207, 188, shade), lerp(197, 176, shade)], [240, 236, 228], lite); }
+      e.background = f.back ? bot : top;   // flat colours only: huge gradient layers break on some GPUs
+      f.px = f.ox * u; f.py = f.oy * u;
+    });
+    door.style.width = ow * .8 + 'px'; door.style.height = oh * .8 + 'px'; door.style.left = -ow * .4 + 'px'; door.style.top = -oh * .4 + 'px';
+  }
+  addEventListener('resize', layout); layout();
 
   var target = 0, p = 0;
   function readScroll() { var m = document.documentElement.scrollHeight - innerHeight; target = m > 0 ? clamp(scrollY / m) : 0; }
   addEventListener('scroll', readScroll, { passive: true }); readScroll();
-  // ?p=0.6 freezes the scene at one point (for checking)
-  var fixed = new URLSearchParams(location.search).get('p');
+  var Q = new URLSearchParams(location.search);
+  var fixed = Q.get('p');                      // ?p=0.6 freezes the scene at one point (for checking)
 
-  var last = performance.now(), lastDot = 0, lastRing = 0, prevFlap = 0, t0 = last;
-  function spawnDot(x, y, sc) {
-    var d = document.createElement('i'); d.className = 'dot';
-    var r = (1.5 + Math.random() * 3) * sc; d.style.width = d.style.height = r + 'px';
-    d.style.left = x + (Math.random() - .5) * 90 * sc + 'px'; d.style.top = y + (Math.random() - .5) * 70 * sc + 'px';
-    fx.appendChild(d);
-    var dx = (Math.random() - .5) * 60, dy = 20 + Math.random() * 50;
-    d.animate([{ transform: 'translate(0,0)', opacity: .8 }, { transform: 'translate(' + dx + 'px,' + dy + 'px)', opacity: 0 }], { duration: 900 + Math.random() * 600, easing: 'ease-out' }).onfinish = function () { d.remove(); };
-  }
+  var last = performance.now(), lastRing = 0, t0 = last, RAD = Math.PI / 180;
   function spawnRing(x, y, sc) {
     var d = document.createElement('i'); d.className = 'ring';
-    var w = 70 * sc, h = 96 * sc; d.style.width = w + 'px'; d.style.height = h + 'px'; d.style.left = x - w / 2 + 'px'; d.style.top = y - h / 2 + 'px';
+    var w = 60 * sc, h = 82 * sc; d.style.width = w + 'px'; d.style.height = h + 'px'; d.style.left = x - w / 2 + 'px'; d.style.top = y - h / 2 + 'px';
     fx.appendChild(d);
-    d.animate([{ transform: 'scale(.7) rotate(-4deg)', opacity: .0 }, { opacity: .7, offset: .25 }, { transform: 'scale(2.1) rotate(5deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out' }).onfinish = function () { d.remove(); };
+    d.animate([{ transform: 'scale(.7) rotate(-4deg)', opacity: 0 }, { opacity: .6, offset: .25 }, { transform: 'scale(2.1) rotate(5deg)', opacity: 0 }], { duration: 1500, easing: 'ease-out' }).onfinish = function () { d.remove(); };
   }
 
   function frame(now) {
-    var dt = Math.min(.05, (now - last) / 1000); last = now;
+    var dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
     var t = (now - t0) / 1000;
     if (fixed !== null) { p = +fixed; } else { p += (target - p) * Math.min(1, dt * 6); }
-    var u = Math.min(W, H);
-    var sc = u / 900;                          // butterfly size
+    var u = Math.min(W, H), sc = u / 900;
 
-    // ---- scene timing (p = scroll progress 0..1) ----
-    var kFly = ease(seg(p, .10, .26));         // S1: leave to the right
-    var kCut = seg(p, .26, .30);               // cut S1 -> S2
-    var kIn  = ease(seg(p, .30, .46));         // S2: enter from the left, reach the poster
-    var kOrb = ease(seg(p, .46, .64));         // camera orbits to the side
-    var kDive = seg(p, .68, .76); kDive = kDive * kDive;   // butterfly darts in, camera follows
-    var kThru = ease(seg(p, .68, .90));        // camera keeps going to the right, through the wall
-    var kWhite = ease(seg(p, .735, .83));
-    var kTitle = ease(seg(p, .90, .98));
+    // ---- timing (p = scroll progress 0..1) ----
+    var kSide = ease(seg(p, .06, .15));        // S1: turn from the front view to a side view
+    var kFly = ease(seg(p, .10, .30));         // S1: fly off to the right, seen from the side
+    var kCut = seg(p, .30, .34);               // cut S1 -> S3
+    var kIn  = ease(seg(p, .34, .50));         // S3: enter from the left (side view) to the middle of the doorway
+    var kAway = ease(seg(p, .43, .53));        // turn away from us, towards the tunnel
+    var kGo = seg(p, .52, .90);                // fly through the tunnel, camera right behind
+    var kWhite = ease(seg(p, .80, .90));
+    var kTitle = ease(seg(p, .92, .99));
 
-    s2.style.opacity = kCut;
+    s3.style.opacity = kCut;
     s1.style.visibility = kCut >= 1 ? 'hidden' : 'visible';
 
-    // wall plane: turn it and slide it, as if the camera walked round to the right and then through
-    var theta = 80 * kOrb;                                    // degrees
-    var wallX = lerp(0, .2 * W, kOrb) - 1.0 * W * kThru;   // px offset of the poster on screen
-    wall.style.transform = 'translateX(' + wallX + 'px) rotateY(' + (-theta) + 'deg)';
-
-    // butterfly position
-    var bob = Math.sin(t * 2.1) * 10 * sc + Math.sin(t * 3.7) * 5 * sc, sway = Math.sin(t * 1.3) * 12 * sc;
-    var x, y, heading, tiltX, turnY = 0, scale = 1;
-    if (p < .28) {                       // scene 1
-      x = lerp(.5 * W, 1.2 * W, kFly) + sway * (1 - kFly);
-      y = .44 * H - Math.sin(kFly * Math.PI) * .10 * H + bob;
-      heading = lerp(-12, 78, ease(seg(p, .08, .16))); tiltX = 52;
-    } else {                             // scene 2
-      var dist = .2 * W * (1 - kDive);                       // how far in front of the wall
-      var posterX = .5 * W + wallX;
-      var frontX = posterX - dist * Math.sin(theta * Math.PI / 180);
-      x = lerp(-.2 * W, frontX, kIn) + sway * (1 - kOrb) * .6;
-      y = lerp(.36 * H, .5 * H, kIn) + bob * (1 - kDive);
-      heading = lerp(80, 0, ease(seg(p, .38, .47)));        // turn to face the wall
-      tiltX = lerp(52, 62, kIn); turnY = -theta;
-      scale = lerp(1, .82, kIn) * (1 - .8 * kDive);
+    // tunnel camera
+    var cam = Math.pow(kGo, 2.1) * (endZ + 200);
+    for (var i = 0; i < frames.length; i++) {
+      var f = frames[i], z = cam - f.z;       // 0 = at the screen plane, 900 = at the eye
+      if (z > 780) { f.el.style.display = 'none'; continue; }
+      f.el.style.display = '';
+      f.el.style.transform = 'translate3d(' + f.px + 'px,' + f.py + 'px,' + z + 'px) rotateZ(' + f.tilt + 'deg)';
     }
-    var gone = p > .28 ? seg(p, .755, .775) : 0;
-    bf.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + (sc * scale) + ')';
-    bf.style.opacity = (p > .262 && p < .30) ? 0 : 1 - gone;
-    if (GL) {   // WebGL butterfly follows the same path
+    door.style.transform = 'translateZ(' + (cam - endZ - 300) + 'px)';
+
+    // ---- butterfly path ----
+    var bob = Math.sin(t * 2.1) * 9 * sc + Math.sin(t * 3.7) * 4 * sc, sway = Math.sin(t * 1.3) * 12 * sc;
+    var x, y, pitch, roll, yaw, scale = 1;
+    if (p < .32) {                       // scene 1
+      x = lerp(.5 * W, 1.18 * W, kFly) + sway * (1 - kFly);
+      y = .44 * H - Math.sin(kFly * Math.PI) * .07 * H + bob;
+      pitch = lerp(-36, -74, kSide); roll = lerp(6 * Math.sin(t * .9), -90, kSide);   // roll -90 = head to the right
+      yaw = lerp(10 * Math.sin(t * .5), 0, kSide);
+    } else {                             // scene 3
+      x = lerp(-.14 * W, .5 * W, kIn) + sway * .5 * (1 - kGo);
+      y = lerp(.46 * H, .55 * H, kIn) + bob;
+      pitch = lerp(-74, -70, kAway); roll = lerp(-90, 0, kAway) + 7 * Math.sin(t * 1.7) * kAway; yaw = 5 * Math.sin(t * 1.1) * kAway;
+      scale = lerp(1, .8, kAway) * (1 - .55 * ease(seg(p, .74, .88)));
+    }
+    var hidden = (p > .305 && p < .34) || p > .9;
+    var alpha = hidden ? 0 : 1 - seg(p, .84, .9);
+    if (GL) {
       var wpos = GL.toWorld(x, y), k = GL.unitsPerPx();
       if (lastX !== null && Math.abs(x - lastX) > .5 * W) GL.clearDust();   // scene cut: drop the old dust
       lastX = x;
-      glB.pose = { x: wpos[0], y: wpos[1], z: 0, scale: .21 * u * scale * k,
-                   yaw: turnY * Math.PI / 180, pitch: -tiltX * .75 * Math.PI / 180, roll: -heading * Math.PI / 180 };
-      $('gl').style.opacity = bf.style.opacity;
+      glB.pose = { x: wpos[0], y: wpos[1], z: 0, scale: CFG.size * u * scale * k, yaw: yaw * RAD, pitch: pitch * RAD, roll: roll * RAD };
+      glB.hzMul = 1 + .9 * Math.max(Math.sin(kFly * Math.PI), Math.sin(kIn * Math.PI), kGo > 0 ? .8 : 0);
+      glB.dust = alpha > .5 ? CFG.dust : 0;
+      GL.wind[2] = 5 * Math.pow(kGo, 1.4);          // dust rushes past us while we fly through
+      glc.style.opacity = alpha;
+      GL.simulate(dt); GL.draw();
     }
-    rot.style.transform = 'rotateY(' + turnY + 'deg) rotateX(' + tiltX + 'deg) rotateZ(' + heading + 'deg)';
-
-    // wing flap: quick down, slower up; faster while travelling
-    var speed = 1 + 1.2 * Math.max(Math.sin(kFly * Math.PI), Math.sin(kIn * Math.PI), kDive);
-    var ph = (t * 4.2 * speed) % 1;
-    var flap = ph < .38 ? ease(ph / .38) : 1 - ease((ph - .38) / .62);   // 0 = up, 1 = down
-    var ang = lerp(72, -18, flap) * (1 - .5 * kDive) + 20 * kDive;
-    wl.style.transform = 'rotateY(' + ang + 'deg)';
-    wr.style.transform = 'rotateY(' + (-ang) + 'deg)';
-    glow.style.transform = 'scale(' + (1 + .25 * flap + 5 * kDive) + ')';
-    glow.style.opacity = GL ? kDive : .75 + .25 * flap;
-    if (GL) { glB.hzMul = speed; glB.dust = bf.style.opacity > .5 ? 1 : 0; GL.simulate(dt); GL.draw(); }
-
-    // graphic effects tied to the wing beat
-    var visible = bf.style.opacity > .5 && x > -40 && x < W + 40;
-    if (visible && flap > .5 && prevFlap <= .5) {
-      if (!GL) for (var i = 0; i < 3; i++) spawnDot(x, y, sc * scale);
-      if (now - lastRing > 1300) { spawnRing(x, y, sc * scale); lastRing = now; }
-    }
-    prevFlap = flap;
+    // a thin frame outline ripples out now and then while it hovers
+    if (alpha > .5 && p < .08 && now - lastRing > 2600) { spawnRing(x, y, sc); lastRing = now; }
 
     white.style.opacity = kWhite;
     title.style.opacity = kTitle;
@@ -201,7 +169,7 @@
     if (!manual) requestAnimationFrame(frame);
   }
   // ?rec=1: frames are stepped by hand (for recording): __tick(p) advances 1/30 s
-  var manual = new URLSearchParams(location.search).get('rec') === '1', clock = performance.now();
+  var manual = Q.get('rec') === '1', clock = performance.now();
   if (manual) window.__tick = function (v) { fixed = v; clock += 1000 / 30; frame(clock); };
   else requestAnimationFrame(frame);
 })();
