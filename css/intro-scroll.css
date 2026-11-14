@@ -1,0 +1,42 @@
+/* 스크롤 인트로 (js/intro-scroll.js): 하늘의 나비 → 포스터 벽 → 나비가 포스터 속으로(표면이 물처럼 일렁임) → 하얗게
+   --iw / --ih = 무대 너비·높이의 1/100 (js가 넣어 줌) */
+.is-stage { --iw: 1vw; --ih: 1vh; font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+.is-stage * { box-sizing: border-box; }
+.is-stage { position: absolute; inset: 0; overflow: hidden; background: #cfe0f0; }
+.is-stage .layer { position: absolute; inset: 0; }
+.is-s1 { background: url("../assets/images/intro/s1-sky.jpg") center / cover no-repeat; }
+/* scene 2: sky + ground behind, and the poster wall as one flat plane we can turn */
+.is-s2 { opacity: 0; background: linear-gradient(to bottom, #a9c6e3 0%, #e4edf5 60%, #d9d2c7 60%, #c9c1b6 100%); }
+.is-cam { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 50%; }
+.is-wall { position: absolute; left: calc(var(--iw) * -400); top: calc(var(--ih) * -100); width: calc(var(--iw) * 650); height: calc(var(--ih) * 300); background: #d2c9c2; transform-origin: calc(var(--iw) * 450) calc(var(--ih) * 150); transform-style: preserve-3d; }
+.is-wall .img, .is-wall .tile { position: absolute; left: calc(var(--iw) * 400); top: calc(var(--ih) * 100); width: calc(var(--iw) * 100); height: calc(var(--ih) * 100);
+        background: url("../assets/images/intro/s2-poster-wall.jpg") center / cover no-repeat; }
+/* the same photo mirrored outwards, so the stone and the leaf shadows carry on past the edge of the screen (only the strips next to the seam, which have no poster in them) */
+.is-wall .tile.l { left: calc(var(--iw) * 300); transform: scaleX(-1); clip-path: inset(0 64% 0 0); }
+.is-wall .tile.r { left: calc(var(--iw) * 500); transform: scaleX(-1); clip-path: inset(0 0 0 64%); }
+.is-wall .tile.t { top: 0; transform: scaleY(-1); clip-path: inset(0 0 85% 0); }
+.is-wall .tile.b { top: calc(var(--ih) * 200); transform: scaleY(-1); clip-path: inset(85% 0 0 0); }
+/* the poster again as its own layer, a little in front of the wall: real depth when the camera moves */
+.is-poster { position: absolute; overflow: hidden; background: url("../assets/images/intro/s2-poster-wall.jpg") no-repeat; transform: translateZ(26px);
+        box-shadow: 0 1.4vmin 3.2vmin rgba(70,50,28,.38), 0 .3vmin .8vmin rgba(70,50,28,.3); }
+/* effects on the poster's own surface (they turn with the wall): inner glow + soft ripples where the butterfly goes in */
+.is-water { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; }
+.is-pfx, .is-rfx { position: absolute; width: 0; height: 0; }
+.is-pfx { transform: translateZ(28px); }
+.is-pfx i, .is-rfx i { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0; will-change: transform, opacity; }
+.is-pfx .pglow { left: -19vmin; top: -19vmin; width: 38vmin; height: 38vmin; background: radial-gradient(circle, rgba(255,255,255,1) 0, rgba(255,244,214,.85) 22%, rgba(255,226,170,.35) 48%, rgba(255,226,170,0) 70%); }
+/* a ripple = a wide soft band of light with a faint shadow behind it, like a wave on glass; clipped to the poster */
+.is-rfx .rip { left: -20vmin; top: -20vmin; width: 40vmin; height: 40vmin; mix-blend-mode: soft-light;
+        background: radial-gradient(circle, rgba(255,255,255,0) 40%, rgba(120,84,40,.22) 50%, rgba(255,255,255,.95) 60%, rgba(255,246,222,.5) 67%, rgba(255,255,255,0) 76%); }
+/* light that bursts out at the spot where it enters (screen space) */
+.is-flash { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; opacity: 0; }
+.is-flash i { position: absolute; left: -22vmin; top: -22vmin; width: 44vmin; height: 44vmin; border-radius: 50%;
+        background: radial-gradient(circle, #fff 0, rgba(255,250,235,.95) 12%, rgba(255,232,180,.5) 34%, rgba(255,232,180,0) 68%); }
+/* butterfly */
+.is-fx { position: absolute; inset: 0; pointer-events: none; }
+.is-gl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.is-stage .ring { position: absolute; border: 1px solid rgba(150,118,70,.6); pointer-events: none; }
+.is-white { background: #fff; opacity: 0; }
+.is-hint { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; color: #fff; font-size: 12px; letter-spacing: .4em; text-shadow: 0 1px 6px rgba(60,90,130,.5); }
+.is-hint i { display: block; width: 1px; height: 34px; margin: 10px auto 0; background: #fff; animation: isDrop 1.6s ease-in-out infinite; transform-origin: top; }
+@keyframes isDrop { 0% { transform: scaleY(0); } 60% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }

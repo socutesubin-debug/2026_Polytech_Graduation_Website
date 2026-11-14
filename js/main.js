@@ -12,8 +12,7 @@ addEventListener('keydown', (e) => {
     if (screens.intro === introFrame) shatter();
     else intro.classList.contains('home') ? enterPoster() : tear();
   } else if (page === 'opening' && detail < 0) {
-    if (e.key === 'Escape') opSkip();
-    else if ((e.key === 'Enter' || e.key === ' ') && e.target === document.body && op.copy.classList.contains('on')) { e.preventDefault(); opEnter(); }
+    if (e.key === 'Escape' || ((e.key === 'Enter') && e.target === document.body)) { e.preventDefault(); opSkip(); }
   } else if (detail >= 0) {
     if (e.key === 'Escape') closeDetail();
     if (e.key === 'ArrowLeft') stepDetail(-1);

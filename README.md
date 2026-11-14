@@ -9,7 +9,7 @@ CSS와 JavaScript는 **화면(방)별로 파일을 나눠** 두었습니다.
 메뉴는 **Intro · About · Project · Designer** 네 개예요. 다른 학교 졸업전시처럼 "작품 보기"와 "사람 보기" 두 갈래로 단순하게 바꿨어요.
 
 ```
-Intro (나비 → 포스터 → 빛나는 입구) → [Project] 또는 [Designer]
+Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속으로, 표면이 물처럼 일렁임 → 하얗게) → About
    About: 왼쪽 포스터 + 오른쪽 전시 소개 글과 전시 개요
    Project 방: 글자 없이 작품 썸네일만 랜덤 순서로 떠다님(공: 들어오면 가운데에서 퍼져 나오고, 카드는 늘 화면을 똑바로 보고, 끌면 부드럽게 돌고 손을 떼면 미끄러지듯 더 돎) → 스크롤하면 부드럽게 도넛으로 바뀜, 도넛은 계속 돌고 카드는 도넛을 따라 휘어진 종이처럼 보임(카드를 누르면 작품 상세: 검은 화면, 왼쪽 글 · 오른쪽 그림 14장) → 만든 사람 이름 → Designer 방
    Designer: 어두운 전시실(가운데 화살표 팻말에서 왼쪽 = UX/UI · 웹, 오른쪽 = Visual. 벽 가득 비치는 색 빛(그라데이션)이 다르고 팻말 뒤에서 흐릿하게 섞임. data.js에서 designer: false면 빠짐) + 입체 받침대 앞면에 붙은 금속 설명판(이름·분야·한 줄 소개·"포트폴리오 보기", 누르면 포트폴리오 새 탭)
@@ -17,7 +17,7 @@ Intro (나비 → 포스터 → 빛나는 입구) → [Project] 또는 [Designer
 
 | 화면 | 주소 끝 | HTML (`index.html` 주석) | CSS | JavaScript | 숫자 고치는 곳 |
 |---|---|---|---|---|---|
-| Intro (오프닝) | (없음) | `⑧ V2 오프닝` | `css/opening.css` | `js/opening.js` | 맨 위 `OPENING` |
+| Intro (스크롤 인트로) | (없음) | `⑧ Intro` | `css/opening.css`, `css/intro-scroll.css` | `js/opening.js`, `js/intro-scroll.js`, `js/butterfly-gl.js` | `js/intro-scroll.js` 맨 위 `CFG` (나비 크기, 카메라, 물결 세기) · 인트로만 보기: `intro-proto.html` |
 | About | `#about` | `⑫ About` | `css/about.css` | `js/about.js` | `js/data.js` 맨 아래 `ABOUT` (글, 개요 — 빈칸은 "확정 전") |
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer 방 | `#designer` | `⑪ Designer 방` | `css/designer.css` | `js/designer.js` | 맨 위 `DESIGNER` (휠 빠르기) |
@@ -30,7 +30,6 @@ Intro (나비 → 포스터 → 빛나는 입구) → [Project] 또는 [Designer
 - 소개글: `desc` 칸. 표찰에 세 줄까지 나와요. 표찰은 한국어만 써요.
 - 포트폴리오 주소: `portfolio` 칸. 비어 있으면 표찰에 "포트폴리오 준비 중"이 나와요 (지금 김예일·송예준).
 - 분야 미정 1명(조민영, Designer에서 제외): `field`를 `'uxui'` 또는 `'visual'`로 적으면 분야 버튼에서 걸러져요.
-- 오프닝 영상: 힉스필드 영상을 `assets/video/intro.webm`(+ `.mp4`)로 넣고 `js/opening.js`의 `OPENING.video`에 파일 이름을 적으면 영상이 대신 나와요.
 
 **Designer 방의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명, 합계 0.4MB)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요.
 

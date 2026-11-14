@@ -16,17 +16,15 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  let p=await open();
  assert.equal(await state(p),'opening');assert.equal(await p.locator('#topbar.on').count(),0);
  await p.locator('#op-skip').waitFor({state:'visible'});
- await p.waitForFunction(()=>document.querySelector('#opening').dataset.shot==='3',null,{timeout:12000});
- await p.locator('#op-copy.on').waitFor({timeout:6000});
- assert.deepEqual(await p.locator('.op-enter').allTextContents(),['Project','Designer']);
- assert(await p.locator('#op-enter').evaluate(el=>document.activeElement===el),'Project 버튼에 초점');
- await p.locator('#op-enter-2').click();
- await p.waitForFunction(()=>page==='designer',null,{timeout:5000});
- assert.equal(new URL(p.url()).hash,'#designer');assert.equal(await p.locator('#topbar.on').count(),1);
+ // 스크롤 인트로: 끝까지 내리면 하얗게 밝아진 뒤 About으로 넘어감
+ assert.equal(await p.locator('#op-stage .is-gl').count(),1);
+ await p.locator('#opening').evaluate(el=>el.scrollTo(0,el.scrollHeight));
+ await p.waitForFunction(()=>page==='about',null,{timeout:8000});
+ assert.equal(new URL(p.url()).hash,'#about');assert.equal(await p.locator('#topbar.on').count(),1);
  assert.deepEqual(await p.locator('.pill button').allTextContents(),['Intro','About','Project','Designer']);
  // 메뉴 Intro → 오프닝 다시, 건너뛰기(Esc) → Project 방
  await p.locator('.pill [data-go="opening"]').click();assert.equal(await state(p),'opening');
- await p.keyboard.press('Escape');assert.equal(await state(p),'project');assert.equal(new URL(p.url()).hash,'#project');
+ await p.keyboard.press('Escape');assert.equal(await state(p),'about');assert.equal(new URL(p.url()).hash,'#about');
  console.log('intro ok');
 
  // 1-2) About: 왼쪽 포스터, 오른쪽 전시 소개 글과 개요. 정해지지 않은 칸은 "확정 전"
@@ -139,8 +137,8 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 4) 움직임 줄이기: Intro는 버튼이 바로 보이고, 카드는 떠다니지 않음
  p=await open({reducedMotion:'reduce'});
- assert.equal(await p.locator('#opening').getAttribute('data-shot'),'3');await p.locator('#op-copy.on').waitFor({timeout:2000});
- await p.locator('#op-enter').click();await p.waitForFunction(()=>page==='project',null,{timeout:3000});
+ await p.locator('#op-skip').click();await p.locator('.pill [data-go="project"]').click();
+ await p.waitForFunction(()=>page==='project',null,{timeout:3000});
  assert.equal(await p.locator('#project.still').count(),1);
  const s0=await p.locator('.pj-strip').first().evaluate(el=>el.style.transform);await p.waitForTimeout(300);
  assert.equal(await p.locator('.pj-strip').first().evaluate(el=>el.style.transform),s0,'움직임 줄이기: 카드가 멈춰 있음');
@@ -149,7 +147,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 5) 모바일: 메뉴 3개, Designer는 손가락으로 옆으로 넘김(한 명씩 딱 멈춤)
  p=await open({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
- await p.locator('#op-skip').tap();assert.equal(await state(p),'project');
+ await p.locator('#op-skip').tap();assert.equal(await state(p),'about');
  await p.locator('.pill [data-go="designer"]').tap();assert.equal(await state(p),'designer');
  assert.equal(await p.locator('.dg-row').evaluate(el=>getComputedStyle(el).scrollSnapType),'x mandatory');
  const w=await p.locator('.dg-item').first().evaluate(el=>el.getBoundingClientRect().width);assert(w>280&&w<320,`모바일 석고상 칸 너비 (${w})`);

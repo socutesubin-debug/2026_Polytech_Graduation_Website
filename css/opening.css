@@ -1,60 +1,8 @@
-/* V2 오프닝 (#opening) — 스토리보드 s1~s3: 나비 등장 → 포스터 → 빛나는 아치 입구 + [입장하기] */
-.opening{background:#fdfcf9}
-.op-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
-.op-art{position:absolute;inset:0;width:100%;height:100%;display:block}
-.op-shot{opacity:0;transition:opacity .9s ease}
-.op-shot.on{opacity:1}
-/* s1: 점선 길이 그려짐 */
-.op-shot[data-shot="1"] .op-path{clip-path:inset(0 100% 0 0);transition:clip-path 0s}
-.op-shot[data-shot="1"].on .op-path{clip-path:inset(0 0 0 0);transition:clip-path 3.2s linear}
-/* s2: 파란 길이 나비를 따라 그려짐 */
-.op-shot[data-shot="2"] .op-path{clip-path:inset(0 100% 0 0)}
-.op-shot[data-shot="2"].on .op-path{clip-path:inset(0 0 0 0);transition:clip-path 4s linear}
-/* s3: 입구의 빛이 숨 쉬듯 밝아졌다 어두워짐 */
-.op-halo{transform-origin:800px 560px;animation:opHalo 3.6s ease-in-out infinite}
-@keyframes opHalo{0%,100%{opacity:.65;transform:scale(.94)}50%{opacity:1;transform:scale(1.05)}}
-
-/* 나비: js/opening.js가 길 위 자리로 옮김 */
-.op-fly{position:absolute;left:0;top:0;width:92px;height:76px;z-index:3;pointer-events:none;will-change:transform;transition:opacity .7s,filter .7s}
-.op-fly svg{width:100%;height:100%;overflow:visible;display:block;transition:transform .9s cubic-bezier(.5,0,.3,1)}
-.op-fly path{fill:#2f6bff;stroke:#1b2a57;stroke-width:1.4;stroke-linejoin:round}
-.op-wing{transform-origin:0 0;animation:opFlap .26s ease-in-out infinite alternate}
-.op-wing.r{animation-name:opFlapR}
-@keyframes opFlap{from{transform:scaleX(1)}to{transform:scaleX(.28)}}
-@keyframes opFlapR{from{transform:scaleX(1)}to{transform:scaleX(.28)}}
-.op-fly.in{opacity:0;filter:blur(2px)}
-.op-fly.in svg{transform:scale(.12) translateY(-120px)}
-.opening.has-video .op-art,.opening.has-video .op-fly,.opening.has-video .op-note{display:none}
-
-/* 하얗게 밝아짐 */
-.op-white{position:absolute;inset:0;z-index:4;background:radial-gradient(circle at 50% 62%,#fff 0%,#fff 30%,rgba(255,255,255,.96) 100%);opacity:0;pointer-events:none;transition:opacity .85s ease-in}
-.op-white.on{opacity:1}
-
-/* 제목 + [입장하기] */
-.op-copy{position:absolute;z-index:5;left:0;right:0;bottom:clamp(40px,9vh,96px);display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 20px;text-align:center;
-  opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .7s,transform .8s cubic-bezier(.2,.7,.2,1),visibility 0s linear .7s}
-.op-copy.on{opacity:1;visibility:visible;transform:none;transition:opacity .7s,transform .8s cubic-bezier(.2,.7,.2,1),visibility 0s}
-.op-eyebrow{margin:0;font-size:11px;letter-spacing:.22em;color:#6b5d4b}
-.op-copy h1{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(22px,3vw,40px);letter-spacing:-.02em;color:#2a2622}
-.op-doors{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px}
-.op-enter{min-width:170px;height:54px;padding:0 34px;border-radius:99px;background:#2a2622;color:#fbf6ec;font-size:16px;font-weight:500;letter-spacing:.08em;
-  box-shadow:0 0 0 0 rgba(255,236,196,.9),0 12px 30px rgba(60,40,20,.22);animation:opPulse 2.4s ease-out infinite;transition:transform .25s,background .25s}
-.op-enter:hover{transform:translateY(-2px);background:#000}
-.op-enter+.op-enter{background:#fbf6ec;color:#2a2622;box-shadow:0 0 0 1px rgba(42,38,34,.5),0 12px 30px rgba(60,40,20,.14);animation:none}
-.op-enter+.op-enter:hover{background:#fff}
-@keyframes opPulse{0%{box-shadow:0 0 0 0 rgba(255,226,170,.85),0 12px 30px rgba(60,40,20,.22)}100%{box-shadow:0 0 0 22px rgba(255,226,170,0),0 12px 30px rgba(60,40,20,.22)}}
-
+/* Intro (#opening) — 스크롤 인트로를 담는 화면. 장면 자체의 모양은 css/intro-scroll.css */
+.opening{background:#fff;overflow-y:auto;overscroll-behavior:none;scrollbar-width:none}
+.opening::-webkit-scrollbar{display:none}
+.op-track{height:700%}                 /* 스크롤 길이: 화면 7개 분량. 길수록 천천히 진행 */
+.op-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
 .op-skip{position:absolute;z-index:6;right:clamp(16px,3vw,36px);top:calc(18px + env(safe-area-inset-top,0px));height:40px;padding:0 18px;border-radius:99px;
-  background:rgba(255,255,255,.72);border:1px solid rgba(46,38,29,.3);font-size:13px;color:#2a2622;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .op-skip:hover{background:#fff}
 .opening.seen .op-skip{background:#2a2622;border-color:#2a2622;color:#fbf6ec}
-.op-note{position:absolute;z-index:6;left:clamp(16px,3vw,36px);top:calc(28px + env(safe-area-inset-top,0px));margin:0;font-size:11px;letter-spacing:.06em;color:rgba(46,38,29,.5)}
-
-@media(max-width:760px){
-  .op-fly{width:64px;height:54px}
-  .op-note{display:none}
-  .op-eyebrow{font-size:10px;letter-spacing:.06em}
-}
-@media(prefers-reduced-motion:reduce){
-  .op-wing,.op-halo,.op-enter{animation:none!important}
-}

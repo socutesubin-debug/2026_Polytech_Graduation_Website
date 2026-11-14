@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/test-room.css">
   <link rel="stylesheet" href="css/hall.css">
   <link rel="stylesheet" href="css/opening.css">
+  <link rel="stylesheet" href="css/intro-scroll.css">
   <link rel="stylesheet" href="css/lobby3d.css">
   <link rel="stylesheet" href="css/about.css">
   <link rel="stylesheet" href="css/project.css">
@@ -162,58 +163,11 @@
   <section class="screen test-room hall" id="hall-uxui" aria-label="UX/UI · 웹 전시관" tabindex="-1"></section>
   <section class="screen test-room hall" id="hall-visual" aria-label="Visual 전시관" tabindex="-1"></section>
 
-  <!-- ⑧ V2 오프닝 — 스토리보드 s1~s3: 나비 등장 → 포스터 → 빛나는 입구 + [입장하기]  (css/opening.css, js/opening.js) — 주소 끝 #opening
-       지금은 코드로 그린 임시 그림. 영상 파일을 넣고 js/opening.js의 OPENING.video에 이름을 적으면 그 영상이 대신 나옴 -->
-  <section class="screen opening" id="opening" aria-label="오프닝">
-    <video class="op-video" id="op-video" muted playsinline preload="none" hidden></video>
-    <svg class="op-art" id="op-art" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <radialGradient id="op-glow" cx=".5" cy=".62" r=".6"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3e3c4"/></radialGradient>
-        <radialGradient id="op-halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="#fff3d6" stop-opacity=".5"/><stop offset="1" stop-color="#fff3d6" stop-opacity="0"/></radialGradient>
-        <linearGradient id="op-wall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e2ddd3"/><stop offset="1" stop-color="#cfc9bd"/></linearGradient>
-        <linearGradient id="op-stone" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f1e9da"/><stop offset="1" stop-color="#e2d6c1"/></linearGradient>
-        <pattern id="op-blocks" width="260" height="130" patternUnits="userSpaceOnUse"><path d="M0 .5H260M0 65.5H260M0 0V65M130 65V130" fill="none" stroke="#8a8172" stroke-opacity=".22"/></pattern>
-      </defs>
-      <!-- s1: 하얀 화면 + 점선 길 -->
-      <g class="op-shot" data-shot="1">
-        <rect width="1600" height="900" fill="#fdfcf9"/>
-        <path class="op-path" id="op-path-1" d="M-80 640 C 180 600 260 300 480 330 S 700 620 900 520 S 1180 200 1330 300 S 1500 520 1700 380" fill="none" stroke="#2a2622" stroke-width="2.5" stroke-dasharray="3 13" stroke-linecap="round"/>
-      </g>
-      <!-- s2: 미술관 돌벽 + 졸업전시 포스터 + 파란 비행 길 -->
-      <g class="op-shot" data-shot="2">
-        <rect width="1600" height="900" fill="url(#op-wall)"/><rect width="1600" height="900" fill="url(#op-blocks)"/>
-        <rect x="0" y="790" width="1600" height="110" fill="#b9b2a5"/><rect x="0" y="776" width="1600" height="16" fill="#d9d3c8"/>
-        <rect x="604" y="96" width="392" height="640" fill="#2a2622" opacity=".18" transform="translate(10 14)"/>
-        <rect x="604" y="96" width="392" height="640" fill="#f1e5d3"/>
-        <image id="op-poster" x="604" y="96" width="392" height="640" preserveAspectRatio="xMidYMid slice"/>
-        <path class="op-path" id="op-path-2" d="M-80 420 C 200 380 420 560 640 470 C 820 400 900 220 780 190 C 660 160 600 330 760 400 C 960 480 1200 300 1700 260" fill="none" stroke="#2f6bff" stroke-width="5" stroke-linecap="round" opacity=".9"/>
-      </g>
-      <!-- s3: 크림색 돌 아치 입구 + 빛 -->
-      <g class="op-shot" data-shot="3">
-        <rect width="1600" height="900" fill="url(#op-glow)"/>
-        <path fill-rule="evenodd" fill="url(#op-stone)" d="M0 0H1600V900H0Z M560 900V470A240 240 0 0 1 1040 470V900Z"/>
-        <path fill="url(#op-blocks)" fill-rule="evenodd" d="M0 0H1600V900H0Z M560 900V470A240 240 0 0 1 1040 470V900Z"/>
-        <path d="M520 900V470A280 280 0 0 1 1080 470V900" fill="none" stroke="#fbf5ea" stroke-width="26"/>
-        <path d="M506 900V470A294 294 0 0 1 1094 470V900" fill="none" stroke="#c9bca4" stroke-opacity=".5" stroke-width="2"/>
-        <rect x="430" y="842" width="740" height="58" fill="#e9decb"/><rect x="470" y="808" width="660" height="36" fill="#f0e7d6"/>
-        <ellipse class="op-halo" cx="800" cy="560" rx="420" ry="460" fill="url(#op-halo)"/>
-        <path class="op-path" id="op-path-3" d="M-80 300 C 260 240 420 660 800 560" fill="none" stroke="none"/>
-      </g>
-    </svg>
-    <div class="op-fly" id="op-fly" aria-hidden="true">
-      <svg viewBox="-60 -50 120 100"><g class="op-wing l"><path d="M-3 -4C-22 -44 -58 -40 -52 -10C-48 8 -22 6 -3 2Z"/><path d="M-3 3C-26 6 -42 22 -30 36C-18 46 -6 22 -3 8Z"/></g><g class="op-wing r"><path d="M3 -4C22 -44 58 -40 52 -10C48 8 22 6 3 2Z"/><path d="M3 3C26 6 42 22 30 36C18 46 6 22 3 8Z"/></g><ellipse cx="0" cy="2" rx="3.4" ry="15" fill="#2a2622"/></svg>
-    </div>
-    <div class="op-white" id="op-white" aria-hidden="true"></div>
-    <div class="op-copy" id="op-copy">
-      <p class="op-eyebrow">2026 한국폴리텍대학 정수캠퍼스 시각디자인과 졸업전시</p>
-      <h1>프레임을 넘어, 우리를 만나다</h1>
-      <div class="op-doors">
-        <button class="op-enter" id="op-enter" type="button" data-to="project">Project</button>
-        <button class="op-enter" id="op-enter-2" type="button" data-to="designer">Designer</button>
-      </div>
-    </div>
+  <!-- ⑧ Intro — 스크롤 인트로: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속으로(표면이 물처럼 일렁임) → 하얗게 → About
+       (css/opening.css · css/intro-scroll.css, js/opening.js · js/intro-scroll.js · js/butterfly-gl.js) — 인트로만 따로 보기: intro-proto.html -->
+  <section class="screen opening" id="opening" aria-label="인트로">
+    <div class="op-track"><div class="op-stage" id="op-stage" aria-hidden="true"></div></div>
     <button class="op-skip" id="op-skip" type="button">건너뛰기 →</button>
-    <p class="op-note" id="op-note">임시 오프닝 · 영상이 준비되면 바뀌어요</p>
   </section>
 
   <!-- ⑨ V2 로비 — 스토리보드 s5: 아치 3개 중 방 고르기  (css/lobby3d.css, js/lobby3d.js) — 주소 끝 #lobby3d
@@ -329,6 +283,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="js/test-room.js"></script>
 <script src="js/hall.js"></script>
+<script src="js/butterfly-gl.js"></script>
+<script src="js/intro-scroll.js"></script>
 <script src="js/opening.js"></script>
 <script src="js/lobby3d.js"></script>
 <script src="js/about.js"></script>

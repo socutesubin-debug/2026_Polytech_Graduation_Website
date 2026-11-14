@@ -26,7 +26,7 @@ function go(name) {
   if (name === 'project') enterProject();
   if (name === 'designer') enterDesigner();
   if (name !== 'project' && typeof pjClose === 'function') pjClose();
-  if (name !== 'opening') { op.playing = false; op.video.pause(); }
+  if (name !== 'opening') opStop();
   updateNav(); setHash();
 }
 function updateNav() {
