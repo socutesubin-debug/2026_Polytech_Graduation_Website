@@ -88,7 +88,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  console.log('project ok');
 
  // 3) Designer 방: 석고상 15개 가로 한 줄, 표찰 = 포트폴리오 새 탭, 주소 없으면 준비 중
- assert.equal(await p.locator('.dg-item').count(),15);
+ assert.equal(await p.locator('.dg-item').count(),14);
  const plate=p.locator('.dg-item[data-i="6"] .dg-plate');
  assert.equal(await plate.getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app');assert.equal(await plate.getAttribute('target'),'_blank');
  assert.equal(await p.locator('.dg-item[data-i="0"] a.dg-plate').count(),0);assert.match(await p.locator('.dg-item[data-i="0"] .dg-go').textContent(),/준비 중/);
@@ -100,13 +100,14 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert(await p.evaluate(()=>dg.row.scrollLeft)>x1,'→ 키로 다음 석고상');
  // 갈림길 복도: 가운데 갈림길, 왼쪽 UX/UI(7명), 오른쪽 Visual(4명) + 분야 확인 중. 방에 들어가면 분위기가 바뀜
  const order=await p.evaluate(()=>[...dg.row.children].map(li=>li.id==='dg-fork'?'fork':li.dataset.field||'sign'));
- assert.equal(order.indexOf('fork'),8,'갈림길 왼쪽에 UX/UI 표지 + 7명');assert(order.slice(1,8).every(f=>f==='uxui'));assert(order.slice(9,13).every(f=>f==='visual'));
+ assert.equal(order.indexOf('fork'),9,'갈림길 왼쪽에 UX/UI 표지 + 8명');assert(order.slice(1,9).every(f=>f==='uxui'));assert(order.slice(10,15).every(f=>f==='visual'));
+ assert.equal(await p.locator('.dg-item').count(),14,'조민영은 Designer에서 빠짐');assert.equal(await p.locator('.dg-item[data-i="9"]').count(),0);
  await p.locator('#dg-filter [data-side="visual"]').click();await p.waitForFunction(()=>dg.root.classList.contains('dark')&&+getComputedStyle($('#dg-amb-vi')).opacity>0.9,null,{timeout:4000});
- assert.match(await p.locator('#dg-count').textContent(),/Visual의 방 · 4명/);
+ assert.match(await p.locator('#dg-count').textContent(),/Visual · 5명/);
  await p.locator('#dg-filter [data-side="uxui"]').click();
  await p.waitForFunction(()=>+getComputedStyle($('#dg-amb-ux')).opacity>0.9&&!dg.root.classList.contains('dark'),null,{timeout:4000});
- assert.match(await p.locator('#dg-count').textContent(),/UX\/UI · 웹의 방 · 7명/);
- await p.locator('#dg-filter [data-side="fork"]').click();await p.waitForTimeout(900);assert.match(await p.locator('#dg-count').textContent(),/갈림길/);
+ assert.match(await p.locator('#dg-count').textContent(),/UX\/UI · 웹 · 8명/);
+ await p.locator('#dg-filter [data-side="fork"]').click();await p.waitForTimeout(900);assert.match(await p.locator('#dg-count').textContent(),/^14명의 디자이너$/);
  // [대표 작품 보기] → Project 방의 그 작품 상세
  await p.locator('.dg-item[data-i="1"] .dg-work').click();await p.locator('#pj-detail.on').waitFor();
  assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도');

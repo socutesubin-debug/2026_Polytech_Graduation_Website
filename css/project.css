@@ -35,7 +35,8 @@
 .pj-d-side{position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;padding:calc(56px + env(safe-area-inset-top,0px)) clamp(20px,2.2vw,36px) calc(28px + env(safe-area-inset-bottom,0px))}
 .pj-d-side h2{margin:0;font-family:var(--sans);font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1.4}
 .pj-d-who{align-self:flex-start;padding:0;font-size:18px;color:#fff;text-align:left;line-height:1.4}
-.pj-d-who:hover,.pj-d-who:focus-visible{text-decoration:underline;text-underline-offset:4px}
+.pj-d-who:disabled{cursor:default;opacity:1;color:#fff}
+.pj-d-who:not(:disabled):hover,.pj-d-who:not(:disabled):focus-visible{text-decoration:underline;text-underline-offset:4px}
 .pj-d-desc{margin:44px 0 0;font-size:16px;line-height:1.9;color:rgba(255,255,255,.92);word-break:keep-all;white-space:pre-line}
 .pj-d-mail{margin-top:auto;padding-top:24px;font-size:17px;color:#fff;text-decoration:none;word-break:break-all}
 .pj-d-mail:hover{text-decoration:underline;text-underline-offset:4px}

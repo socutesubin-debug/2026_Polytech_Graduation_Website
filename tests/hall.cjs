@@ -17,8 +17,9 @@ const MB=(n)=>(n/1048576).toFixed(1)+'MB';
   await p.waitForSelector(`#${id}[data-loaded="1"]`,{state:'attached',timeout:120000});
   const info=await p.evaluate(id=>{const H=HALLS[id];return {field:H.T.field,names:H.students.map(s=>s.name),fields:H.students.map(s=>s.field),stops:H.stops,near:H.nearStops,half:H.halfStops};},id);
   // 0) 분야가 맞는 학생만, 분야 미정 학생은 빠짐
+  const STUDENTS_UNSET=await p.evaluate(()=>STUDENTS.filter(s=>!s.field).map(s=>s.name));
   assert(info.fields.every(f=>f===info.field),'다른 분야 학생이 섞이면 안 됨');
-  for(const n of ['김준서','김우선','조민영','조예빈']) assert(!info.names.includes(n),'분야 미정 학생은 전시관에서 빠져야 함: '+n);
+  for(const n of STUDENTS_UNSET) assert(!info.names.includes(n),'분야 미정 학생은 전시관에서 빠져야 함: '+n);
   assert.equal(info.stops.length,2+info.names.length*2-1,'멈춤 지점: 처음·끝 + 석고상 앞 + 절반 보임');
   const setScroll=(u)=>p.evaluate(([id,u])=>{const H=HALLS[id];H.root.scrollTop=u*hallScrollMax(H);},[id,u]);
   const settle=async()=>{await p.waitForFunction(id=>Math.abs(HALLS[id].progress-HALLS[id].target)<2e-4,id,{timeout:20000});await p.waitForTimeout(300);};

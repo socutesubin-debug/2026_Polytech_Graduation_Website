@@ -1,12 +1,13 @@
 /* Designer 방 (#designer) — 갈림길 복도
-   - 들어오면 가운데 갈림길에 서 있음. 왼쪽으로 가면 UX/UI · 웹의 방, 오른쪽으로 가면 Visual의 방
+   - 들어오면 가운데 갈림길에 서 있음. 왼쪽으로 가면 UX/UI · 웹, 오른쪽으로 가면 Visual
    - 걸어갈수록 방 분위기가 서서히 바뀜: UX/UI = 밝은 벽 + 얇은 도면 격자, Visual = 어두운 벽 + 석고상마다 조명
-   - 분야가 아직 정해지지 않은 사람은 Visual의 방 끝 "분야 확인 중" 자리에 있음 (js/data.js의 field를 채우면 자기 방으로 감)
+   - 분야가 아직 정해지지 않은 사람은 Visual 쪽 끝 "분야 확인 중" 자리에 있음 (js/data.js의 field를 채우면 자기 쪽으로 감)
+   - js/data.js에서 designer: false 인 사람은 Designer에 나오지 않음
    - 마우스 휠(위아래)을 굴리면 옆으로 천천히 지나감. 휴대폰은 손가락으로 옆으로 넘김. ← → 키, 양옆 화살표 버튼도 됨
    - 석고상마다 미술관 같은 작품안내 표찰: 번호·분야, 이름, 한 줄 소개, 소개글(있으면)
      표찰을 누르면 그 사람의 포트폴리오 사이트가 새 탭으로 열림 (주소가 아직 없으면 "포트폴리오 준비 중")
      표찰 아래 [대표 작품 보기]를 누르면 Project 방의 그 작품 상세가 열림
-   - 위의 버튼으로 UX/UI 방 / 갈림길 / Visual 방으로 바로 갈 수 있음
+   - 위의 버튼으로 UX/UI · 웹 / 갈림길 / Visual 쪽으로 바로 갈 수 있음
    - 석고상 사진은 assets/images/busts/01~15.webp (3D 파일을 미리 찍어 둔 사진, 배경이 투명)
    숫자를 바꾸고 싶으면 아래 DESIGNER만 고치면 됩니다 */
 const DESIGNER = {
@@ -32,16 +33,16 @@ function dgBuild() {
     </li>`;
   };
   // 줄 세우기: [UX/UI 방 (갈림길에서 가까운 순서가 오른쪽)] [갈림길] [Visual 방] [분야 확인 중]
-  const all = STUDENTS.map((s, i) => [s, i]);
+  const all = STUDENTS.map((s, i) => [s, i]).filter(([s]) => s.designer !== false);
   const ux = all.filter(([s]) => s.field === 'uxui'), vi = all.filter(([s]) => s.field === 'visual'), un = all.filter(([s]) => s.field !== 'uxui' && s.field !== 'visual');
-  dg.row.innerHTML = `<li class="dg-sign dg-end" aria-hidden="true"><b>UX/UI · 웹의 방</b><span>${ux.length}명</span></li>`
+  dg.row.innerHTML = `<li class="dg-sign dg-end" aria-hidden="true"><b>UX/UI · 웹</b><span>${ux.length}명</span></li>`
     + ux.map(([s, i]) => item(s, i)).join('')
-    + `<li class="dg-fork" id="dg-fork"><p>어느 방으로 갈까요?</p>
-        <button type="button" data-side="uxui"><span>←</span><b>UX/UI · 웹의 방</b><small>${ux.length}명</small></button>
-        <button type="button" data-side="visual"><b>Visual의 방</b><small>${vi.length}명</small><span>→</span></button></li>`
+    + `<li class="dg-fork" id="dg-fork"><p>어느 쪽으로 갈까요?</p>
+        <button type="button" data-side="uxui"><span>←</span><b>UX/UI · 웹</b><small>${ux.length}명</small></button>
+        <button type="button" data-side="visual"><b>Visual</b><small>${vi.length}명</small><span>→</span></button></li>`
     + vi.map(([s, i]) => item(s, i)).join('')
     + (un.length ? `<li class="dg-sign" aria-hidden="true"><b>분야 확인 중</b><span>${un.length}명</span></li>` + un.map(([s, i]) => item(s, i)).join('') : '');
-  dg.counts = { uxui: ux.length, visual: vi.length };
+  dg.counts = { uxui: ux.length, visual: vi.length }; dg.total = all.length;
   dg.row.addEventListener('click', (e) => {
     const side = e.target.closest('[data-side]'); if (side) { dgGo(side.dataset.side); return; }
     const b = e.target.closest('.dg-work'); if (!b) return;
@@ -66,7 +67,7 @@ function dgProgress() {
   if (side !== dg.side || !$('#dg-count').textContent) {
     dg.side = side;
     $$('#dg-filter button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.side === side)));
-    $('#dg-count').textContent = side === 'uxui' ? `UX/UI · 웹의 방 · ${dg.counts.uxui}명` : side === 'visual' ? `Visual의 방 · ${dg.counts.visual}명` : `갈림길 · ${STUDENTS.length}명의 디자이너`;
+    $('#dg-count').textContent = side === 'uxui' ? `UX/UI · 웹 · ${dg.counts.uxui}명` : side === 'visual' ? `Visual · ${dg.counts.visual}명` : `${dg.total}명의 디자이너`;
   }
 }
 /* 방으로 바로 가기: UX/UI = 갈림길 바로 왼쪽 석고상, Visual = 바로 오른쪽 석고상 */

@@ -91,6 +91,7 @@ function pjOpen(i, from) {
   $('#pj-d-title').textContent = pjTitle(s);
   $('#pj-d-desc').textContent = (s.work && s.work.desc) || '작품 설명은 자료를 받으면 채워져요.';
   const who = $('#pj-d-who'); who.textContent = s.name; who.setAttribute('aria-label', `${s.name} 디자이너 보기`);
+  who.disabled = s.designer === false; // Designer에 없는 사람은 이름만 보여 줌
   const mail = $('#pj-d-mail'); mail.hidden = !s.email; mail.textContent = s.email || ''; if (s.email) mail.href = `mailto:${s.email}`; else mail.removeAttribute('href');
   $('#pj-d-images').innerHTML = Array.from({ length: count }, (_, k) => imgs
     ? `<figure class="pj-shot"><img src="${imgs[k]}" alt="${pjTitle(s)} 그림 ${k + 1}" loading="lazy" decoding="async"></figure>`
