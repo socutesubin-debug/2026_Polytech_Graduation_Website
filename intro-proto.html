@@ -19,6 +19,7 @@
 /* 인트로만 따로 보는 시험 페이지. 실제 사이트(index.html)도 같은 js/intro-scroll.js를 씁니다.  ?p=0.6 한 지점에서 멈춤 · ?rec=1 녹화용(__tick) */
 var Q = new URLSearchParams(location.search);
 var I = createIntroScroll(document.getElementById('stage'), { p: Q.has('p') ? +Q.get('p') : null, rec: Q.get('rec') === '1' });
+window.__pace = I.pace;
 if (Q.get('rec') === '1') window.__tick = I.tick; else I.start();
 </script>
 </body>
