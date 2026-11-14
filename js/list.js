@@ -1,91 +1,38 @@
-/* 작가 목록 LIST: 이름 검색, 학생 카드와 3D 썸네일 */
-let filter = -1;
+/* 학생 목록 LIST (스토리보드 s8): 이름 검색, 분야 선택, 석고상 사진 카드.
+   3D를 전혀 쓰지 않는 화면이라서, 3D가 안 켜지는 기기에서도 15명 모두 볼 수 있음 (3D 실패 시 대피소).
+   석고상 사진은 assets/images/busts/01~15.webp (3D 파일을 미리 찍어 둔 사진) */
+let fieldFilter = 'all'; // 'all' | 'uxui' | 'visual'
 
-const thumbObj = new Map();
-const T3 = { ready: null, obj: null };
-function initThumb3D() {
-  if (!T3.ready) T3.ready = three().then(({ THREE }) => {
-    const r = makeRenderer(THREE, 1.5), scene = new THREE.Scene();
-    addLights(THREE, scene);
-    Object.assign(T3, { THREE, r, scene, cam: new THREE.PerspectiveCamera(24, 1, .1, 50) });
-  });
-  return T3.ready;
+/* 카드 아래에 적는 전시관 이름: 분야가 정해진 학생만 전시관이 있음 */
+function galleryLabel(s) {
+  return s.field === 'uxui' ? 'GALLERY 01 · UX/UI' : s.field === 'visual' ? 'GALLERY 02 · Visual' : '분야 확인 중';
+}
+function bustThumb(s) {
+  const url = MODELS[s.name]; if (!url) return '';
+  return 'assets/images/busts/' + url.match(/(\d+)\.glb$/)[1] + '.webp';
 }
 function listRows() {
   const q = $('#search').value.trim();
-  return STUDENTS.filter((s) => (filter < 0 || s.room === filter) && (!q || s.name.includes(q)));
+  return STUDENTS.filter((s) => (fieldFilter === 'all' || s.field === fieldFilter) && (!q || s.name.includes(q)));
 }
-let thumbQueue = Promise.resolve();
-const thumbObserver = new IntersectionObserver((entries) => {
-  for (const entry of entries) {
-    if (!entry.isIntersecting) continue;
-    const el = entry.target;
-    thumbObserver.unobserve(el);
-    thumbQueue = thumbQueue.then(async () => {
-      if (!el.isConnected || page !== 'list') return;
-      await mountThumb(el, MODELS[el.dataset.model]);
-    }).catch((e) => report3D(e, 'model'));
-  }
-}, { root: $('#list'), rootMargin: '100px' });
-function drawThumb(canvas, url) {
-  const t = thumbObj.get(url); if (!t) return;
-  const keep = T3.obj; if (keep) T3.scene.remove(keep);
-  t.obj.rotation.y = t.angle; T3.scene.add(t.obj); T3.obj = t.obj;
-  const px = canvas.width;
-  T3.r.setSize(px / T3.r.getPixelRatio(), px / T3.r.getPixelRatio(), false); frameModel(px, px, T3); T3.r.render(T3.scene, T3.cam);
-  const x = canvas.getContext('2d'); x.clearRect(0, 0, px, px); x.drawImage(T3.r.domElement, 0, 0, px, px);
-  T3.scene.remove(t.obj); T3.obj = keep; if (keep) T3.scene.add(keep);
-}
-async function mountThumb(el, url) {
-  await initThumb3D();
-  const tpl = await loadModel(url);
-  if (!thumbObj.has(url)) thumbObj.set(url, { obj: tpl.clone(true), angle: 0 });
-  if (!el.isConnected) return;
-  const c = document.createElement('canvas'); c.width = c.height = Math.round(420 * Math.min(T3.r.getPixelRatio(), 2)); c.setAttribute('aria-hidden', 'true');
-  el.replaceChildren(c); el.classList.add('live'); drawThumb(c, url);
-}
-let spin = null;
-const grid = $('#grid');
-grid.addEventListener('pointerdown', (e) => {
-  const th = e.target.closest('.thumb.live'); if (!th || e.button > 0) return;
-  spin = { th, x: e.clientX, url: MODELS[th.dataset.model] }; th.dataset.spun = '';
-  try { th.setPointerCapture(e.pointerId); } catch (err) {  }
-});
-grid.addEventListener('pointermove', (e) => {
-  if (!spin) return;
-  const dx = e.clientX - spin.x; spin.x = e.clientX; if (!dx) return;
-  spin.th.dataset.spun = '1';
-  const t = thumbObj.get(spin.url); if (t) { t.angle += dx * .012; drawThumb(spin.th.firstElementChild, spin.url); }
-});
-grid.addEventListener('pointerup', () => { spin = null; });
-grid.addEventListener('pointercancel', () => { spin = null; });
 function renderList() {
-  thumbObserver.disconnect();
-  spin = null;
   const rows = listRows();
-  $('#grid').innerHTML = rows.map((s) => `
-    <button class="card" type="button" data-i="${s.no - 1}">
-      <span class="thumb" data-model="${MODELS[s.name] ? s.name : ''}">${bustSVG([-1, 1, 0][s.no % 3])}</span>
+  $('#grid').innerHTML = rows.map((s) => {
+    const img = bustThumb(s);
+    return `
+    <button class="card" type="button" data-i="${s.no - 1}" aria-label="${s.name} 학생 소개 보기">
+      <span class="thumb">${img ? `<img src="${img}" alt="" loading="lazy" decoding="async" width="480" height="560">` : bustSVG(0)}</span>
       <span class="meta"><b>${s.name}</b><em>${pad(s.no)}</em></span>
-      <span class="gal">GALLERY ${pad(s.room + 1)}</span>
+      <span class="gal">${galleryLabel(s)}</span>
       <span class="card-slogan">${s.slogan}</span>
-    </button>`).join('');
-  $('#total').textContent = `검색 결과 ${rows.length}명 / 전체 ${STUDENTS.length}명`;
+    </button>`;
+  }).join('');
+  $('#total').innerHTML = rows.length === STUDENTS.length
+    ? `총 인원 <b>${STUDENTS.length}</b>명`
+    : `<b>${rows.length}</b>명 보는 중 / 총 인원 ${STUDENTS.length}명`;
   $('#empty').hidden = rows.length > 0;
-  $$('#grid .card').forEach((b) => b.addEventListener('click', () => {
-    const th = $('.thumb', b);
-    if (th && th.dataset.spun) { th.dataset.spun = ''; return; }
-    const s = STUDENTS[+b.dataset.i];
-    openDetail(s.no - 1);
-  }));
-  $$('#grid .thumb[data-model]').forEach((el) => {
-    const name = el.dataset.model; if (!name) return;
-    thumbObserver.observe(el);
-  });
+  $$('#grid .card').forEach((b) => b.addEventListener('click', () => openDetail(+b.dataset.i)));
+  $$('#field-filter button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.field === fieldFilter)));
 }
 $('#search').addEventListener('input', renderList);
-
-$('#gallery-filter').addEventListener('change', (e) => {
-  filter = Number(e.target.value);
-  renderList();
-});
+$$('#field-filter button').forEach((b) => b.addEventListener('click', () => { fieldFilter = b.dataset.field; renderList(); }));
