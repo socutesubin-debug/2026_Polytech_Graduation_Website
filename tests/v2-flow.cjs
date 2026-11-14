@@ -98,8 +98,15 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.mouse.wheel(0,600);await p.waitForTimeout(300);const x1=await p.evaluate(()=>dg.row.scrollLeft);assert(x1>300,`휠로 옆으로 움직임 (${x1})`);
  await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await p.waitForTimeout(900);
  assert(await p.evaluate(()=>dg.row.scrollLeft)>x1,'→ 키로 다음 석고상');
- await p.locator('#dg-filter [data-field="visual"]').click();assert.equal(await p.locator('.dg-item:visible').count(),4);assert.equal(await p.locator('#dg-count').textContent(),'4명의 디자이너');
- await p.locator('#dg-filter [data-field="all"]').click();
+ // 갈림길 복도: 가운데 갈림길, 왼쪽 UX/UI(7명), 오른쪽 Visual(4명) + 분야 확인 중. 방에 들어가면 분위기가 바뀜
+ const order=await p.evaluate(()=>[...dg.row.children].map(li=>li.id==='dg-fork'?'fork':li.dataset.field||'sign'));
+ assert.equal(order.indexOf('fork'),8,'갈림길 왼쪽에 UX/UI 표지 + 7명');assert(order.slice(1,8).every(f=>f==='uxui'));assert(order.slice(9,13).every(f=>f==='visual'));
+ await p.locator('#dg-filter [data-side="visual"]').click();await p.waitForFunction(()=>dg.root.classList.contains('dark')&&+getComputedStyle($('#dg-amb-vi')).opacity>0.9,null,{timeout:4000});
+ assert.match(await p.locator('#dg-count').textContent(),/Visual의 방 · 4명/);
+ await p.locator('#dg-filter [data-side="uxui"]').click();
+ await p.waitForFunction(()=>+getComputedStyle($('#dg-amb-ux')).opacity>0.9&&!dg.root.classList.contains('dark'),null,{timeout:4000});
+ assert.match(await p.locator('#dg-count').textContent(),/UX\/UI · 웹의 방 · 7명/);
+ await p.locator('#dg-filter [data-side="fork"]').click();await p.waitForTimeout(900);assert.match(await p.locator('#dg-count').textContent(),/갈림길/);
  // [대표 작품 보기] → Project 방의 그 작품 상세
  await p.locator('.dg-item[data-i="1"] .dg-work').click();await p.locator('#pj-detail.on').waitFor();
  assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도');
@@ -130,6 +137,6 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer row (wheel/keys/filter/portfolio plaque), reduced motion, mobile; no page errors.');
+ console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer crossroads corridor (UX/UI left bright grid, Visual right dark; wheel/keys/jump/portfolio plaque), reduced motion, mobile; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

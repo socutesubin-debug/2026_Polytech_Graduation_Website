@@ -1,7 +1,50 @@
-/* Designer 방 (#designer): 밝은 전시실에 석고상 15개가 받침대 위에 가로 한 줄 + 작품안내 표찰 */
+/* Designer 방 (#designer): 갈림길 복도. 가운데 = 따뜻한 전시실, 왼쪽 = UX/UI · 웹의 방(밝은 도면 격자), 오른쪽 = Visual의 방(어두운 조명) */
 .designer{background:linear-gradient(180deg,#f6f3ee 0%,#f1ede6 64%,#e6e0d6 64.2%,#ebe6dd 100%);color:#1f1b17}
 .dg-head{position:absolute;z-index:3;left:clamp(16px,4vw,56px);right:clamp(16px,4vw,56px);top:calc(86px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;pointer-events:none}
 .dg-head>*{pointer-events:auto}
+.designer{transition:color .5s}
+.designer .dg-head h2,.designer .dg-head small{transition:color .5s}
+
+/* 방 분위기 (js가 opacity를 0~1로 바꿈) */
+.dg-amb{position:absolute;inset:0;z-index:0;opacity:0;pointer-events:none;overflow:hidden}
+.dg-amb span{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);white-space:nowrap;font-family:var(--sans);font-weight:700;font-size:clamp(90px,17vw,260px);letter-spacing:-.05em;line-height:1}
+.dg-amb.ux{background:
+  linear-gradient(rgba(47,107,255,.07) 1px,transparent 1px) 0 0/44px 44px,
+  linear-gradient(90deg,rgba(47,107,255,.07) 1px,transparent 1px) 0 0/44px 44px,
+  linear-gradient(180deg,#f6f8fa 0%,#eef2f5 64%,#e1e6ec 64.2%,#e8ecf0 100%)}
+.dg-amb.ux span{color:transparent;-webkit-text-stroke:1px rgba(47,107,255,.16)} /* 도면처럼 선만 있는 글자 */
+.dg-amb.vi{background:
+  radial-gradient(ellipse 60% 50% at 20% 0%,rgba(255,170,110,.14),transparent 70%),
+  radial-gradient(ellipse 60% 50% at 85% 0%,rgba(150,120,255,.12),transparent 70%),
+  linear-gradient(180deg,#1a1613 0%,#211c18 64%,#2b241e 64.2%,#1c1814 100%)}
+.dg-amb.vi span{color:rgba(255,255,255,.045)}
+.designer.dark{color:#f3ede4}
+.designer.dark .dg-head small{color:#b9ad9c}
+.designer.dark .dg-filter button{border-color:rgba(255,255,255,.3);color:#f3ede4}
+.designer.dark .dg-filter button[aria-pressed="true"]{background:#f3ede4;border-color:#f3ede4;color:#1f1b17}
+.designer.dark .dg-work{color:#e9e2d6;border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.06)}
+.designer.dark .dg-work:hover{border-color:#fff;color:#fff}
+.designer.dark .dg-track{background:rgba(255,255,255,.18)}.designer.dark .dg-track i{background:#f3ede4}
+.designer .dg-plate,.designer .dg-fork button,.designer .dg-arrow{color:#1f1b17} /* 어두운 방에서도 하얀 표찰·버튼 글자는 검게 */
+.designer.dark .dg-fork p{color:#b9ad9c}
+.designer .dg-fork button[data-side="visual"]{color:#f3ede4}
+.designer.dark .dg-fork button[data-side="visual"]{border-color:rgba(255,255,255,.35)}
+.designer.dark .dg-bust img{filter:drop-shadow(0 18px 24px rgba(0,0,0,.5))}
+
+/* 갈림길 표지판과 방 입구 표지 */
+.dg-fork{position:relative;flex:0 0 auto;width:340px;align-self:center;display:flex;flex-direction:column;gap:10px;padding-bottom:4vh}
+.dg-fork p{margin:0 0 6px;font-size:12px;letter-spacing:.24em;color:#8a7d6a;text-align:center}
+.dg-fork button{display:flex;align-items:center;gap:12px;height:68px;padding:0 22px;border-radius:14px;background:rgba(255,255,255,.75);border:1px solid rgba(31,27,23,.18);text-align:left;transition:background .25s,transform .25s,border-color .25s}
+.dg-fork button b{flex:1;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.dg-fork button small{font-size:12px;color:#8a7d6a}
+.dg-fork button span{font-size:20px}
+.dg-fork button[data-side="uxui"]:hover{transform:translateX(-6px);border-color:#2f6bff;background:#fff}
+.dg-fork button[data-side="visual"]{background:#1f1b17;color:#f3ede4;border-color:#1f1b17}
+.dg-fork button[data-side="visual"] small{color:#b9ad9c}
+.dg-fork button[data-side="visual"]:hover{transform:translateX(6px)}
+.dg-sign{flex:0 0 auto;width:220px;align-self:center;display:flex;flex-direction:column;gap:6px;padding-bottom:6vh;border-left:2px solid currentColor;padding-left:18px}
+.dg-sign b{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.dg-sign span{font-size:13px;opacity:.65}
 .dg-head h2{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(36px,5vw,72px);letter-spacing:-.04em;line-height:.95}
 .dg-head h2 small{display:block;margin-top:10px;font-size:13px;font-weight:400;letter-spacing:.02em;color:#6b5d4b}
 
@@ -12,6 +55,7 @@
 .dg-item{position:relative;flex:0 0 auto;width:340px;display:flex;flex-direction:column;align-items:center}
 .dg-item::before{content:"";position:absolute;left:50%;bottom:120px;width:520px;height:120%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .5s;
   background:radial-gradient(ellipse 34% 48% at 50% 40%,rgba(255,250,236,.95),rgba(255,250,236,0) 70%)} /* 마우스를 올리면 위에서 비추는 빛 */
+.designer.dark .dg-item::before{opacity:calc(var(--vi,0) * .32)} /* Visual 방: 석고상마다 늘 조명 */
 .dg-item:hover::before,.dg-item:focus-within::before,.dg-item.hi::before{opacity:1}
 .dg-bust{position:relative;width:min(240px,26vh);aspect-ratio:480/560;margin-bottom:-4px;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
 .dg-bust img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 18px 18px rgba(40,30,20,.16))}
@@ -43,7 +87,9 @@ a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-3px);box-shadow:
 
 @media(max-width:760px){
   .dg-row{gap:28px;padding:0 11vw calc(56px + env(safe-area-inset-bottom,0px));scroll-snap-type:x mandatory}
-  .dg-item{width:78vw;scroll-snap-align:center}
+  .dg-item,.dg-fork{width:78vw;scroll-snap-align:center}
+  .dg-sign{width:46vw;scroll-snap-align:center}
+  .dg-fork button{height:58px}
   .dg-arrow{display:none}
   .dg-head{top:calc(76px + env(safe-area-inset-top,0px))}
   .dg-head h2 small{margin-top:6px}
