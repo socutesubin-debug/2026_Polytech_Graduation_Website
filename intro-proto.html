@@ -27,6 +27,7 @@
   #poster { position: absolute; overflow: hidden; background: url("assets/images/intro/s2-poster-wall.jpg") no-repeat; transform: translateZ(26px);
           box-shadow: 0 1.4vmin 3.2vmin rgba(70,50,28,.38), 0 .3vmin .8vmin rgba(70,50,28,.3); }
   /* effects on the poster's own surface (they turn with the wall): inner glow + soft ripples where the butterfly goes in */
+  #water { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; }
   #pfx, #rfx { position: absolute; width: 0; height: 0; }
   #pfx { transform: translateZ(28px); }
   #pfx i, #rfx i { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0; will-change: transform, opacity; }
@@ -51,7 +52,7 @@
 <body>
 <div id="stage">
   <div id="s1" class="layer"></div>
-  <div id="s2" class="layer"><div id="cam"><div id="wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div id="poster"><div id="rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div id="pfx"><i class="pglow"></i></div></div></div></div>
+  <div id="s2" class="layer"><div id="cam"><div id="wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div id="poster"><canvas id="water"></canvas><div id="rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div id="pfx"><i class="pglow"></i></div></div></div></div>
   <div id="fx" class="layer"></div>
   <canvas id="gl"></canvas>
   <div id="flash"><i></i></div>
@@ -73,7 +74,8 @@
     dust: .08,         // how much gold dust (1 = a lot)
     zoom: 3.4,         // how far the camera pushes into the poster after the butterfly
     chaseZoom: .65,    // how much closer the camera is while it chases the butterfly into scene 2
-    chaseTilt: 5       // how much the camera banks during the chase (degrees)
+    chaseTilt: 5,      // how much the camera banks during the chase (degrees)
+    wave: 1            // how strongly the poster's surface ripples like water when the butterfly goes in (0 = off)
   };
   var GL = window.createButterflyGL ? createButterflyGL(glc, { sky: true, dense: CFG.dense }) : null, glB = GL && GL.butterflies[0], lastX = null;
   var W = innerWidth, H = innerHeight;
@@ -99,6 +101,57 @@
     wall.style.transformOrigin = (L + CX) + 'px ' + (T + CY) + 'px';
   }
   var CX = 0, CY = 0;
+
+  // the poster's surface as water: a small WebGL layer on the poster that bends the picture with ripples from the point of entry.
+  // (if the picture cannot be used as a texture, e.g. opened as a local file, the soft CSS ripples are used instead)
+  var water = (function () {
+    var cv = $('water'), g = CFG.wave > 0 && cv.getContext('webgl', { antialias: false, alpha: false });
+    if (!g) return null;
+    var vs = 'attribute vec2 a; varying vec2 v; void main(){ v = vec2(a.x*.5+.5, .5-a.y*.5); gl_Position = vec4(a, 0., 1.); }';
+    var fs = [
+      'precision highp float; varying vec2 v; uniform sampler2D uT; uniform vec4 uR; uniform vec2 uC; uniform float uAsp, uE, uNear, uTime, uAmp;',
+      'float hgt(vec2 q){',
+      '  float d = length(q), beh = uE*1.5 - d;',                                                   // beh = how far behind the wave front this point is
+      '  float train = sin(beh*40.)*smoothstep(-.03, .06, beh)*exp(-beh*2.6)*(1. - .5*uE)*step(.0001, uE);',
+      '  float amb = (sin(q.x*17. + uTime*1.9) + sin(q.y*13. - uTime*1.5 + q.x*5.) + sin((q.x + q.y)*23. + uTime*2.6))/3.;',
+      '  return train + amb*(.07*uNear*exp(-d*3.) + .16*smoothstep(0., .45, uE)); }',
+      'void main(){',
+      '  vec2 q = (v - uC)*vec2(uAsp, 1.); float e = .004;',
+      '  vec2 gr = vec2(hgt(q + vec2(e, 0.)) - hgt(q - vec2(e, 0.)), hgt(q + vec2(0., e)) - hgt(q - vec2(0., e)))/(2.*e);',
+      '  float m = smoothstep(.035, .12, min(v.x, 1. - v.x))*smoothstep(.025, .085, min(v.y, 1. - v.y));',   // the frame itself stays rigid
+      '  gr *= m; vec2 off = gr*vec2(1./uAsp, 1.)*.0011*uAmp;',
+      '  vec3 c = vec3(texture2D(uT, uR.xy + (v + off)*uR.zw).r, texture2D(uT, uR.xy + (v + off*1.1)*uR.zw).g, texture2D(uT, uR.xy + (v + off*1.2)*uR.zw).b);',
+      '  float lit = dot(gr, vec2(-.6, -.8))*.011*uAmp;',                                            // light from the upper left catches the wave slopes
+      '  c += max(lit, 0.)*vec3(1., .97, .88); c *= 1. + max(min(lit, 0.), -1.)*.38;',
+      '  c += pow(max(lit, 0.), 3.)*.6;',
+      '  c = mix(c, vec3(1., .985, .94), smoothstep(.4, 1., uE)*.75);',
+      '  gl_FragColor = vec4(c, 1.); }'].join('\n');
+    var pr = g.createProgram();
+    [[g.VERTEX_SHADER, vs], [g.FRAGMENT_SHADER, fs]].forEach(function (x) { var sh = g.createShader(x[0]); g.shaderSource(sh, x[1]); g.compileShader(sh); if (!g.getShaderParameter(sh, g.COMPILE_STATUS)) console.error(g.getShaderInfoLog(sh)); g.attachShader(pr, sh); });
+    g.linkProgram(pr); g.useProgram(pr);
+    g.bindBuffer(g.ARRAY_BUFFER, g.createBuffer()); g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), g.STATIC_DRAW);
+    g.enableVertexAttribArray(0); g.bindAttribLocation(pr, 0, 'a'); g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0); g.linkProgram(pr); g.useProgram(pr);
+    var U = {}; ['uR', 'uC', 'uAsp', 'uE', 'uNear', 'uTime', 'uAmp'].forEach(function (n) { U[n] = g.getUniformLocation(pr, n); });
+    var api = { ready: false, draw: function (e, near, time) {
+      var dpr = Math.min(devicePixelRatio || 1, 2), w = Math.max(8, Math.round(cv.clientWidth * dpr)), h = Math.max(8, Math.round(cv.clientHeight * dpr));
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      g.viewport(0, 0, w, h);
+      g.uniform4f(U.uR, IMG.x0 / IMG.w, IMG.y0 / IMG.h, (IMG.x1 - IMG.x0) / IMG.w, (IMG.y1 - IMG.y0) / IMG.h);
+      g.uniform2f(U.uC, .5, .47); g.uniform1f(U.uAsp, (IMG.x1 - IMG.x0) / (IMG.y1 - IMG.y0));
+      g.uniform1f(U.uE, e); g.uniform1f(U.uNear, near); g.uniform1f(U.uTime, time); g.uniform1f(U.uAmp, CFG.wave);
+      g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
+    } };
+    var im = new Image();
+    im.onload = function () {
+      try {
+        g.bindTexture(g.TEXTURE_2D, g.createTexture()); g.texImage2D(g.TEXTURE_2D, 0, g.RGB, g.RGB, g.UNSIGNED_BYTE, im);
+        g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+        api.ready = true;
+      } catch (err) { console.warn('water: picture not usable as a texture, using the simple ripples', err); }
+    };
+    im.src = 'assets/images/intro/s2-poster-wall.jpg';
+    api.cv = cv; return api;
+  })();
   addEventListener('resize', layout); layout();
 
   var target = 0, p = 0;
@@ -128,8 +181,8 @@
     var kIn  = seg(p, .275, .62);               // S2: enter from the left, loop once, settle in front of the poster (camera follows)
     var kFace = ease(seg(p, .57, .64));        // turn to face the poster
     var kDive = seg(p, .69, .765); kDive = kDive * kDive;   // the butterfly darts into the poster
-    var kThru = Math.pow(seg(p, .70, .93), 2.6); // camera drifts right with the dive, then speeds up through the wall once it is in
-    var kWhite = ease(seg(p, .80, .89));
+    var kThru = Math.pow(seg(p, .72, .97), 2.6); // camera drifts right with the dive, then speeds up through the wall once it is in
+    var kWhite = ease(seg(p, .865, .955));
 
     s2.style.opacity = kCut;
     s1.style.visibility = kCut >= 1 ? 'hidden' : 'visible';
@@ -152,9 +205,13 @@
 
     // the moment of entering: the poster glows from inside as the butterfly comes close, then ripples spread on its surface
     var near = ease(seg(p, .66, .765)), after = seg(p, .765, .90);
-    pglow.style.opacity = near * (1 - .55 * ease(after));
+    pglow.style.opacity = near * (1 - .8 * ease(seg(after, 0, .45)));
     pglow.style.transform = 'scale(' + (.5 + .7 * near + 1.6 * after) + ')';
+    // water: the surface stirs a little as the butterfly comes near, then rings run out from where it goes in
+    var wOn = water && water.ready, wE = seg(p, .762, .95);
+    if (wOn) { var show = near > 0 && p < .97; water.cv.style.opacity = show ? 1 : 0; if (show) water.draw(wE, near, t); }
     for (var r = 0; r < rips.length; r++) {
+      if (wOn) { rips[r].style.opacity = 0; continue; }
       var e = seg(p, .764 + r * .03, .875 + r * .03);
       rips[r].style.opacity = e > 0 && e < 1 ? Math.sin(Math.PI * Math.pow(e, .6)) * .9 : 0;     // swells in, then dies away
       rips[r].style.transform = 'scale(' + (.15 + 2.9 * (1 - Math.pow(1 - e, 2))) + ')';
@@ -180,12 +237,12 @@
       yaw = 0;
       scale = lerp(1, 1.35, ease(kIn)) * (1 - .84 * kDive);
       // burst of light exactly where it goes in
-      var fl = seg(p, .745, .775) * (1 - seg(p, .775, .86));
+      var fl = seg(p, .75, .772) * (1 - seg(p, .772, .83)) * .75;
       flash.style.opacity = fl;
       flash.style.transform = 'translate(' + posterX + 'px,' + CY + 'px) scale(' + (.5 + 1.6 * seg(p, .745, .86)) + ')';
     }
     if (p < .27) flash.style.opacity = 0;
-    var hidden = (p > .262 && p < .278) || p > .79;
+    var hidden = (p > .262 && p < .278) || p > .80;
     var alpha = hidden ? 0 : 1 - seg(p, .757, .775);
     if (GL) {
       var wpos = GL.toWorld(x, y), k = GL.unitsPerPx();
