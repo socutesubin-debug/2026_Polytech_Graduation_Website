@@ -1,8 +1,8 @@
-/* Project 방 (#project): 떠다니는 카드 첫 화면 → 작품 목록(격자) → 작품 상세 */
+/* Project 방 (#project): 떠다니는 카드 (공 → 도넛) → 작품 상세 */
 .project{background:#fbfaf7;color:#1f1b17;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .project.reading{overflow:hidden}
 
-/* ① 첫 화면 (스크롤하면 아래 작품 목록이 올라와 덮음) */
+/* ① 떠다니는 카드 */
 .pj-track{position:relative} /* 높이는 js/project.js가 정함: 이 길이만큼 스크롤하는 동안 첫 화면이 붙어 있음 */
 .pj-hero{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;--cw:140px}
 .pj-scene{position:absolute;inset:0;perspective:1400px;overflow:hidden}
@@ -12,32 +12,17 @@
 .pj-card{position:absolute;left:calc(var(--cw) / -2);top:calc(var(--cw) * -.375);width:var(--cw);height:calc(var(--cw) * .75);overflow:hidden;border-radius:calc(var(--cw) * .07);background:#9a9186;
   box-shadow:0 6px 18px rgba(30,20,10,.16);will-change:transform;cursor:pointer}
 .pj-card:hover{outline:2px solid #2f6bff;outline-offset:2px}
-.pj-card img,.pj-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.pj-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .pj-temp{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding:9%;color:#2a2622;text-align:left;background:linear-gradient(160deg,#c9c2b6,#9a9186)}
 .pj-temp em{position:absolute;left:9%;top:9%;font-style:normal;font-size:calc(var(--cw) * .07);letter-spacing:.12em}
 .pj-temp b{font-size:calc(var(--cw) * .17);font-weight:700;letter-spacing:-.02em;line-height:1.05}
 .pj-temp small{display:none}
 
-/* ② 작품 목록 */
-.pj-list{position:relative;z-index:3;min-height:100vh;padding:calc(96px + env(safe-area-inset-top,0px)) clamp(16px,4vw,56px) 80px;background:#fbfaf7;border-radius:28px 28px 0 0;box-shadow:0 -18px 40px rgba(30,20,10,.06)}
-.pj-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 24px;max-width:1280px;margin:0 auto 28px}
-.pj-head h2{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(40px,6vw,84px);letter-spacing:-.04em;line-height:.95}
-.pj-head h2 small{display:block;margin-top:12px;font-size:13px;font-weight:400;letter-spacing:.02em;color:#6b5d4b}
-.pj-filter,.dg-filter{display:flex;gap:8px;flex-wrap:wrap}
-.pj-filter button,.dg-filter button{height:38px;padding:0 16px;border-radius:99px;border:1px solid rgba(31,27,23,.25);font-size:13px;transition:background .2s,color .2s,border-color .2s}
-.pj-filter button:hover,.dg-filter button:hover{border-color:#1f1b17}
-.pj-filter button[aria-pressed="true"],.dg-filter button[aria-pressed="true"]{background:#1f1b17;border-color:#1f1b17;color:#fbfaf7}
-.pj-grid{list-style:none;margin:0 auto;padding:0;max-width:1280px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px 24px}
-.pj-item{display:flex;flex-direction:column;gap:12px;width:100%;text-align:left}
-.pj-thumb{position:relative;display:block;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:12px;background:#d8d2c7;--cw:260px}
-.pj-thumb .pj-temp{transition:transform .5s cubic-bezier(.2,.7,.2,1)}
-.pj-thumb .pj-temp em{font-size:12px}.pj-thumb .pj-temp b{font-size:clamp(22px,2.4vw,34px)}
-.pj-item:hover .pj-thumb>*{transform:scale(1.04)}
-.pj-thumb img{transition:transform .5s cubic-bezier(.2,.7,.2,1)}
-.pj-meta{display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:3px}
-.pj-meta .pj-no{grid-row:1 / span 2;font-size:12px;letter-spacing:.1em;color:#8a7d6a;padding-top:3px}
-.pj-meta b{font-size:16px;font-weight:700;letter-spacing:-.01em}
-.pj-meta span:last-child{font-size:13px;color:#6b5d4b}
+/* 분야 고르기 버튼 (Designer 방에서 씀) */
+.dg-filter{display:flex;gap:8px;flex-wrap:wrap}
+.dg-filter button{height:38px;padding:0 16px;border-radius:99px;border:1px solid rgba(31,27,23,.25);font-size:13px;transition:background .2s,color .2s,border-color .2s}
+.dg-filter button:hover{border-color:#1f1b17}
+.dg-filter button[aria-pressed="true"]{background:#1f1b17;border-color:#1f1b17;color:#fbfaf7}
 
 /* ③ 작품 상세 */
 
@@ -62,15 +47,12 @@
 .pj-d-close{position:sticky;top:0;align-self:start;justify-self:center;width:56px;height:56px;margin-top:calc(36px + env(safe-area-inset-top,0px));display:grid;place-items:center;color:#fff}
 .pj-d-close svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6}
 .pj-d-close:hover svg{stroke-width:2.4}.pj-d-close:focus-visible{outline:1px solid rgba(255,255,255,.45);outline-offset:-4px;border-radius:50%}
-@media(max-width:1000px){.pj-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){
-  .pj-grid{grid-template-columns:1fr;gap:28px}
   .pj-detail{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .pj-d-side{position:static;height:auto;padding:calc(72px + env(safe-area-inset-top,0px)) 20px 28px}
   .pj-d-desc{margin-top:24px;font-size:15px}
   .pj-d-mail{margin-top:20px;padding-top:0;font-size:15px}
   .pj-d-images{gap:12px}
   .pj-d-close{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:8px;margin:0;background:rgba(0,0,0,.55);border-radius:50%}
-  .pj-list{border-radius:20px 20px 0 0;padding-top:calc(84px + env(safe-area-inset-top,0px))}
 }
 @media(prefers-reduced-motion:reduce){.pj-detail{transition:none}}

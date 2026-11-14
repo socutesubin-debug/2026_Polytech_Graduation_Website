@@ -65,22 +65,20 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
  await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
  await p.keyboard.press('Escape');await p.waitForTimeout(400);
- // 끝까지 내리면 작품 목록
- await p.evaluate(()=>pjScrollToU(pjEndAt()+1,true));await p.waitForFunction(()=>pj.root.scrollTop/pj.root.clientHeight>=pjEndAt()+0.99,null,{timeout:6000});
- assert.equal(await p.locator('.pj-item:visible').count(),15);assert.equal(await p.locator('#pj-count').textContent(),'15개의 작품');
- await p.locator('#pj-filter [data-field="visual"]').click();assert.equal(await p.locator('.pj-item:visible').count(),4);
- await p.locator('#pj-filter [data-field="uxui"]').click();assert.equal(await p.locator('.pj-item:visible').count(),7);
- await p.locator('#pj-filter [data-field="all"]').click();assert.equal(await p.locator('.pj-item:visible').count(),15);
- // 작품 상세: 그림 14칸, ← → 이전/다음, Esc 닫으면 누른 카드에 초점
- await p.locator('.pj-item').nth(6).click();await p.locator('#pj-detail.on').waitFor();
+ // 끝까지 내리면 마지막 작품에서 멈춤 (작품 목록 없음)
+ assert.equal(await p.locator('#pj-list, #pj-grid, .pj-item').count(),0,'작품 목록 없음');
+ await p.evaluate(()=>{pj.root.scrollTop=1e7;});await p.waitForTimeout(100);
+ assert(await p.evaluate(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjEndAt())<0.02),'스크롤 끝 = 마지막 작품');
+ // 작품 상세: 그림 14칸, ← → 이전/다음, Esc 닫기
+ await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();
  assert.equal(await p.locator('.pj-shot').count(),14);
  assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
  await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박호성');
  await p.keyboard.press('ArrowLeft');await p.keyboard.press('Escape');await p.waitForTimeout(400);
  assert.equal(await p.locator('#pj-detail').isHidden(),true);
- assert(await p.locator('.pj-item').nth(6).evaluate(el=>document.activeElement===el),'닫으면 누른 작품에 초점');
+ assert(await p.evaluate(()=>document.activeElement===pj.root),'닫으면 Project 방에 초점');
  // 만든 사람 → Designer 방의 그 석고상이 가운데 + 표찰에 초점
- await p.locator('.pj-item').nth(6).click();await p.locator('#pj-detail.on').waitFor();await p.locator('#pj-d-who').click();
+ await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();await p.locator('#pj-d-who').click();
  await p.waitForFunction(()=>page==='designer',null,{timeout:3000});await p.waitForTimeout(300);
  const centered=await p.evaluate(()=>{const li=document.querySelector('.dg-item[data-i="6"]').getBoundingClientRect();return Math.abs(li.left+li.width/2-innerWidth/2);});
  assert(centered<4,`박수빈 석고상이 가운데 (${centered}px)`);
@@ -130,6 +128,6 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut one by one (snap/keys) → list → detail (14 images) → designer, designer row (wheel/keys/filter/portfolio plaque), reduced motion, mobile; no page errors.');
+ console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut one by one (snap/keys) → end at last work (no list) → detail (14 images) → designer, designer row (wheel/keys/filter/portfolio plaque), reduced motion, mobile; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

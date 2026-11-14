@@ -247,8 +247,8 @@
     </div>
   </section>
 
-  <!-- ⑩ Project 방 — 작품 15개: 떠다니는 카드 → 작품 목록 → 작품 상세  (css/project.css, js/project.js) — 주소 끝 #project
-       떠다니는 카드(pj-cloud 안), 작품 목록(pj-grid 안), 상세 그림(pj-d-images 안)은 js/project.js가 js/data.js를 보고 만듦 -->
+  <!-- ⑩ Project 방 — 작품 15개: 떠다니는 카드(공 → 도넛) → 작품 상세  (css/project.css, js/project.js) — 주소 끝 #project
+       떠다니는 카드(pj-cloud 안), 상세 그림(pj-d-images 안)은 js/project.js가 js/data.js를 보고 만듦 -->
   <section class="screen project" id="project" aria-label="Project: 작품" tabindex="-1">
     <div class="pj-track" id="pj-track">
     <div class="pj-hero" id="pj-hero">
@@ -256,17 +256,6 @@
       <!-- 화면에는 작품 썸네일만. 아래 한 줄은 화면 읽기 프로그램용 (눈에는 안 보임) -->
       <p class="pj-live" id="pj-live" aria-live="polite"></p>
     </div>
-    </div>
-    <div class="pj-list" id="pj-list">
-      <div class="pj-head">
-        <h2>Project<small id="pj-count"></small></h2>
-        <div class="pj-filter" id="pj-filter" role="group" aria-label="분야 고르기">
-          <button type="button" data-field="all" aria-pressed="true">전체</button>
-          <button type="button" data-field="uxui" aria-pressed="false">UX/UI · 웹</button>
-          <button type="button" data-field="visual" aria-pressed="false">Visual</button>
-        </div>
-      </div>
-      <ul class="pj-grid" id="pj-grid"></ul>
     </div>
     <!-- 작품 상세: 왼쪽 = 제목 · 이름 · 설명 · (맨 아래) 메일, 오른쪽 = 내려 보는 그림들, 오른쪽 위 X = 닫기 -->
     <div class="pj-detail" id="pj-detail" role="dialog" aria-modal="true" aria-labelledby="pj-d-title" hidden>

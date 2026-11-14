@@ -3,7 +3,7 @@
    ② 스크롤하면 카드들이 모여 도넛(고리) 모양이 됨
    ③ 계속 스크롤하면 도넛이 돌면서 작품이 한 장씩 맨 앞에 크게 옴. 카드를 누르거나 Enter 키 = 작품 상세
       스크롤을 멈추면 가장 가까운 작품에 딱 멈춤. ← → 키로도 한 장씩
-   ④ 도넛을 다 보면 아래에서 작품 목록(격자)이 올라옴. 분야(전체 / UX/UI · 웹 / Visual)를 고를 수 있음
+   ④ 마지막 작품이 맨 앞에 오면 스크롤 끝 (작품 목록은 없음)
    ⑤ 작품을 누르면 작품 상세 (검은 화면): 왼쪽 제목·이름·설명·맨 아래 메일, 오른쪽 내려 보는 그림 (작품마다 14장 정도), 오른쪽 위 X 닫기
       만든 사람 이름을 누르면 Designer 방의 그 사람 석고상으로 감
    - 메일은 js/data.js 학생마다 email 칸 (비어 있으면 안 보임)
@@ -16,7 +16,6 @@ const PROJECT = {
   hold: 0.35,                     // 공 모양으로 머무는 스크롤 길이
   gather: 1.0,                    // 공 → 도넛으로 바뀌는 스크롤 길이
   perCard: 0.45,                  // 도넛에서 작품 한 장을 넘기는 스크롤 길이
-  tail: 0.6,                      // 마지막 작품 뒤 작품 목록이 올라오기 전까지
   focusScale: 1.25, focusOut: 0.45, // 맨 앞 작품: 크기, 앞으로 튀어나오는 정도 (도넛 반지름의 몇 배)
   spin: 7,                        // 공일 때 저절로 도는 속도 (도/초)
   float: 1,                       // 카드가 따로따로 둥둥 움직이는 정도 (0 = 안 움직임)
@@ -35,8 +34,8 @@ const PROJECT = {
 };
 const pj = {
   root: $('#project'), track: $('#pj-track'), hero: $('#pj-hero'), scene: $('#pj-hero .pj-scene'), space: $('#pj-space'), cloud: $('#pj-cloud'),
-  live: $('#pj-live'), grid: $('#pj-grid'), view: $('#pj-detail'),
-  cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, field: 'all', at: -1, back: null,
+  live: $('#pj-live'), view: $('#pj-detail'),
+  cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, at: -1, back: null,
   u: 0, k: 0, ringBase: 0, front: -1, snapT: 0,
   ver: /[?&]v=1\b/.test(location.search) ? 1 : PROJECT.version,
 };
@@ -53,7 +52,7 @@ const pjTitle = (s) => (s.work && s.work.title) || '작품 제목 준비 중';
 /* 스크롤 자리 (화면 높이 단위): 도넛이 시작되는 곳, k번째 작품이 맨 앞에 오는 곳, 도넛이 끝나는 곳 */
 const pjRingAt = () => PROJECT.hold + PROJECT.gather;
 const pjCardAt = (k) => pjRingAt() + k * PROJECT.perCard;
-const pjEndAt = () => pjCardAt(STUDENTS.length - 1) + PROJECT.tail;
+const pjEndAt = () => pjCardAt(STUDENTS.length - 1); // 마지막 작품이 맨 앞에 오면 스크롤 끝
 
 /* 떠다니는 카드 + 아래 작품 목록 만들기 (처음 들어올 때 한 번) */
 function pjBuild() {
@@ -68,11 +67,6 @@ function pjBuild() {
       sz: 0.72 + ((i * 7) % 5) * 0.14, f1: 0.5 + ((i * 3) % 7) * 0.09, f2: 0.4 + ((i * 5) % 6) * 0.11, p1: i * 1.7, p2: i * 2.9 };
   });
   pj.cloud.addEventListener('click', (e) => { const b = e.target.closest('.pj-card'); if (b) pjOpen(+b.dataset.i, b); });
-  pj.grid.innerHTML = STUDENTS.map((s, i) => `<li data-field="${s.field || 'none'}"><button class="pj-item" type="button" data-i="${i}">
-    <span class="pj-thumb">${pjThumb(s)}</span>
-    <span class="pj-meta"><span class="pj-no">${pad(s.no)}</span><b>${pjTitle(s)}</b><span>${s.name} · ${FIELD_LABEL[s.field] || '분야 확인 중'}</span></span></button></li>`).join('');
-  pj.grid.addEventListener('click', (e) => { const b = e.target.closest('.pj-item'); if (b) pjOpen(+b.dataset.i, b); });
-  $('#pj-count').textContent = `${STUDENTS.length}개의 작품`;
   pjSize();
 }
 function pjSize() { pj.track.style.height = `${((pjEndAt() + 1) * pj.root.clientHeight).toFixed(0)}px`; }
@@ -80,16 +74,7 @@ function pjScrollToU(u, instant) { pj.root.scrollTo({ top: u * pj.root.clientHei
 /* 도넛에서 k번째 작품을 맨 앞으로 */
 function pjGotoCard(k) { pjScrollToU(pjCardAt(clamp(k, 0, STUDENTS.length - 1))); }
 function pjFrontNow() { return clamp(Math.round((pj.u - pjRingAt()) / PROJECT.perCard), 0, STUDENTS.length - 1); }
-const pjInRing = () => pj.u > pjRingAt() - 0.3 && pj.u < pjEndAt() - PROJECT.tail * 0.5;
-
-/* 분야 고르기 */
-function pjFilter(f) {
-  pj.field = f;
-  $$('#pj-filter button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.field === f)));
-  let n = 0;
-  $$('li', pj.grid).forEach((li) => { const on = f === 'all' || li.dataset.field === f; li.hidden = !on; if (on) n++; });
-  $('#pj-count').textContent = `${n}개의 작품`;
-}
+const pjInRing = () => pj.u > pjRingAt() - 0.3;
 
 /* 작품 상세 */
 function pjOpen(i, from) {
@@ -112,8 +97,7 @@ function pjClose() {
   if (pj.view.hidden) return false;
   cancelAnimationFrame(pj.raf); pj.view.classList.remove('on'); pj.root.classList.remove('reading'); document.body.classList.remove('pj-reading');
   setTimeout(() => { if (!pj.view.classList.contains('on')) pj.view.hidden = true; }, reduce ? 0 : 320);
-  const back = pj.back && pj.back.isConnected && !pj.back.closest('[hidden]') && pj.back.closest('#pj-grid') ? pj.back : null;
-  if (back) back.focus({ preventScroll: true }); else pj.root.focus({ preventScroll: true });
+  pj.root.focus({ preventScroll: true });
   pj.at = -1; return true;
 }
 function pjStep(d) { if (pj.at >= 0) pjOpen((pj.at + d + STUDENTS.length) % STUDENTS.length); }
@@ -125,12 +109,9 @@ function renderProject(t) {
   const dt = Math.min(64, t - (pj.lastT || t)); pj.lastT = t;
   if (pj.root.classList.contains('reading')) return;
   pj.u = pj.root.scrollTop / H;
-  if (pj.u > pjEndAt() + 1) return; // 작품 목록을 보는 중: 쉬기
   const a = pjSmooth(C.hold, pjRingAt(), pj.u);                                 // 0 = 공, 1 = 도넛
   const kTarget = clamp((pj.u - pjRingAt()) / C.perCard, 0, n - 1);            // 맨 앞에 올 작품 번호 (소수)
   pj.k += (kTarget - pj.k) * (reduce ? 1 : 1 - Math.exp(-dt / 120));
-  const out = pjSmooth(pjEndAt() - C.tail, pjEndAt() + 0.2, pj.u);             // 도넛이 끝나면 흐려짐
-  pj.hero.style.opacity = (1 - out * 0.85).toFixed(3);
 
   const live = !reduce, ease = 1 - Math.exp(-dt / 260);
   pj.mx += (pj.tmx - pj.mx) * ease; pj.my += (pj.tmy - pj.my) * ease;
@@ -184,7 +165,7 @@ function projectKey(e) {
     if (e.key === 'ArrowRight') { pjStep(1); return true; }
     return false;
   }
-  if (pj.u < pjEndAt() - PROJECT.tail * 0.5 && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
     const k = pj.u < pjRingAt() - 0.3 ? -1 : pjFrontNow();
     pjGotoCard(e.key === 'ArrowRight' ? k + 1 : k - 1); return true;
   }
@@ -210,6 +191,5 @@ pj.root.addEventListener('scroll', () => {
 }, { passive: true });
 addEventListener('resize', () => { if (pj.built) pjSize(); });
 
-$$('#pj-filter button').forEach((b) => b.addEventListener('click', () => pjFilter(b.dataset.field)));
 $('#pj-d-close').addEventListener('click', pjClose);
 $('#pj-d-who').addEventListener('click', () => { const i = pj.at; pjClose(); go('designer'); dgFocus(i); });
