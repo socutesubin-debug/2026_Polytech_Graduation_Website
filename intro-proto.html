@@ -15,7 +15,7 @@
   /* scene 2: sky + ground behind, and the poster wall as one flat plane we can turn */
   #s2 { opacity: 0; background: linear-gradient(to bottom, #a9c6e3 0%, #e4edf5 60%, #d9d2c7 60%, #c9c1b6 100%); }
   #cam { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 50%; }
-  #wall { position: absolute; left: -400vw; top: -100vh; width: 650vw; height: 300vh; background: #d2c9c2; transform-origin: 450vw 150vh; }
+  #wall { position: absolute; left: -400vw; top: -100vh; width: 650vw; height: 300vh; background: #d2c9c2; transform-origin: 450vw 148vh; }
   #wall .img { position: absolute; left: 400vw; top: 100vh; width: 100vw; height: 100vh;
           background: url("assets/images/intro/s2-poster-wall.jpg") center / cover no-repeat;
           -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
@@ -67,7 +67,8 @@
     size: .105,        // butterfly size (share of the shorter screen side)
     dense: 1,          // 0 = see-through glass wings, 1 = nearly solid
     dust: .08,         // how much gold dust (1 = a lot)
-    orbit: 72          // how far the camera walks round to the side (90 = fully edge-on)
+    orbit: 20,         // how far the camera drifts to the side while the butterfly waits (degrees; keep small, the wall is one flat photo)
+    zoom: 3.4          // how far the camera pushes into the poster after the butterfly
   };
   var GL = window.createButterflyGL ? createButterflyGL(glc, { sky: true, dense: CFG.dense }) : null, glB = GL && GL.butterflies[0], lastX = null;
   var W = innerWidth, H = innerHeight;
@@ -117,9 +118,10 @@
     s1.style.visibility = kCut >= 1 ? 'hidden' : 'visible';
 
     // wall plane: turn it and slide it, as if the camera walked round to the right and then through
-    var theta = CFG.orbit * kOrb;                              // degrees
-    var wallX = lerp(0, .2 * W, kOrb) - 1.0 * W * kThru;      // px offset of the poster on screen
-    wall.style.transform = 'translateX(' + wallX + 'px) rotateY(' + (-theta) + 'deg)';
+    var theta = CFG.orbit * kOrb * (1 - ease(seg(p, .70, .86)));   // drift a little to the side, then square up as we go in
+    var wallX = lerp(0, .05 * W, kOrb) * (1 - ease(seg(p, .70, .86)));   // px offset of the poster on screen
+    var zoom = 1 + (CFG.zoom - 1) * kThru;                           // push in towards the poster's butterfly
+    wall.style.transform = 'translateX(' + wallX + 'px) rotateY(' + (-theta) + 'deg) scale(' + zoom + ')';
 
     // the moment of entering: the poster glows from inside as the butterfly comes close, then ripples spread on its surface
     var near = ease(seg(p, .66, .765)), after = seg(p, .765, .90);
@@ -141,18 +143,18 @@
       pitch = lerp(-36, -74, kSide); roll = lerp(6 * Math.sin(t * .9), -90, kSide);   // roll -90 = head to the right
       yaw = lerp(10 * Math.sin(t * .5), 0, kSide);
     } else {                             // scene 2
-      var dist = .2 * W * (1 - kDive);                       // how far in front of the wall
       var posterX = .5 * W + wallX; th = theta * RAD;
-      var frontX = posterX - dist * Math.sin(th);
-      x = lerp(-.14 * W, frontX, kIn) + sway * (1 - kOrb) * .5 * (1 - kDive);
-      y = lerp(.40 * H, .48 * H, kIn) + bob * (1 - kDive);
-      pitch = lerp(-74, -68, kFace); roll = lerp(-90, 0, kFace);   // side flight, then nose towards the poster
+      // it waits a little in front of the poster (nearer to us = lower left and bigger), then flies away from us into it
+      var frontX = posterX - .09 * W * (1 - kDive);
+      x = lerp(-.14 * W, frontX, kIn) + sway * .5 * (1 - kDive);
+      y = lerp(.40 * H, lerp(.60 * H, .48 * H, kDive), kIn) + bob * (1 - kDive);
+      pitch = lerp(-74, -62, kFace); roll = lerp(-90, lerp(-16, 0, kDive), kFace);   // side flight, then nose towards the poster
       yaw = -theta;                                          // it turns with the wall, so from the side we see it in profile
-      scale = lerp(1, .9, kIn) * (1 - .78 * kDive);
+      scale = lerp(1, 1.35, kIn) * (1 - .84 * kDive);
       // burst of light exactly where it goes in
       var fl = seg(p, .745, .775) * (1 - seg(p, .775, .86));
       flash.style.opacity = fl;
-      flash.style.transform = 'translate(' + posterX + 'px,' + (.48 * H) + 'px) scale(' + (Math.max(.3, Math.cos(th)) * (.5 + 1.6 * seg(p, .745, .86))) + ',' + (.5 + 1.6 * seg(p, .745, .86)) + ')';
+      flash.style.transform = 'translate(' + posterX + 'px,' + (.48 * H) + 'px) scale(' + ((.5 + 1.6 * seg(p, .745, .86))) + ',' + (.5 + 1.6 * seg(p, .745, .86)) + ')';
     }
     if (p < .3) flash.style.opacity = 0;
     var hidden = (p > .285 && p < .32) || p > .79;
