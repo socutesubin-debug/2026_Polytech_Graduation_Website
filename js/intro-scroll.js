@@ -7,7 +7,7 @@
    숫자를 고치고 싶으면 아래 CFG만 고치면 됩니다 */
 function createIntroScroll(root, opts) {
   opts = opts || {};
-  root.classList.add('is-stage'); root.innerHTML = '<div class="is-s1 layer"></div><div class="is-s2 layer"><div class="is-cam"><div class="is-wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div class="is-poster"><canvas class="is-water"></canvas><div class="is-rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div class="is-pfx"><i class="pglow"></i></div></div></div></div><div class="is-fx layer"></div><canvas class="is-gl"></canvas><div class="is-flash"><i></i></div><div class="is-white layer"></div><div class="is-hint">SCROLL<i></i></div>';
+  root.classList.add('is-stage'); root.innerHTML = '<div class="is-s1 layer"><i class="sun-rays"></i><i class="sun-glow"></i></div><div class="is-s2 layer"><div class="is-cam"><div class="is-wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div class="is-poster"><canvas class="is-water"></canvas><div class="is-rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div class="is-light"><i class="dap a"></i><i class="dap b"></i><i class="shaft"></i></div><div class="is-pfx"><i class="pglow"></i></div></div></div></div><div class="is-fx layer"></div><canvas class="is-gl"></canvas><div class="is-flare"><i class="f1"></i><i class="f2"></i><i class="f3"></i></div><div class="is-flash"><i></i></div><div class="is-white layer"></div><div class="is-hint">SCROLL<i></i></div>';
   var $ = function (id) { return root.querySelector('.is-' + id); };
   var s1 = $('s1'), s2 = $('s2'), wall = $('wall'), glc = $('gl'), flash = $('flash'),
       pglow = root.querySelector('.is-pfx .pglow'), rips = root.querySelectorAll('.is-rfx .rip'), poster = $('poster'), pfx = $('pfx'), rfx = $('rfx'),
@@ -23,6 +23,7 @@ function createIntroScroll(root, opts) {
     skyZoom: .34,      // scene 1: how much closer the camera gets while it follows the butterfly across the sky
     skyRest: 1.2,      // scene 1: how close the camera already is before any scroll (1 = whole picture; closer leaves room to follow the butterfly up, down and sideways)
     skyTilt: 3,         // scene 1: how much the camera banks while following (degrees)
+    sun: 1,            // how strong the sunlight effects are (sun glow and rays in the sky, moving light on the wall); 0 = off
     glide: 3.6,        // how quickly the picture catches up with the scroll (smaller = softer, more gliding)
     wave: 1            // how strongly the poster's surface ripples like water when the butterfly goes in (0 = off)
   };
@@ -51,6 +52,7 @@ function createIntroScroll(root, opts) {
       st.width = iw + 'px'; st.height = ih + 'px'; st.backgroundSize = '100% 100%';
       st.left = L + ox + (c.contains('l') ? -iw : c.contains('r') ? iw : 0) + 'px'; st.top = T + oy + (c.contains('t') ? -ih : c.contains('b') ? ih : 0) + 'px';
     }
+    lightEl.style.left = L + ox + 'px'; lightEl.style.top = T + oy + 'px'; lightEl.style.width = iw + 'px'; lightEl.style.height = ih + 'px';
     poster.style.left = L + px + 'px'; poster.style.top = T + py + 'px'; poster.style.width = pw + 'px'; poster.style.height = ph + 'px';
     poster.style.backgroundSize = IMG.w * k + 'px ' + IMG.h * k + 'px'; poster.style.backgroundPosition = (ox - px) + 'px ' + (oy - py) + 'px';
     ZB = Math.min(1, .8 * W / pw);                                                                      // tall (phone) screens: step back so the whole poster fits
@@ -58,6 +60,8 @@ function createIntroScroll(root, opts) {
     pfx.style.left = L + CX + 'px'; pfx.style.top = T + CY + 'px'; rfx.style.left = pw / 2 + 'px'; rfx.style.top = ph * .47 + 'px';
     wall.style.transformOrigin = (L + CX) + 'px ' + (T + CY) + 'px';
   }
+  var lightEl = $('light'), flares = root.querySelectorAll('.is-flare i'), flareEl = $('flare');
+  root.style.setProperty('--sun', CFG.sun);
   var CX = 0, CY = 0, ZB = 1, cam1 = { x: 0, y: 0, r: 0 };
 
   // the poster's surface as water: a small WebGL layer on the poster that bends the picture with ripples from the point of entry.
@@ -152,7 +156,7 @@ function createIntroScroll(root, opts) {
     var kThru = Math.pow(seg(p, .72, .97), 2.6); // camera drifts right with the dive, then speeds up through the wall once it is in
     var kWhite = ease(seg(p, .865, .955));
 
-    s2.style.opacity = kCut;
+    s2.style.opacity = kCut; flareEl.style.opacity = (1 - kCut) * CFG.sun * (.75 + .25 * Math.sin(t * .8));
     s1.style.visibility = kCut >= 1 ? 'hidden' : 'visible';
 
     // S2 flight path in wall space: a straight run from off-screen left to the waiting spot, with one full loop added on the way
@@ -205,6 +209,9 @@ function createIntroScroll(root, opts) {
       s1.style.transform = 'translate(' + (-c1x * z1) + 'px,' + (-c1y * z1) + 'px) rotate(' + cam1.r + 'deg) scale(' + z1 + ')';
       x = .5 * W + (wx - c1x) * z1; y = .5 * H + (wy - c1y) * z1;
       scale = 1 + .5 * (z1 - CFG.skyRest);
+      // lens flare: small soft discs on the line from the sun through the middle of the screen; they slide as the camera moves
+      var sunX = .5 * W + (-.40 * W - c1x) * z1, sunY = .5 * H + (-.46 * H - c1y) * z1, FL = [.55, 1.15, 1.6];
+      for (var fi = 0; fi < flares.length; fi++) flares[fi].style.transform = 'translate(' + (sunX + (.5 * W - sunX) * FL[fi]) + 'px,' + (sunY + (.5 * H - sunY) * FL[fi]) + 'px)';
       pitch = lerp(-36, -74, kSide); roll = lerp(6 * Math.sin(t * .9), -90, kSide);   // roll -90 = head to the right
       yaw = lerp(10 * Math.sin(t * .5), 0, kSide);
     } else {                             // scene 2

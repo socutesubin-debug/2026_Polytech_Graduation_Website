@@ -40,3 +40,35 @@
 .is-hint { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; color: #fff; font-size: 12px; letter-spacing: .4em; text-shadow: 0 1px 6px rgba(60,90,130,.5); }
 .is-hint i { display: block; width: 1px; height: 34px; margin: 10px auto 0; background: #fff; animation: isDrop 1.6s ease-in-out infinite; transform-origin: top; }
 @keyframes isDrop { 0% { transform: scaleY(0); } 60% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
+
+/* ---- 햇빛 (세기는 js/intro-scroll.js CFG.sun) ---- */
+/* 장면 1: 왼쪽 위 화면 밖의 해. 따뜻한 빛 번짐 + 천천히 흔들리는 빛줄기 (하늘 그림에 붙어 있어 카메라와 같이 움직임) */
+.is-s1 i { position: absolute; pointer-events: none; mix-blend-mode: screen; }
+.is-s1 .sun-glow { left: -45%; top: -70%; width: 110%; height: 150%; opacity: calc(var(--sun) * .9); animation: isSunBreath 7s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, rgba(255,250,232,.95) 0, rgba(255,240,205,.6) 18%, rgba(255,232,190,.26) 42%, rgba(255,232,190,0) 100%); }
+.is-s1 .sun-rays { left: -110%; top: -150%; width: 240%; height: 300%; opacity: calc(var(--sun) * .5); transform-origin: 50% 50%; animation: isSunRays 16s ease-in-out infinite alternate;
+  background: repeating-conic-gradient(from 96deg at 50% 50%, rgba(255,246,220,0) 0deg, rgba(255,246,220,.5) 2.2deg, rgba(255,246,220,0) 5deg, rgba(255,246,220,0) 8.5deg, rgba(255,246,220,.28) 10deg, rgba(255,246,220,0) 13deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 0, rgba(0,0,0,.55) 30%, transparent 78%); mask-image: radial-gradient(closest-side, #000 0, rgba(0,0,0,.55) 30%, transparent 78%); }
+@keyframes isSunBreath { from { transform: scale(.94); opacity: calc(var(--sun) * .7); } to { transform: scale(1.06); opacity: calc(var(--sun) * .95); } }
+@keyframes isSunRays { from { transform: rotate(-5deg); } to { transform: rotate(6deg); } }
+/* 렌즈에 맺히는 작은 빛 (화면 기준, 카메라가 움직이면 미끄러짐) */
+.is-flare { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; mix-blend-mode: screen; }
+.is-flare i { position: absolute; border-radius: 50%; will-change: transform; }
+.is-flare .f1 { left: -3vmin; top: -3vmin; width: 6vmin; height: 6vmin; background: radial-gradient(circle, rgba(255,236,190,.32) 0, rgba(255,236,190,.16) 55%, rgba(255,236,190,0) 70%); }
+.is-flare .f2 { left: -7vmin; top: -7vmin; width: 14vmin; height: 14vmin; background: radial-gradient(circle, rgba(200,225,255,0) 52%, rgba(215,232,255,.22) 62%, rgba(215,232,255,0) 72%); }
+.is-flare .f3 { left: -2vmin; top: -2vmin; width: 4vmin; height: 4vmin; background: radial-gradient(circle, rgba(255,214,170,.36) 0, rgba(255,214,170,0) 70%); }
+/* 장면 2: 나뭇잎 사이로 들어온 햇살이 벽과 포스터 위에서 천천히 일렁임 + 비스듬한 빛 한 줄기가 지나감 (벽에 붙어 있어 카메라와 같이 움직임) */
+.is-light { position: absolute; transform: translateZ(27px); pointer-events: none; overflow: hidden; opacity: var(--sun); }
+.is-light i { position: absolute; inset: -6%; mix-blend-mode: soft-light; will-change: transform, opacity; }
+.is-light .dap.a { animation: isDapA 6.5s ease-in-out infinite alternate;
+  background: radial-gradient(ellipse 9% 7% at 22% 30%, rgba(255,250,225,.95), transparent 70%), radial-gradient(ellipse 7% 9% at 31% 52%, rgba(255,250,225,.8), transparent 70%), radial-gradient(ellipse 11% 8% at 12% 64%, rgba(255,250,225,.85), transparent 70%),
+              radial-gradient(ellipse 8% 6% at 44% 22%, rgba(255,250,225,.8), transparent 70%), radial-gradient(ellipse 9% 8% at 72% 34%, rgba(255,250,225,.7), transparent 70%), radial-gradient(ellipse 7% 7% at 84% 60%, rgba(255,250,225,.75), transparent 70%); }
+.is-light .dap.b { animation: isDapB 9s ease-in-out infinite alternate;
+  background: radial-gradient(ellipse 8% 8% at 17% 44%, rgba(255,246,214,.85), transparent 70%), radial-gradient(ellipse 10% 7% at 37% 70%, rgba(255,246,214,.75), transparent 70%), radial-gradient(ellipse 7% 9% at 58% 28%, rgba(255,246,214,.8), transparent 70%),
+              radial-gradient(ellipse 9% 7% at 66% 62%, rgba(255,246,214,.7), transparent 70%), radial-gradient(ellipse 8% 8% at 90% 26%, rgba(255,246,214,.8), transparent 70%), radial-gradient(ellipse 10% 8% at 6% 20%, rgba(255,246,214,.8), transparent 70%); }
+.is-light .shaft { mix-blend-mode: screen; animation: isShaft 14s ease-in-out infinite alternate;
+  background: linear-gradient(112deg, rgba(255,244,214,0) 30%, rgba(255,244,214,.20) 42%, rgba(255,250,232,.30) 48%, rgba(255,244,214,.16) 55%, rgba(255,244,214,0) 68%); }
+@keyframes isDapA { from { transform: translate(-1.2%, .6%) rotate(-.6deg) scale(1.5); opacity: .2; } to { transform: translate(1.4%, -.8%) rotate(.7deg) scale(1.5); opacity: .5; } }
+@keyframes isDapB { from { transform: translate(1%, -1%) scale(1.7); opacity: .45; } to { transform: translate(-1.5%, .9%) scale(1.6); opacity: .15; } }
+@keyframes isShaft { from { transform: translateX(-22%); opacity: .5; } to { transform: translateX(20%); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .is-s1 i, .is-light i { animation: none; } }
