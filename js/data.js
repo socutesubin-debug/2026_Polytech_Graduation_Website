@@ -42,21 +42,21 @@ const ROOM_ASSETS = [
 ];
 
 const STUDENTS = [
-  { name: '김예일', field: 'uxui', slogan: '구조와 흐름을 꿰뚫어 불편을 편리로 바꾸는 경험 디자이너', desc: '', portfolio: '' },
-  { name: '민하도', field: 'visual', slogan: '아이디어를 시각화하는 디자이너', desc: '', portfolio: 'https://hadomin91-design.github.io/hadomin_design/' },
-  { name: '김준서', field: '', slogan: '상상한 것을 실현으로 바꾸는 디자이너', desc: '', portfolio: 'https://superijun.github.io/portfolio/' },
-  { name: '김우선', field: '', slogan: '경험을 디자인하고, 감각을 시각화하는 디자이너', desc: '', portfolio: 'https://kok62360.github.io/1004/' },
-  { name: '김수연', field: 'visual', slogan: '상대의 이야기에 귀 기울이고, 원하는 방향을 함께 찾아가는 디자이너', desc: '', portfolio: 'https://kimssuyeon.github.io/battery-portfolio/' },
-  { name: '박재연', field: 'uxui', slogan: '재미있게 끝까지 질리지 않는 디자이너', desc: '', portfolio: 'https://2501110072-dotcom.github.io/l01_interaction_2b/2501110072_ing_1' },
-  { name: '박수빈', field: 'uxui', slogan: '떠오른 가능성을, 손에 닿는 경험으로.', desc: '', portfolio: 'https://vinportfolio-desk-flow.vercel.app' },
-  { name: '박호성', field: 'uxui', slogan: '감에 의존하지 않고, 데이터를 바탕으로 개선하는 디자이너', desc: '', portfolio: 'https://hoseong-graduation-portfolio.qkrghtjd4820.chatgpt.site/' },
-  { name: '오수한', field: 'uxui', slogan: '익숙함의 결을 따라, 변화를 섬세하게 빚는 디자이너', desc: '', portfolio: 'https://suhan998.github.io/Web-Portfolio/' },
-  { name: '조민영', field: '', slogan: '경험을 내일로 잇는 디자이너', desc: '', portfolio: 'https://ddmom.github.io/my_portfolio/' },
-  { name: '조예빈', field: '', slogan: '익숙한 것에서 낯선 매력을 발견하는 디자이너', desc: '', portfolio: 'https://yobinnie.github.io/exhibition_2026/' },
-  { name: '손예진', field: 'uxui', slogan: '익숙한 것을 낯설게 듣고, 음악처럼 오래 남는 경험을 만드는 디자이너', desc: '', portfolio: 'https://pueon01-max.github.io/play-2/' },
-  { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', portfolio: '' },
-  { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },
-  { name: '하태랑', field: 'visual', slogan: '현실과 꿈의 모호한 경계를 시각화하는 디자이너', desc: '', portfolio: 'https://lalalatototo10-alt.github.io/graduation/' },
+  { name: '김예일', field: 'uxui', slogan: '구조와 흐름을 꿰뚫어 불편을 편리로 바꾸는 경험 디자이너', desc: '', email: '', portfolio: '' },
+  { name: '민하도', field: 'visual', slogan: '아이디어를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://hadomin91-design.github.io/hadomin_design/' },
+  { name: '김준서', field: '', slogan: '상상한 것을 실현으로 바꾸는 디자이너', desc: '', email: '', portfolio: 'https://superijun.github.io/portfolio/' },
+  { name: '김우선', field: '', slogan: '경험을 디자인하고, 감각을 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://kok62360.github.io/1004/' },
+  { name: '김수연', field: 'visual', slogan: '상대의 이야기에 귀 기울이고, 원하는 방향을 함께 찾아가는 디자이너', desc: '', email: '', portfolio: 'https://kimssuyeon.github.io/battery-portfolio/' },
+  { name: '박재연', field: 'uxui', slogan: '재미있게 끝까지 질리지 않는 디자이너', desc: '', email: '', portfolio: 'https://2501110072-dotcom.github.io/l01_interaction_2b/2501110072_ing_1' },
+  { name: '박수빈', field: 'uxui', slogan: '떠오른 가능성을, 손에 닿는 경험으로.', desc: '', email: '', portfolio: 'https://vinportfolio-desk-flow.vercel.app' },
+  { name: '박호성', field: 'uxui', slogan: '감에 의존하지 않고, 데이터를 바탕으로 개선하는 디자이너', desc: '', email: '', portfolio: 'https://hoseong-graduation-portfolio.qkrghtjd4820.chatgpt.site/' },
+  { name: '오수한', field: 'uxui', slogan: '익숙함의 결을 따라, 변화를 섬세하게 빚는 디자이너', desc: '', email: '', portfolio: 'https://suhan998.github.io/Web-Portfolio/' },
+  { name: '조민영', field: '', slogan: '경험을 내일로 잇는 디자이너', desc: '', email: '', portfolio: 'https://ddmom.github.io/my_portfolio/' },
+  { name: '조예빈', field: '', slogan: '익숙한 것에서 낯선 매력을 발견하는 디자이너', desc: '', email: '', portfolio: 'https://yobinnie.github.io/exhibition_2026/' },
+  { name: '손예진', field: 'uxui', slogan: '익숙한 것을 낯설게 듣고, 음악처럼 오래 남는 경험을 만드는 디자이너', desc: '', email: '', portfolio: 'https://pueon01-max.github.io/play-2/' },
+  { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: '' },
+  { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', email: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },
+  { name: '하태랑', field: 'visual', slogan: '현실과 꿈의 모호한 경계를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://lalalatototo10-alt.github.io/graduation/' },
 ].map((s, i) => ({ ...s, work: null, no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
 /* V2 공통 칸 (2026-11-11 추가)
    field: 'uxui' = UX/UI·웹 전시관, 'visual' = Visual 전시관, '' = 아직 확인 안 됨

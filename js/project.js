@@ -4,8 +4,9 @@
    ③ 계속 스크롤하면 도넛이 돌면서 작품이 한 장씩 맨 앞에 크게 옴. 카드를 누르거나 Enter 키 = 작품 상세
       스크롤을 멈추면 가장 가까운 작품에 딱 멈춤. ← → 키로도 한 장씩
    ④ 도넛을 다 보면 아래에서 작품 목록(격자)이 올라옴. 분야(전체 / UX/UI · 웹 / Visual)를 고를 수 있음
-   ⑤ 작품을 누르면 작품 상세: 제목·설명·만든 사람 + 아래로 내리며 보는 그림 (작품마다 14장 정도)
+   ⑤ 작품을 누르면 작품 상세 (검은 화면): 왼쪽 제목·이름·설명·맨 아래 메일, 오른쪽 내려 보는 그림 (작품마다 14장 정도), 오른쪽 위 X 닫기
       만든 사람 이름을 누르면 Designer 방의 그 사람 석고상으로 감
+   - 메일은 js/data.js 학생마다 email 칸 (비어 있으면 안 보임)
    - 작품 자료는 js/data.js의 work 칸: { src: 대표 그림, title, desc, images: [그림1, 그림2, …] }
      아직 없으면(null) 떠다니는 카드는 글자 없는 회색 임시 카드, 작품 목록은 이름이 적힌 회색 카드, 상세 그림도 회색 임시 칸으로 보여 줌
    - 움직임 줄이기: 카드가 저절로 떠다니지 않음 (스크롤하면 자리만 바뀜)
@@ -95,23 +96,21 @@ function pjOpen(i, from) {
   const s = STUDENTS[i]; pj.at = i; pj.back = from || pj.back;
   const imgs = (s.work && s.work.images && s.work.images.length) ? s.work.images : null;
   const count = imgs ? imgs.length : PROJECT.imageCount;
-  $('#pj-d-no').textContent = `${pad(s.no)} / ${pad(STUDENTS.length)} · ${FIELD_LABEL[s.field] || '분야 확인 중'}`;
   $('#pj-d-title').textContent = pjTitle(s);
   $('#pj-d-desc').textContent = (s.work && s.work.desc) || '작품 설명은 자료를 받으면 채워져요.';
-  const who = $('#pj-d-who'); who.textContent = `${s.name} →`; who.setAttribute('aria-label', `${s.name} 디자이너 보기`);
+  const who = $('#pj-d-who'); who.textContent = s.name; who.setAttribute('aria-label', `${s.name} 디자이너 보기`);
+  const mail = $('#pj-d-mail'); mail.hidden = !s.email; mail.textContent = s.email || ''; if (s.email) mail.href = `mailto:${s.email}`; else mail.removeAttribute('href');
   $('#pj-d-images').innerHTML = Array.from({ length: count }, (_, k) => imgs
     ? `<figure class="pj-shot"><img src="${imgs[k]}" alt="${pjTitle(s)} 그림 ${k + 1}" loading="lazy" decoding="async"></figure>`
     : `<figure class="pj-shot pj-shot-temp"><span>그림 ${pad(k + 1)} / ${pad(count)}</span></figure>`).join('');
-  const nx = STUDENTS[(i + 1) % STUDENTS.length];
-  $('#pj-d-next').textContent = `다음 작품 · ${pad(nx.no)} ${nx.name} →`;
-  pj.view.hidden = false; pj.root.classList.add('reading');
+  pj.view.hidden = false; pj.root.classList.add('reading'); document.body.classList.add('pj-reading'); // 위 메뉴 숨김
   pj.view.scrollTop = 0;
   cancelAnimationFrame(pj.raf); pj.raf = requestAnimationFrame(() => pj.view.classList.add('on'));
   $('#pj-d-close').focus({ preventScroll: true });
 }
 function pjClose() {
   if (pj.view.hidden) return false;
-  cancelAnimationFrame(pj.raf); pj.view.classList.remove('on'); pj.root.classList.remove('reading');
+  cancelAnimationFrame(pj.raf); pj.view.classList.remove('on'); pj.root.classList.remove('reading'); document.body.classList.remove('pj-reading');
   setTimeout(() => { if (!pj.view.classList.contains('on')) pj.view.hidden = true; }, reduce ? 0 : 320);
   const back = pj.back && pj.back.isConnected && !pj.back.closest('[hidden]') && pj.back.closest('#pj-grid') ? pj.back : null;
   if (back) back.focus({ preventScroll: true }); else pj.root.focus({ preventScroll: true });
@@ -213,7 +212,4 @@ addEventListener('resize', () => { if (pj.built) pjSize(); });
 
 $$('#pj-filter button').forEach((b) => b.addEventListener('click', () => pjFilter(b.dataset.field)));
 $('#pj-d-close').addEventListener('click', pjClose);
-$('#pj-d-prev').addEventListener('click', () => pjStep(-1));
-$('#pj-d-nextbtn').addEventListener('click', () => pjStep(1));
-$('#pj-d-next').addEventListener('click', () => pjStep(1));
 $('#pj-d-who').addEventListener('click', () => { const i = pj.at; pjClose(); go('designer'); dgFocus(i); });

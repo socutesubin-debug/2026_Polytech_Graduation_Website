@@ -268,20 +268,16 @@
       </div>
       <ul class="pj-grid" id="pj-grid"></ul>
     </div>
+    <!-- 작품 상세: 왼쪽 = 제목 · 이름 · 설명 · (맨 아래) 메일, 오른쪽 = 내려 보는 그림들, 오른쪽 위 X = 닫기 -->
     <div class="pj-detail" id="pj-detail" role="dialog" aria-modal="true" aria-labelledby="pj-d-title" hidden>
-      <div class="pj-d-bar">
-        <button type="button" id="pj-d-prev" aria-label="이전 작품">←</button>
-        <button type="button" id="pj-d-nextbtn" aria-label="다음 작품">→</button>
-        <button type="button" id="pj-d-close" aria-label="닫기">×</button>
-      </div>
-      <div class="pj-d-inner" id="pj-d-body">
-        <div class="pj-d-head">
-          <div><p class="pj-d-no" id="pj-d-no"></p><h2 id="pj-d-title"></h2></div>
-          <div class="pj-d-side"><p id="pj-d-desc"></p><button type="button" class="pj-d-who" id="pj-d-who"></button></div>
-        </div>
-        <div class="pj-d-images" id="pj-d-images"></div>
-        <button type="button" class="pj-d-next" id="pj-d-next"></button>
-      </div>
+      <aside class="pj-d-side">
+        <h2 id="pj-d-title"></h2>
+        <button type="button" class="pj-d-who" id="pj-d-who"></button>
+        <p class="pj-d-desc" id="pj-d-desc"></p>
+        <a class="pj-d-mail" id="pj-d-mail" hidden></a>
+      </aside>
+      <div class="pj-d-images" id="pj-d-images"></div>
+      <button type="button" class="pj-d-close" id="pj-d-close" aria-label="닫기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16M20 4L4 20"/></svg></button>
     </div>
   </section>
 

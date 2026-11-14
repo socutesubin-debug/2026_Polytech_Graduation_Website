@@ -61,9 +61,9 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.waitForFunction(()=>Math.abs(pj.k-3)<0.02,null,{timeout:6000});
  // 맨 앞 카드를 누르면 그 작품 상세, Enter 키도 같음
  const who3=await nameOf(3);
- await p.waitForFunction(()=>Math.abs(pj.k-3)<0.002&&Math.abs(pj.mx-pj.tmx)<0.002,null,{timeout:6000}); await p.locator('.pj-card').nth(3).click({force:true});await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
+ await p.waitForFunction(()=>Math.abs(pj.k-3)<0.002&&Math.abs(pj.mx-pj.tmx)<0.002,null,{timeout:6000}); await p.locator('.pj-card').nth(3).click({force:true});await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
  await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
- await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
+ await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
  await p.keyboard.press('Escape');await p.waitForTimeout(400);
  // 끝까지 내리면 작품 목록
  await p.evaluate(()=>pjScrollToU(pjEndAt()+1,true));await p.waitForFunction(()=>pj.root.scrollTop/pj.root.clientHeight>=pjEndAt()+0.99,null,{timeout:6000});
@@ -73,9 +73,9 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.locator('#pj-filter [data-field="all"]').click();assert.equal(await p.locator('.pj-item:visible').count(),15);
  // 작품 상세: 그림 14칸, ← → 이전/다음, Esc 닫으면 누른 카드에 초점
  await p.locator('.pj-item').nth(6).click();await p.locator('#pj-detail.on').waitFor();
- assert.match(await p.locator('#pj-d-no').textContent(),/^07 \/ 15/);assert.equal(await p.locator('.pj-shot').count(),14);
- assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈 →');
- await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박호성 →');
+ assert.equal(await p.locator('.pj-shot').count(),14);
+ assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
+ await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박호성');
  await p.keyboard.press('ArrowLeft');await p.keyboard.press('Escape');await p.waitForTimeout(400);
  assert.equal(await p.locator('#pj-detail').isHidden(),true);
  assert(await p.locator('.pj-item').nth(6).evaluate(el=>document.activeElement===el),'닫으면 누른 작품에 초점');
@@ -102,8 +102,11 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.locator('#dg-filter [data-field="all"]').click();
  // [대표 작품 보기] → Project 방의 그 작품 상세
  await p.locator('.dg-item[data-i="1"] .dg-work').click();await p.locator('#pj-detail.on').waitFor();
- assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도 →');
- await p.locator('.pill [data-go="designer"]').click();assert.equal(await p.locator('#pj-detail').evaluate(el=>el.classList.contains('on')),false,'다른 방으로 가면 상세가 닫힘');
+ assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도');
+ // 상세: 검은 화면, 위 메뉴는 숨김, 오른쪽 위 X로 닫으면 메뉴가 다시 보임
+ assert.equal(await p.locator('.topbar').isVisible(),false,'상세에서는 위 메뉴 숨김');assert.equal(await p.locator('#pj-d-mail').isHidden(),true,'메일이 없으면 안 보임');
+ await p.locator('#pj-d-close').click();await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
+ await p.locator('.pill [data-go="designer"]').click();await p.waitForFunction(()=>page==='designer',null,{timeout:3000});
  console.log('designer ok');
  await p.context().close();
 
