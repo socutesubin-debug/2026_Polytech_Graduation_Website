@@ -1,16 +1,19 @@
 /* Project 방 (#project) — 작품 15개를 보는 방
-   ① 첫 화면: 글자 없이 작품 썸네일만 공(구) 모양으로 떠다님. 순서는 들어올 때마다 랜덤. 마우스 쪽으로 기울고, 옆으로 빨리 움직이면 휙 돎
-   ② 스크롤하면 카드들이 모여 도넛(고리) 모양이 됨
+   ① 첫 화면: 글자 없이 작품 썸네일만 공(구) 모양으로 떠다님. 순서는 들어올 때마다 랜덤
+      - 들어오면 카드가 가운데에서 하나씩 부드럽게 퍼져 나옴
+      - 카드는 공을 따라 기울지 않고 늘 화면을 똑바로 봄. 앞에 있는 카드는 크고 또렷하게, 뒤에 있는 카드는 작고 흐리게
+      - 끌면(드래그) 공이 손을 따라 부드럽게 돌고, 손을 떼면 미끄러지듯 더 돌다가 멈춤. 마우스 쪽으로 살짝 기욺
+   ② 스크롤하면 카드들이 모여 도넛(고리) 모양이 됨 (스크롤을 바로 따라가지 않고 미끄러지듯 부드럽게 따라감)
    ③ 도넛은 저절로 계속 돌고, 스크롤하면 더 돎. 카드는 평평한 판이 아니라 도넛을 따라 휘어진 종이처럼 보임
       (카드 한 장 = 세로로 자른 얇은 띠 여러 개를 둥글게 이어 붙인 것. 띠마다 밝기가 달라 휜 종이 느낌, 살짝 물결치듯 휨)
-      카드를 누르거나 Enter 키(맨 앞 카드) = 작품 상세. ← → 키 = 한 장만큼 돌리기
+      도넛도 옆으로 끌어서 돌릴 수 있음. 카드를 누르거나 Enter 키(맨 앞 카드) = 작품 상세. ← → 키 = 한 장만큼 돌리기
    ④ 스크롤 끝에서도 도넛은 계속 돎 (작품 목록은 없음)
    ⑤ 작품을 누르면 작품 상세 (검은 화면): 왼쪽 제목·이름·설명·맨 아래 메일, 오른쪽 내려 보는 그림 (작품마다 14장 정도), 오른쪽 위 X 닫기
       만든 사람 이름을 누르면 Designer 방의 그 사람 석고상으로 감
    - 메일은 js/data.js 학생마다 email 칸 (비어 있으면 안 보임)
    - 작품 자료는 js/data.js의 work 칸: { src: 대표 그림, title, desc, images: [그림1, 그림2, …] }
      아직 없으면(null) 떠다니는 카드는 글자 없는 회색 임시 카드 (썸네일은 가로:세로 = 4:3이 가장 잘 맞음), 상세 그림도 회색 임시 칸으로 보여 줌
-   - 움직임 줄이기: 카드가 저절로 떠다니거나 돌지 않음 (스크롤하면 자리만 바뀜)
+   - 움직임 줄이기: 카드가 저절로 떠다니거나 돌지 않고, 퍼져 나오는 움직임·미끄러짐도 없음 (스크롤하거나 끌면 자리만 바뀜)
    숫자를 바꾸고 싶으면 아래 PROJECT만 고치면 됩니다 (스크롤 길이는 화면 높이 1 = 한 화면) */
 const PROJECT = {
   imageCount: 14,                 // 작품 상세의 그림 수 (work.images가 없을 때 보여 줄 임시 칸 수)
@@ -23,7 +26,16 @@ const PROJECT = {
   ringSpin: 6,                    // 도넛이 저절로 계속 도는 속도 (도/초, 0 = 멈춤)
   strips: 10, stripsMobile: 7,    // 카드 한 장을 몇 개의 띠로 나눠 휘게 할지 (많을수록 매끄럽지만 무거움)
   paper: 1,                       // 종이가 물결치듯 휘는 정도 (0 = 도넛 모양대로만 휨)
-  mouseTilt: 14, mouseSpin: 0.22, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 휙 도는 힘
+  mouseTilt: 12, mouseSpin: 0.08, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 살짝 도는 힘
+  // 부드럽게 흘러가는 움직임
+  follow: 0.07,                   // 스크롤을 따라오는 부드러움 (작을수록 더 천천히 미끄러지듯 따라옴, 1 = 바로 따라옴)
+  drag: 1,                        // 끌어서 돌리기 (0 = 끔)
+  smoothing: 0.09,                // 끌 때 따라오는 부드러움 (작을수록 더 늦게, 부드럽게 따라옴)
+  glide: 1.2,                     // 손을 뗀 뒤 미끄러지듯 더 도는 정도 (클수록 오래 돎)
+  flat: 1,                        // 공일 때 카드가 화면을 똑바로 보는 정도 (0 = 예전처럼 공을 따라 기울어짐)
+  depth: 0.22, depthFog: 0.5,     // 공일 때 뒤에 있는 카드를 작게 / 흐리게 하는 정도
+  reveal: 1.1,                    // 들어올 때 카드 한 장이 가운데에서 퍼져 나오는 시간 (초, 0 = 끔)
+  hover: 0.07,                    // 마우스를 올린 카드가 커지는 정도
   // 도넛 보기 방식: 2 = 가까이에서 크게 (카드가 화면 가장자리까지 둘러쌈), 1 = 멀리서 작은 도넛 (예전)
   // 주소 끝에 ?v=1 을 붙이면 (예: index.html?v=1#project) 예전 버전으로 비교해 볼 수 있음
   version: 2,
@@ -40,11 +52,14 @@ const pj = {
   root: $('#project'), track: $('#pj-track'), hero: $('#pj-hero'), scene: $('#pj-hero .pj-scene'), space: $('#pj-space'), cloud: $('#pj-cloud'),
   live: $('#pj-live'), view: $('#pj-detail'),
   cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, at: -1, back: null,
-  u: 0, k: 0, ringBase: 0, front: -1, auto: 0, frontIdx: 0,
+  u: 0, us: 0, a: 0, k: 0, ringBase: 0, front: -1, auto: 0, frontIdx: 0,
+  dy: 0, dys: 0, dp: 0, dps: 0, dvy: 0, dvp: 0, down: null, dragged: false, hover: -1, revT: null, rev: 0, // 끌어서 돌리기, 마우스 올린 카드, 퍼져 나오기
   ver: /[?&]v=1\b/.test(location.search) ? 1 : PROJECT.version,
 };
 const pjSmooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const pjLerp = (a, b, t) => a + (b - a) * t;
+const pjOut = (x) => 1 - Math.pow(1 - x, 3);                                   // 처음엔 빠르고 끝에서 부드럽게 멈춤
+const pjEase = (s, dt) => 1 - Math.pow(1 - clamp(s, 0, 1), dt / 16.7);         // 한 프레임(1/60초)에 s만큼 따라가는 부드러움
 
 // 썸네일이 아직 없을 때의 회색 임시 카드 (사람마다 밝기만 조금 다름)
 function pjTempBg(s) { const l = 74 + ((s.no * 7) % 5) * 3; return `linear-gradient(160deg,hsl(36 10% ${l}%),hsl(32 6% ${l - 18}%))`; }
@@ -71,7 +86,7 @@ function pjBuild() {
     const y = 1 - (2 * (i + 0.5)) / n; // 공 위에 골고루 퍼지는 자리 (나선)
     return { el, i, s: +el.dataset.i, th: (i * 137.508) % 360, ph: Math.asin(y) * deg * 0.92, tr: (i * 360) / n, // tr = 도넛 위 자리
       sz: 0.72 + ((i * 7) % 5) * 0.14, f1: 0.5 + ((i * 3) % 7) * 0.09, f2: 0.4 + ((i * 5) % 6) * 0.11, p1: i * 1.7, p2: i * 2.9,
-      strips: $$('.pj-strip', el), face: -1 };
+      strips: $$('.pj-strip', el), face: -1, hv: 0, off: 0, fog: '' };
   });
   pj.cloud.addEventListener('click', (e) => { const b = e.target.closest('.pj-card'); if (b) pjOpen(+b.dataset.i, b); });
   pjSize();
@@ -116,19 +131,39 @@ function renderProject(t) {
   const C = PROJECT, W = pj.hero.clientWidth, H = pj.hero.clientHeight, n = STUDENTS.length; if (!W || !H) return;
   const dt = Math.min(64, t - (pj.lastT || t)); pj.lastT = t;
   if (pj.root.classList.contains('reading')) return;
+  const live = !reduce, rad = Math.PI / 180, ts = t / 1000;
+  // 스크롤을 바로 따라가지 않고 미끄러지듯 부드럽게 따라감 (us = 부드럽게 따라가는 스크롤 자리)
   pj.u = pj.root.scrollTop / H;
-  const a = pjSmooth(C.hold, pjRingAt(), pj.u);                                 // 0 = 공, 1 = 도넛
-  const kTarget = clamp((pj.u - pjRingAt()) / C.perCard, 0, n - 1);            // 맨 앞에 올 작품 번호 (소수)
-  pj.k += (kTarget - pj.k) * (reduce ? 1 : 1 - Math.exp(-dt / 120));
+  pj.us += (pj.u - pj.us) * (live ? pjEase(C.follow, dt) : 1);
+  if (Math.abs(pj.u - pj.us) < 0.0004) pj.us = pj.u;
+  const a = pj.a = pjSmooth(C.hold, pjRingAt(), pj.us);                         // 0 = 공, 1 = 도넛
+  const f = (1 - a) * C.flat;                                                  // 1 = 카드가 화면을 똑바로 봄 (공), 0 = 도넛을 따라 휨
+  pj.k = clamp((pj.us - pjRingAt()) / C.perCard, 0, n - 1);                    // 맨 앞에 올 작품 번호 (소수)
 
-  const live = !reduce, ease = 1 - Math.exp(-dt / 260);
+  // 들어올 때: 카드가 가운데에서 하나씩 부드럽게 퍼져 나옴
+  if (pj.revT == null) pj.revT = t;
+  const rv = live && C.reveal > 0 ? C.reveal * 1000 : 0;
+  pj.rev = rv ? clamp((t - pj.revT) / (rv + n * 45), 0, 1) : 1;
+
+  const ease = 1 - Math.exp(-dt / 320);
   pj.mx += (pj.tmx - pj.mx) * ease; pj.my += (pj.tmy - pj.my) * ease;
-  if (live) { pj.angle += (C.spin * (1 - a) + pj.vel) * dt / 1000; pj.vel *= Math.exp(-dt / 700); pj.auto += C.ringSpin * a * dt / 1000; }
+  // 끌어서 돌리기: 손을 따라 부드럽게 늦게 따라오고, 손을 떼면 미끄러지듯 더 돌다가 멈춤
+  if (live) {
+    if (!(pj.down && pj.down.moved)) {
+      const g = Math.exp(-dt / (C.glide * 700));
+      pj.dy += pj.dvy * dt / 1000; pj.dp += pj.dvp * dt / 1000; pj.dvy *= g; pj.dvp *= g;
+      pj.dp *= Math.exp(-dt / 3500);                                           // 위아래로 기울인 것은 천천히 제자리로
+    }
+    pj.dp = clamp(pj.dp, -60, 60);
+    const s = pjEase(C.smoothing, dt); pj.dys += (pj.dy - pj.dys) * s; pj.dps += (pj.dp - pj.dps) * s;
+    pj.angle += (C.spin * (1 - a) + pj.vel) * dt / 1000; pj.vel *= Math.exp(-dt / 700); pj.auto += C.ringSpin * a * dt / 1000;
+  } else { pj.dp = clamp(pj.dp, -60, 60); pj.dys = pj.dy; pj.dps = pj.dp; }
   if (a < 0.01) { pj.ringBase = 360 * Math.round(pj.angle / 360); pj.auto = 0; } // 도넛으로 바뀌기 시작할 때의 기준 각도
   const step = 360 / n, mt = C.mouseTilt * (1 - 0.7 * a);
-  const spinY = pjLerp(pj.angle, pj.ringBase - pj.k * step - pj.auto, a) + pj.mx * mt; // 도넛: 스크롤만큼 + 저절로 계속 돎
+  const spinY = pjLerp(pj.angle, pj.ringBase - pj.k * step - pj.auto, a) + pj.mx * mt + pj.dys // 도넛: 스크롤만큼 + 저절로 계속 돎 + 끌어서 돌린 만큼
+    - (1 - pjOut(pj.rev)) * 50;                                                // 들어올 때 살짝 감겼다 풀림
   const V2 = pj.ver === 2, N = C.near, mob = W < 760;
-  const cw = mob ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), rad = Math.PI / 180, ts = t / 1000, wob = live ? C.float * (1 - 0.85 * a) : 0;
+  const cw = mob ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), wob = live ? C.float * (1 - 0.85 * a) : 0;
   if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px'); }
   // 도넛일 때의 모양: 버전 1 = 멀리서 작은 도넛, 버전 2 = 가까이에서 크게
   const ring = V2
@@ -136,53 +171,71 @@ function renderProject(t) {
         y: -H * (mob ? 0.04 : N.lift), sc: (W * (mob ? N.cardMobile : N.card)) / cw, fs: 1.05, fo: 0.06, dimBack: 0.35, dimSide: 0.08 }
     : { R: mob ? W * 0.4 : Math.min(W * 0.36, H * 0.46), y: 0, z: -0.35, tilt: -13, roll: 0, persp: 1400, sc: 0.9, fs: C.focusScale, fo: C.focusOut, dimBack: 0.55, dimSide: 0.25 };
   const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4);
-  const R = pjLerp(Rs, ring.R, a);
-  const tilt = pjLerp(-6, ring.tilt, a) - pj.my * mt * 0.7;
+  const R = pj.R = pjLerp(Rs, ring.R, a);
+  const tilt = pjLerp(-6, ring.tilt, a) - pj.my * mt * 0.7 + pj.dps * (1 - a) + Math.sin(ts * 0.21) * 4 * wob; // 공은 위아래로도 아주 천천히 흔들림
   const persp = pjLerp(1400, ring.persp, a);
   if (Math.abs(persp - (pj.persp || 0)) > 0.5) { pj.persp = persp; pj.scene.style.perspective = persp.toFixed(0) + 'px'; }
   pj.space.style.transform = `translate3d(0,${(ring.y * a).toFixed(1)}px,${(R * pjLerp(-0.35, ring.z, a)).toFixed(1)}px)`;
   pj.cloud.style.transform = `rotateZ(${(ring.roll * a).toFixed(2)}deg) rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
-  const K = pj.K, mid = (K - 1) / 2, pap = live ? C.paper : 0;
+  const K = pj.K, mid = (K - 1) / 2, pap = live ? C.paper * (0.35 + 0.65 * a) : 0;
+  const hvE = live ? 1 - Math.exp(-dt / 170) : 1, offD = Math.exp(-dt / 220);
   if (cw !== pj.sw) { pj.sw = cw; pj.hero.style.setProperty('--sw', (cw / K).toFixed(2) + 'px'); }
   let best = 999;
   for (const c of pj.cards) {
+    const e = rv ? pjOut(clamp((t - pj.revT - c.i * 45) / rv, 0, 1)) : 1;      // 이 카드가 얼마나 퍼져 나왔는지 (0~1)
+    c.hv += ((pj.hover === c.i ? 1 : 0) - c.hv) * hvE;                         // 마우스를 올리면 부드럽게 커짐
     const th = pjLerp(c.th, c.tr, a) + Math.sin(ts * c.f1 + c.p1) * 6 * wob;
     const ph = pjLerp(c.ph, 0, a) + Math.cos(ts * c.f2 + c.p2) * 5 * wob;
-    const r = R * (1 + Math.sin(ts * c.f2 + c.p1) * 0.07 * wob);
+    const r = R * (1 + Math.sin(ts * c.f2 + c.p1) * 0.07 * wob) * pjLerp(0.06, 1, e);
     const ang = ((th + spinY) % 360 + 540) % 360 - 180;                       // 맨 앞에서 얼마나 돌아가 있는지 (-180~180도)
     if (Math.abs(ang) < best) { best = Math.abs(ang); pj.frontIdx = c.i; }
     const near = Math.max(0, 1 - Math.abs(ang) / step) * a;                    // 맨 앞 작품일수록 1
     const back = Math.cos(ang * rad) < 0, face = back ? 180 : 0;              // 뒤쪽 카드는 뒤집어서 그림이 거꾸로 보이지 않게
+    const angp = back ? ang - Math.sign(ang) * 180 : ang;                      // 카드 앞면 기준으로 돌아간 각도 (-90~90도)
     if (c.face !== face) {                                                     // 뒤집히면 띠 순서도 거꾸로 (그림이 좌우로 뒤바뀌지 않게)
+      // 공 ↔ 도넛 사이에서 뒤집힐 때 툭 튀지 않고 종이가 넘어가듯 부드럽게 돌아가도록
+      if (c.face >= 0 && live) { const nb = c.off - angp * (1 - f); c.off = Math.abs(nb) < 60 ? nb - angp * (1 - f) : 0; }
       c.face = face;
       c.strips.forEach((el, j) => { const k = back ? K - 1 - j : j; el.style.backgroundPosition = `${(k / (K - 1) * 100).toFixed(2)}% 50%`;
         el.classList.toggle('l', k === 0); el.classList.toggle('r', k === K - 1); });
     }
-    const sc = pjLerp(c.sz, ring.sc, a) * (1 + (ring.fs - 1) * near);
-    const rz = r + R * ring.fo * near, dth = (cw * sc / K) / rz / rad;         // 띠 하나가 차지하는 도넛 위 각도
-    const op = (1 - a * ring.dimBack * (1 - Math.cos(ang * rad)) / 2 - a * ring.dimSide * (1 - near)).toFixed(2); // 도넛 뒤쪽 카드는 흐리게 (배경색으로 덮음)
+    c.off *= offD;
+    const zc = Math.cos(ph * rad) * Math.cos(ang * rad);                       // 깊이: 1 = 맨 앞, -1 = 맨 뒤
+    const sc = pjLerp(1 + (c.sz - 1) * 0.45, ring.sc, a) * (1 + (ring.fs - 1) * near)
+      * (1 + C.depth * zc * f) * (1 + C.hover * c.hv) * pjLerp(0.4, 1, e);     // 공: 앞에 있을수록 크게, 뒤에 있을수록 작게
+    const rz = r + R * ring.fo * near + cw * 0.12 * c.hv, w = cw * sc / K, kap = a / rz; // w = 띠 하나 너비, kap = 휘는 정도 (0 = 평평)
+    // 공일 때는 카드를 다시 돌려서 화면을 똑바로 보게 함 (도넛으로 갈수록 도넛을 따라 섬)
+    const L = -angp * f + c.off, p1 = -ph * f, p2 = (back ? 1 : -1) * tilt * f;
+    const head = `rotateY(${th.toFixed(2)}deg) rotateX(${ph.toFixed(2)}deg) translateZ(${rz.toFixed(1)}px) rotateX(${p1.toFixed(2)}deg) rotateY(${L.toFixed(2)}deg) rotateX(${p2.toFixed(2)}deg)`;
+    // 흐리게 = 배경색 안개 (투명하게 하면 띠 이음매가 보여서). 도넛 뒤쪽 + 공에서 멀리 있는 카드 + 아직 덜 퍼져 나온 카드
+    const op = (1 - a * ring.dimBack * (1 - Math.cos(ang * rad)) / 2 - a * ring.dimSide * (1 - near) - f * C.depthFog * (1 - zc) / 2) * e;
+    const fog = (1 - op).toFixed(2), setFog = c.fog !== fog; c.fog = fog;
     const twist = Math.sin(ts * 0.45 + c.p1) * 3 * pap;                         // 종이가 살짝 비틀림 (도)
+    const amp = cw * sc * 0.06 * pap, nrm = (angp + L) * rad;
     for (let j = 0; j < K; j++) {
-      const x = (j - mid) / mid;                                               // 카드 왼쪽 끝 -1 ~ 오른쪽 끝 1
-      // 종이가 물결치듯 앞뒤로 휨: 띠마다 도넛에서 조금 들어가고 나오고, 그 기울기만큼 띠를 비스듬히 돌려서 이음매가 벌어지지 않게
-      const ph2 = x * 2.2 + ts * 0.8 + c.p2, amp = cw * sc * 0.06 * pap;
+      const o = j - mid, x = o / mid;                                          // 카드 왼쪽 끝 -1 ~ 오른쪽 끝 1
+      const be = o * w * kap;                                                  // 이 띠가 카드 가운데에서 휘어 돌아간 각도 (라디안)
+      const px = kap > 1e-5 ? Math.sin(be) / kap : o * w, pz = kap > 1e-5 ? (Math.cos(be) - 1) / kap : 0;
+      // 종이가 물결치듯 앞뒤로 휨: 띠마다 조금 들어가고 나오고, 그 기울기만큼 띠를 비스듬히 돌려서 이음매가 벌어지지 않게
+      const ph2 = x * 2.2 + ts * 0.8 + c.p2;
       const wave = amp * Math.sin(ph2), slope = Math.atan(amp * Math.cos(ph2) * 2.2 * 2 / (cw * sc)) / rad;
-      const el = c.strips[j], a2 = ang + (j - mid) * dth;
-      el.style.transform = `rotateY(${(th + (j - mid) * dth).toFixed(2)}deg) rotateX(${ph.toFixed(2)}deg) translateZ(${(rz + wave).toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad)).toFixed(3)}, ${sc.toFixed(3)})`;
-      el.style.setProperty('--sh', (0.34 * (1 - Math.abs(Math.cos(a2 * rad)))).toFixed(3)); // 옆으로 돌아간 띠일수록 어둡게 = 휜 종이 그림자
-      if (el.dataset.op !== op) { el.dataset.op = op; el.style.setProperty('--fog', (1 - op).toFixed(2)); } // 흐리게 = 배경색 안개 (투명하게 하면 띠 이음매가 보여서)
+      const el = c.strips[j];
+      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad)).toFixed(3)}, ${sc.toFixed(3)})`;
+      el.style.setProperty('--sh', (0.34 * (1 - Math.abs(Math.cos(nrm + be)))).toFixed(3)); // 옆으로 돌아간 띠일수록 어둡게 = 휜 종이 그림자
+      if (setFog) el.style.setProperty('--fog', fog);
     }
   }
   // 맨 앞 작품 (화면에는 글자 없이, 화면 읽기 프로그램에만 알림)
-  const f = a > 0.85 ? pj.frontIdx : -1;
-  if (f !== pj.front) {
-    pj.front = f; const s = f >= 0 ? STUDENTS[pj.cards[f].s] : null;
+  const fr = a > 0.85 ? pj.frontIdx : -1;
+  if (fr !== pj.front) {
+    pj.front = fr; const s = fr >= 0 ? STUDENTS[pj.cards[fr].s] : null;
     pj.live.textContent = s ? `${s.name}, ${pjTitle(s)}. Enter 키를 누르면 작품 보기` : '';
   }
 }
 function enterProject() {
   pjBuild();
   pj.root.classList.toggle('still', reduce);
+  pj.revT = null; // 들어올 때마다 카드가 다시 퍼져 나옴
 }
 /* 키보드 (js/main.js가 부름): 상세가 열려 있으면 Esc 닫기, ← → 이전/다음 작품. 도넛에서는 ← → 로 한 장씩 */
 function projectKey(e) {
@@ -200,13 +253,51 @@ function projectKey(e) {
   return false;
 }
 
+/* 마우스·손가락: 끌어서 돌리기 (공은 위아래로도, 도넛은 옆으로) + 마우스 쪽으로 살짝 기울기 + 마우스를 올린 카드 */
+pj.hero.addEventListener('pointerdown', (e) => {
+  pj.dragged = false;
+  if (!PROJECT.drag || e.button > 0) return;
+  pj.down = { id: e.pointerId, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, lt: e.timeStamp, vy: 0, vp: 0, moved: false, touch: e.pointerType !== 'mouse' };
+  pj.dvy = pj.dvp = 0;                                                         // 미끄러지던 중이면 잡아서 멈춤
+});
 pj.hero.addEventListener('pointermove', (e) => {
+  let d = pj.down;
+  if (d && d.id === e.pointerId && !d.touch && !(e.buttons & 1)) d = pj.down = null; // 화면 밖에서 버튼을 뗀 경우
+  if (d && d.id === e.pointerId) {
+    if (!d.moved) {                                                            // 조금(6px) 움직여야 끌기 시작 (그냥 누르기 = 작품 열기)
+      const tx = e.clientX - d.x, ty = e.clientY - d.y;
+      if (Math.hypot(tx, ty) < 6) return;
+      if (d.touch && Math.abs(ty) > Math.abs(tx)) { pj.down = null; return; }  // 손가락으로 위아래 = 스크롤
+      d.moved = true; d.lx = e.clientX; d.ly = e.clientY; d.lt = e.timeStamp; pj.hover = -1; pj.hero.classList.add('drag');
+      try { pj.hero.setPointerCapture(e.pointerId); } catch (_) { /* 괜찮음 */ }
+      return;
+    }
+    const k = 57.3 / Math.max(160, pj.R || 400);                               // 끈 거리(px) → 돌아가는 각도(도): 카드가 손을 따라옴
+    const dx = (e.clientX - d.lx) * k, dy = -(e.clientY - d.ly) * k * (1 - (pj.a || 0)), ms = Math.max(8, e.timeStamp - d.lt);
+    pj.dy += dx; pj.dp += dy; d.vy = pjLerp(d.vy, dx / ms * 1000, 0.4); d.vp = pjLerp(d.vp, dy / ms * 1000, 0.4);
+    d.lx = e.clientX; d.ly = e.clientY; d.lt = e.timeStamp;
+    return;
+  }
   if (e.pointerType !== 'mouse' || reduce) return;
   const r = pj.hero.getBoundingClientRect();
   pj.tmx = ((e.clientX - r.left) / r.width - 0.5) * 2; pj.tmy = ((e.clientY - r.top) / r.height - 0.5) * 2;
   pj.vel = clamp(pj.vel + e.movementX * PROJECT.mouseSpin * (pj.u < PROJECT.hold ? 1 : 0), -90, 90);
 });
-pj.hero.addEventListener('pointerleave', () => { pj.tmx = pj.tmy = 0; });
+function pjDragEnd(e) {
+  const d = pj.down; if (!d || d.id !== e.pointerId) return;
+  pj.down = null; if (!d.moved) return;
+  pj.dragged = e.type === 'pointerup'; pj.hero.classList.remove('drag');       // 끌고 난 뒤의 클릭은 작품을 열지 않음
+  if (!reduce && e.timeStamp - d.lt < 90) { pj.dvy = clamp(d.vy, -420, 420); pj.dvp = clamp(d.vp, -240, 240); } // 놓는 순간의 빠르기로 더 미끄러짐
+}
+pj.hero.addEventListener('pointerup', pjDragEnd);
+pj.hero.addEventListener('pointercancel', pjDragEnd);
+pj.hero.addEventListener('click', (e) => { if (pj.dragged) { pj.dragged = false; e.stopPropagation(); e.preventDefault(); } }, true);
+pj.hero.addEventListener('pointerleave', () => { pj.tmx = pj.tmy = 0; pj.hover = -1; });
+pj.cloud.addEventListener('pointerover', (e) => {
+  const b = e.target.closest('.pj-card'); if (!b || e.pointerType !== 'mouse' || (pj.down && pj.down.moved)) return;
+  pj.hover = pj.cards.findIndex((c) => c.el === b);
+});
+pj.cloud.addEventListener('pointerout', (e) => { const b = e.target.closest('.pj-card'); if (b && !(e.relatedTarget && b.contains(e.relatedTarget))) pj.hover = -1; });
 addEventListener('resize', () => { if (pj.built) pjSize(); });
 
 $('#pj-d-close').addEventListener('click', pjClose);

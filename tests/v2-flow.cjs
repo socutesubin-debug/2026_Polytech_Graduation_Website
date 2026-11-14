@@ -46,10 +46,22 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.notEqual(await p.locator('.pj-strip').first().evaluate(el=>el.style.transform),t0,'카드가 떠다님');
  // 스크롤하면 공 → 도넛: 카드들이 위아래로 덜 퍼짐
  const spread=()=>p.evaluate(()=>{const ys=[...document.querySelectorAll('.pj-strip:first-child')].map(el=>{const r=el.getBoundingClientRect();return r.top+r.height/2;});return Math.max(...ys)-Math.min(...ys);});
+ // 들어오면 카드가 가운데에서 퍼져 나옴 → 다 퍼진 뒤: 카드는 공을 따라 기울지 않고 화면을 똑바로 봄 (가로:세로가 그대로 4:3), 앞 카드가 뒤 카드보다 큼
+ assert(await p.evaluate(()=>pj.rev<1),'들어오면 카드가 퍼져 나오는 중');await p.waitForFunction(()=>pj.rev>=1,null,{timeout:8000});
+ const boxes=await p.evaluate(()=>pj.cards.map(c=>{const rs=c.strips.map(el=>el.getBoundingClientRect());const w=Math.max(...rs.map(r=>r.right))-Math.min(...rs.map(r=>r.left)),h=Math.max(...rs.map(r=>r.bottom))-Math.min(...rs.map(r=>r.top));return {w,h};}));
+ for(const b of boxes) assert(Math.abs(b.w/b.h-4/3)<0.2,'공일 때 카드는 화면을 똑바로 봄: '+(b.w/b.h).toFixed(2));
+ const ws=boxes.map(b=>b.w);assert(Math.max(...ws)>Math.min(...ws)*1.6,'앞 카드는 크고 뒤 카드는 작음');
+ // 끌면 공이 손을 따라 부드럽게 돌고, 손을 떼면 미끄러지듯 더 돎. 끌고 난 뒤에는 작품이 열리지 않음
+ await p.mouse.move(600,450);await p.mouse.down();await p.mouse.move(820,430,{steps:6});
+ assert(await p.evaluate(()=>pj.dy>15&&pj.hero.classList.contains('drag')),'끌면 돎');assert(await p.evaluate(()=>pj.dys<pj.dy),'부드럽게 늦게 따라옴');
+ const d0=await p.evaluate(()=>pj.dy);await p.mouse.up();await p.waitForTimeout(300);
+ assert(await p.evaluate(d0=>pj.dy>d0+1&&!pj.hero.classList.contains('drag'),d0),'손을 떼면 미끄러지듯 더 돎');
+ assert.equal(await p.locator('#pj-detail').isHidden(),true,'끌고 난 뒤에는 작품이 열리지 않음');
+ await p.mouse.move(5,450);await p.waitForFunction(()=>Math.abs(pj.dvy)<1,null,{timeout:8000});
  const sphere=await spread();
  await p.waitForTimeout(1000);await p.evaluate(()=>pjGotoCard(0));
  await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(0))<0.01,null,{timeout:6000});
- await p.waitForTimeout(600);assert(await spread()<sphere*0.75,'도넛은 공보다 납작함');
+ await p.waitForFunction(()=>pj.us===pj.u,null,{timeout:6000});await p.waitForTimeout(300);assert(await spread()<sphere*0.75,'도넛은 공보다 납작함');
  // 도넛은 스크롤을 안 해도 저절로 계속 돌고, 카드는 휘어진 종이처럼 띠 여러 개로 되어 있고 살짝 물결침
  const a0=await p.evaluate(()=>pj.auto);await p.waitForTimeout(500);assert(await p.evaluate(a0=>pj.auto>a0+1,a0),'도넛이 계속 돎');
  assert.equal(await p.locator('.pj-card').first().locator('.pj-strip').count(),await p.evaluate(()=>pj.K));const c0=await p.evaluate(()=>pj.cards[0].strips[0].style.transform);await p.waitForTimeout(200);assert.notEqual(await p.evaluate(()=>pj.cards[0].strips[0].style.transform),c0,'종이가 살짝 물결침');
@@ -138,6 +150,6 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer crossroads corridor (UX/UI left bright grid, Visual right dark; wheel/keys/jump/portfolio plaque), reduced motion, mobile; no page errors.');
+ console.log('PASS: intro buttons + skip + menu, about (poster + text), project reveal + flat cards by depth + drag/glide → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer crossroads corridor (UX/UI left bright grid, Visual right dark; wheel/keys/jump/portfolio plaque), reduced motion, mobile; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

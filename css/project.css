@@ -4,7 +4,8 @@
 
 /* ① 떠다니는 카드 */
 .pj-track{position:relative} /* 높이는 js/project.js가 정함: 이 길이만큼 스크롤하는 동안 첫 화면이 붙어 있음 */
-.pj-hero{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;--cw:140px}
+.pj-hero{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;--cw:140px;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none} /* 끌어서 돌리기 (손가락 위아래 = 스크롤) */
+.pj-hero.drag,.pj-hero.drag .pj-card{cursor:grabbing}
 .pj-scene{position:absolute;inset:0;perspective:1400px;overflow:hidden}
 .pj-space{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform} /* 카드가 떠다니는 3D 공간 */
 .pj-cloud{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
@@ -16,7 +17,9 @@
 .pj-strip::before{content:"";position:absolute;z-index:1;inset:0;border-radius:inherit;background:#fbfaf7;opacity:var(--fog,0);pointer-events:none} /* 뒤쪽 카드를 흐리게 (배경색 안개) */
 .pj-strip.l{border-radius:calc(var(--cw) * .045) 0 0 calc(var(--cw) * .045)}
 .pj-strip.r{border-radius:0 calc(var(--cw) * .045) calc(var(--cw) * .045) 0}
-.pj-card:hover .pj-strip{filter:brightness(1.08)}
+.pj-strip{transition:filter .35s ease}
+.pj-card:hover .pj-strip{filter:brightness(1.07)}
+.pj-hero.drag .pj-card:hover .pj-strip{filter:none}
 
 /* 분야 고르기 버튼 (Designer 방에서 씀) */
 .dg-filter{display:flex;gap:8px;flex-wrap:wrap}
