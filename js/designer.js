@@ -6,9 +6,9 @@
    - 분야가 아직 정해지지 않은 사람은 Visual 쪽 끝 "분야 확인 중" 자리에 있음 (js/data.js의 field를 채우면 자기 쪽으로 감)
    - js/data.js에서 designer: false 인 사람은 Designer에 나오지 않음
    - 마우스 휠(위아래)을 굴리면 옆으로 천천히 지나감. 휴대폰은 손가락으로 옆으로 넘김. ← → 키, 양옆 화살표 버튼도 됨
-   - 석고상마다 미술관 같은 작품안내 표찰: 번호·분야, 이름, 한 줄 소개, 소개글(있으면)
-     표찰을 누르면 그 사람의 포트폴리오 사이트가 새 탭으로 열림 (주소가 아직 없으면 "포트폴리오 준비 중")
-     표찰 아래 [대표 작품 보기]를 누르면 Project 방의 그 작품 상세가 열림
+   - 석고상은 입체 받침대(윗면 + 앞면 + 발판) 위에 있고, 받침대 앞면에 미술관 캡션 같은 금속 설명판이 붙어 있음: 이름·분야, 번호·연도, 한 줄 소개, 소개글(있으면)
+     설명판을 누르면 그 사람의 포트폴리오 사이트가 새 탭으로 열림 (주소가 아직 없으면 "포트폴리오 준비 중")
+     설명판 아래 작은 금속 이름표 [대표 작품 보기]를 누르면 Project 방의 그 작품 상세가 열림
    - 위의 버튼으로 UX/UI · 웹 / 팻말 / Visual 쪽으로 바로 갈 수 있음
    - 석고상 사진은 assets/images/busts/01~15.webp (3D 파일을 미리 찍어 둔 사진, 배경이 투명)
    숫자를 바꾸고 싶으면 아래 DESIGNER만 고치면 됩니다 */
@@ -20,19 +20,26 @@ const dg = { root: $('#designer'), row: $('#dg-row'), built: false, side: 'fork'
 
 function dgBuild() {
   if (dg.built) return; dg.built = true;
+  const anyDesc = STUDENTS.some((s) => s.designer !== false && s.desc); dg.row.classList.toggle('has-desc', anyDesc); // 소개글이 있으면 설명판에 칸을 만듦
   const item = (s, i) => {
-    const plate = `<span class="dg-no">${pad(s.no)} · ${FIELD_LABEL[s.field] || '분야 확인 중'}</span>
-        <b class="dg-name">${s.name}</b>
+    // 금속 설명판 글: 이름 · 분야 / 번호 · 연도 / 가는 줄 / 한 줄 소개 (+ 소개글) / 포트폴리오
+    const plate = `<span class="dg-line"><b class="dg-name">${s.name}</b><span class="dg-field">${FIELD_LABEL[s.field] || '분야 확인 중'}</span></span>
+        <span class="dg-no">No. ${pad(s.no)} · 2026</span>
         <span class="dg-slogan">${s.slogan || ''}</span>
-        ${s.desc ? `<span class="dg-desc">${s.desc}</span>` : ''}
+        ${anyDesc ? `<span class="dg-desc">${s.desc || ''}</span>` : ''}
         <span class="dg-go">${s.portfolio ? '포트폴리오 보기 ↗' : '포트폴리오 준비 중'}</span>`;
     return `<li class="dg-item" data-field="${s.field || 'none'}" data-i="${i}">
       <div class="dg-bust"><img src="${bustThumb(s)}" alt="${s.name}의 석고상" loading="lazy" decoding="async"></div>
-      <div class="dg-stand" aria-hidden="true"></div>
-      ${s.portfolio
-        ? `<a class="dg-plate" href="${s.portfolio}" target="_blank" rel="noopener" aria-label="${s.name} 포트폴리오 새 탭으로 열기">${plate}</a>`
-        : `<div class="dg-plate is-empty">${plate}</div>`}
-      <button class="dg-work" type="button" data-i="${i}">대표 작품 보기</button>
+      <div class="dg-stand">
+        <i class="dg-cap" aria-hidden="true"></i>
+        <div class="dg-shaft">
+          ${s.portfolio
+            ? `<a class="dg-plate" href="${s.portfolio}" target="_blank" rel="noopener" aria-label="${s.name} 포트폴리오 새 탭으로 열기">${plate}</a>`
+            : `<div class="dg-plate is-empty">${plate}</div>`}
+          <button class="dg-work" type="button" data-i="${i}">대표 작품 보기 →</button>
+        </div>
+        <i class="dg-foot" aria-hidden="true"></i>
+      </div>
     </li>`;
   };
   // 줄 세우기: [UX/UI · 웹 (팻말에서 가까운 순서가 오른쪽)] [팻말] [Visual] [분야 확인 중]

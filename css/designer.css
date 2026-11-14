@@ -71,25 +71,41 @@
   background:radial-gradient(ellipse 34% 48% at 50% 40%,rgba(255,250,236,.95),rgba(255,250,236,0) 70%)} /* 마우스를 올리면 위에서 비추는 빛 */
 .designer .dg-item::before{opacity:.3} /* 어두운 방: 석고상마다 늘 조명 */
 .dg-item:hover::before,.dg-item:focus-within::before,.dg-item.hi::before{opacity:1}
-.dg-bust{position:relative;width:min(240px,26vh);aspect-ratio:480/560;margin-bottom:-4px;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
-.dg-bust img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 18px 22px rgba(10,8,6,.5))}
+.dg-bust{position:relative;z-index:1;width:min(240px,26vh);aspect-ratio:480/560;margin-bottom:-16px;transition:transform .5s cubic-bezier(.2,.7,.2,1)} /* 석고상이 받침대 윗면 위에 올라가 있음 */
+.dg-bust img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 14px 12px rgba(10,8,6,.45))}
 .dg-item:hover .dg-bust{transform:translateY(-6px)}
-.dg-stand{width:min(200px,22vh);height:min(26vh,230px);background:linear-gradient(180deg,rgba(20,16,12,0) 30%,rgba(20,16,12,.38)),linear-gradient(90deg,#e9e4db 0%,#f8f6f1 38%,#f2eee7 70%,#dcd5ca 100%);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 30px 34px -18px rgba(0,0,0,.7)}
 
-/* 작품안내 표찰: 받침대 앞에 붙은 하얀 카드 */
-.dg-plate{position:relative;z-index:1;display:flex;flex-direction:column;gap:5px;width:100%;margin-top:-56px;padding:16px 18px 15px;background:#fff;border-radius:4px;text-align:left;text-decoration:none;color:inherit;
-  box-shadow:0 0 0 1px rgba(31,27,23,.08),0 10px 24px rgba(40,30,20,.1);transition:transform .3s,box-shadow .3s}
-a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(31,27,23,.3),0 16px 30px rgba(40,30,20,.16)}
-.dg-no{font-size:11px;letter-spacing:.14em;color:#8a7d6a}
-.dg-name{font-size:22px;font-weight:700;letter-spacing:-.02em}
-.dg-slogan{font-size:13px;line-height:1.55;color:#4a4036;min-height:3.1em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden} /* 두 줄까지: 표찰 높이를 맞춰 받침대가 나란히 서게 */
-.dg-desc{font-size:12.5px;line-height:1.6;color:#6b5d4b;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
-.dg-go{margin-top:6px;padding-top:10px;border-top:1px solid rgba(31,27,23,.12);font-size:13px;font-weight:600}
-.dg-plate.is-empty .dg-go{color:#a39684;font-weight:400}
-.dg-work{margin-top:10px;height:34px;padding:0 14px;border-radius:99px;font-size:12.5px;color:#e9e2d6;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.06)}
-.dg-work:hover{border-color:#fff;color:#fff}
+/* 입체 받침대: 윗면(dg-cap 위 사다리꼴) + 머리판(dg-cap) + 몸통 앞면(dg-shaft, 여기에 금속 설명판이 붙음) + 발판(dg-foot) + 바닥 그림자 */
+.dg-stand{position:relative;width:300px;max-width:100%;display:flex;flex-direction:column;align-items:center}
+.dg-stand::after{content:"";position:absolute;z-index:-1;left:-9%;right:-9%;bottom:-16px;height:36px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.7),rgba(0,0,0,0) 70%)}
+.dg-cap{position:relative;display:block;width:100%;height:16px;background:linear-gradient(90deg,#cfc7ba 0,#fbf9f4 26%,#f2ede4 70%,#b9b1a3 100%);box-shadow:0 4px 6px rgba(0,0,0,.28)}
+.dg-cap::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:30px;background:linear-gradient(180deg,#cfc7b9 0,#f4f0e8 55%,#fffdf9 100%);clip-path:polygon(10% 0,90% 0,100% 100%,0 100%)} /* 위에서 내려다보이는 윗면 */
+.dg-shaft{position:relative;width:calc(100% - 26px);padding:24px 16px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  background:linear-gradient(180deg,rgba(0,0,0,.26) 0,rgba(0,0,0,0) 16px,rgba(20,16,12,0) 42%,rgba(20,16,12,.36) 100%),linear-gradient(90deg,#c3bbad 0,#ece7de 16%,#f6f3ec 34%,#efeae1 70%,#b3ab9d 100%)}
+.dg-foot{position:relative;display:block;width:calc(100% - 6px);height:22px;background:linear-gradient(180deg,rgba(20,16,12,0),rgba(20,16,12,.3)),linear-gradient(90deg,#a9a193 0,#dcd6ca 22%,#d6cfc3 70%,#958d80 100%)}
+.dg-foot::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:9px;background:linear-gradient(180deg,#d3ccbf,#efeae0);clip-path:polygon(10px 0,calc(100% - 10px) 0,100% 100%,0 100%)} /* 발판의 윗면 */
+
+/* 작품 설명판: 받침대 앞면에 붙은 결이 있는 금속판 (미술관 캡션처럼: 이름·분야 / 번호·연도 / 가는 줄 / 소개) */
+.dg-plate{position:relative;z-index:1;display:flex;flex-direction:column;width:100%;padding:13px 15px 11px;border-radius:5px;text-align:left;text-decoration:none;color:#1b1d20;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.2) 0 1px,rgba(0,0,0,.04) 1px 2px),linear-gradient(104deg,#bfc3c7 0,#f1f2f3 24%,#b5b9be 50%,#e7e9ea 74%,#a5aaaf 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(0,0,0,.2),0 0 0 1px rgba(36,38,42,.4),0 6px 10px rgba(0,0,0,.34);transition:transform .3s,filter .3s,box-shadow .3s}
+a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-2px);filter:brightness(1.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(0,0,0,.2),0 0 0 1px rgba(36,38,42,.6),0 10px 16px rgba(0,0,0,.4)}
+.dg-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dg-name{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.dg-field{font-size:13px;font-weight:500;color:#2d3035}
+.dg-no{margin-top:3px;padding-bottom:8px;border-bottom:1px solid rgba(27,29,32,.55);font-size:10.5px;letter-spacing:.12em;color:#3a3d42}
+.dg-slogan{margin-top:8px;font-size:12.5px;line-height:1.55;word-break:keep-all;color:#24262a;min-height:3.1em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden} /* 두 줄까지: 판 높이를 맞춰 받침대가 나란히 서게 */
+.dg-desc{margin-top:4px;font-size:12px;line-height:1.6;word-break:keep-all;color:#33363b;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.dg-row.has-desc .dg-desc{min-height:4.8em} /* 소개글이 있는 사람이 한 명이라도 있으면 모두 같은 높이로 */
+.dg-go{margin-top:8px;font-size:12px;font-weight:700;letter-spacing:.01em}
+.dg-plate.is-empty .dg-go{color:#5d6167;font-weight:500}
+/* 대표 작품 보기: 설명판 아래에 붙은 작은 금속 이름표 */
+.dg-work{position:relative;z-index:1;height:30px;padding:0 14px;border-radius:4px;font-size:12px;font-weight:600;color:#1b1d20;border:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.2) 0 1px,rgba(0,0,0,.04) 1px 2px),linear-gradient(104deg,#b9bdc2 0,#eceeef 30%,#b3b7bc 62%,#dfe1e3 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 0 1px rgba(36,38,42,.4),0 4px 8px rgba(0,0,0,.3);transition:transform .25s,filter .25s}
+.dg-work:hover,.dg-work:focus-visible{transform:translateY(-2px);filter:brightness(1.08)}
 .dg-item.hi .dg-plate{animation:dgHi 1.6s ease-out}
-@keyframes dgHi{0%,40%{box-shadow:0 0 0 3px #2f6bff,0 16px 30px rgba(40,30,20,.16)}100%{box-shadow:0 0 0 1px rgba(31,27,23,.08),0 10px 24px rgba(40,30,20,.1)}}
+@keyframes dgHi{0%,40%{box-shadow:0 0 0 3px #2f6bff,0 10px 16px rgba(0,0,0,.4)}100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(0,0,0,.2),0 0 0 1px rgba(36,38,42,.4),0 6px 10px rgba(0,0,0,.34)}}
 
 /* 옆으로 넘기기 버튼 + 진행 막대 */
 .dg-arrow{position:absolute;z-index:4;top:50%;width:52px;height:52px;margin-top:-26px;border-radius:50%;background:rgba(255,255,255,.85);border:1px solid rgba(31,27,23,.2);font-size:20px;transition:opacity .2s,background .2s}
@@ -111,10 +127,11 @@ a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-3px);box-shadow:
   .dg-head{top:calc(76px + env(safe-area-inset-top,0px))}
   .dg-head h2 small{margin-top:6px}
   .dg-filter button{height:32px;padding:0 12px;font-size:12px}
-  .dg-bust{width:min(170px,44vw)}
-  .dg-stand{width:min(150px,38vw);height:15vh}
-  .dg-plate{margin-top:-40px;padding:14px 16px 13px}
+  .dg-bust{width:min(170px,44vw);margin-bottom:-12px}
+  .dg-stand{width:min(280px,100%)}
+  .dg-cap::before{height:24px}
+  .dg-shaft{padding:20px 14px 16px}
 }
 @media(max-height:720px){.dg-head h2{font-size:clamp(30px,4vw,48px)}.dg-slogan{min-height:0}}
-@media(max-height:780px) and (min-width:761px){.dg-stand{height:min(17vh,140px)}.dg-post{height:min(36vh,280px)}} /* 낮은 화면: 석고상이 위쪽 버튼을 가리지 않게 받침대를 낮춤 */
-@media(prefers-reduced-motion:reduce){.dg-item.hi .dg-plate{animation:none}.dg-bust,.dg-plate{transition:none}}
+@media(max-height:780px) and (min-width:761px){.dg-post{height:min(36vh,280px)}.dg-shaft{padding-top:18px;padding-bottom:14px}}
+@media(prefers-reduced-motion:reduce){.dg-item.hi .dg-plate{animation:none}.dg-bust,.dg-plate,.dg-work{transition:none}}
