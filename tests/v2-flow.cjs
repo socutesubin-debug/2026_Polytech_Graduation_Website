@@ -110,7 +110,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.mouse.wheel(0,600);await p.waitForTimeout(300);const x1=await p.evaluate(()=>dg.row.scrollLeft);assert(x1>300,`휠로 옆으로 움직임 (${x1})`);
  await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await p.waitForTimeout(900);
  assert(await p.evaluate(()=>dg.row.scrollLeft)>x1,'→ 키로 다음 석고상');
- // 어두운 전시실: 가운데 화살표 팻말, 왼쪽 UX/UI(8명), 오른쪽 Visual(6명). 벽 그림 두 장이 팻말 뒤에서 흐릿하게 섞임
+ // 어두운 전시실: 가운데 화살표 팻말, 왼쪽 UX/UI(8명), 오른쪽 Visual(6명). 두 벽의 색 빛이 팻말 뒤에서 흐릿하게 섞임
  const order=await p.evaluate(()=>[...dg.row.children].map(li=>li.id==='dg-fork'?'fork':li.dataset.field||'sign'));
  assert.equal(order.indexOf('fork'),9,'갈림길 왼쪽에 UX/UI 표지 + 8명');assert(order.slice(1,9).every(f=>f==='uxui'));assert(order.slice(10,16).every(f=>f==='visual'));assert.equal(order.length,16,'분야 확인 중 표지는 없음');
  assert.equal(await p.locator('.dg-item').count(),14,'조민영은 Designer에서 빠짐');assert.equal(await p.locator('.dg-item[data-i="9"]').count(),0);
@@ -121,7 +121,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.match(await p.evaluate(()=>getComputedStyle($('#dg-amb-ux')).maskImage||getComputedStyle($('#dg-amb-ux')).webkitMaskImage),/linear-gradient/);
  const post=await p.evaluate(()=>{const a=$('#dg-fork .dg-post').getBoundingClientRect(),b=$('.dg-item .dg-stand').getBoundingClientRect();return Math.abs(a.bottom-b.bottom);});assert(post<3,'팻말 기둥이 받침대와 같은 바닥에 섬: '+post);
  await p.locator('#dg-fork [data-side="visual"]').click();await p.waitForFunction(()=>dg.side==='visual',null,{timeout:4000});await p.waitForTimeout(700);
- assert(await fx()<0.3,'Visual 쪽으로 가면 경계(팻말)는 왼쪽으로');assert.notEqual(await p.evaluate(()=>dg.root.style.getPropertyValue('--wx')),'0.0px','벽 그림이 같이 흘러감');
+ assert(await fx()<0.3,'Visual 쪽으로 가면 경계(팻말)는 왼쪽으로');assert.notEqual(await p.evaluate(()=>dg.root.style.getPropertyValue('--wx')),'0.0px','벽 빛이 같이 흘러감');
  assert.match(await p.locator('#dg-count').textContent(),/Visual · 6명/);
  await p.locator('#dg-filter [data-side="uxui"]').click();
  await p.waitForFunction(()=>dg.side==='uxui',null,{timeout:4000});await p.waitForTimeout(700);assert(await fx()>0.7,'UX/UI 쪽으로 가면 경계(팻말)는 오른쪽으로');

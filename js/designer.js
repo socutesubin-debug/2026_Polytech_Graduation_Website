@@ -1,8 +1,7 @@
 /* Designer 방 (#designer) — 어두운 전시실 + 가운데 화살표 팻말
    - 들어오면 가운데 팻말 앞에 서 있음. 팻말의 왼쪽 화살표 = UX/UI · 웹, 오른쪽 화살표 = Visual (누르면 그쪽으로 감)
-   - 방은 어둡고, 벽 가득 빛나는 그림이 비침. 왼쪽 벽 = 푸른 화면 설계도 그림, 오른쪽 벽 = 포스터 같은 색 그림
-     두 벽은 팻말 뒤에서 뚝 끊기지 않고 흐릿하게(블러) 섞임. 옆으로 걸어가면 벽 그림도 같이 흘러감
-   - 벽 그림 파일: assets/images/designer/wall-ux.webp, wall-visual.webp (같은 이름으로 바꿔 넣으면 됨)
+   - 방은 어둡고, 벽 가득 색 빛(그라데이션)이 비침. 왼쪽 벽 = 푸른빛, 오른쪽 벽 = 따뜻한 살구·분홍빛 (색은 css/designer.css)
+     두 벽은 팻말 뒤에서 뚝 끊기지 않고 흐릿하게(블러) 섞임. 옆으로 걸어가면 벽 빛도 천천히 같이 흘러감
    - 분야가 아직 정해지지 않은 사람은 Visual 쪽 끝 "분야 확인 중" 자리에 있음 (js/data.js의 field를 채우면 자기 쪽으로 감)
    - js/data.js에서 designer: false 인 사람은 Designer에 나오지 않음
    - 마우스 휠(위아래)을 굴리면 옆으로 천천히 지나감. 휴대폰은 손가락으로 옆으로 넘김. ← → 키, 양옆 화살표 버튼도 됨
@@ -13,7 +12,7 @@
    숫자를 바꾸고 싶으면 아래 DESIGNER만 고치면 됩니다 */
 const DESIGNER = {
   wheel: 1,        // 휠 한 번에 옆으로 움직이는 정도 (2 = 두 배 빠르게)
-  wallMove: 0.85,  // 옆으로 걸을 때 벽 그림이 따라 흐르는 정도 (1 = 석고상과 똑같이, 0 = 벽 그림은 가만히)
+  wallMove: 0.5,   // 옆으로 걸을 때 벽 빛이 따라 흐르는 정도 (1 = 석고상과 똑같이, 0 = 가만히)
 };
 const dg = { root: $('#designer'), row: $('#dg-row'), built: false, side: 'fork', fresh: true };
 
@@ -64,7 +63,7 @@ function dgProgress() {
   const max = dg.row.scrollWidth - dg.row.clientWidth, x = dg.row.scrollLeft;
   $('#dg-bar').style.transform = `scaleX(${max > 0 ? (x / max).toFixed(3) : 1})`;
   $('#dg-prev').disabled = x <= 2; $('#dg-next').disabled = x >= max - 2;
-  // 팻말이 화면 어디에 있는지 → 두 벽이 섞이는 흐린 경계의 자리. 벽 그림은 걸어간 만큼 옆으로 흘러감
+  // 팻말이 화면 어디에 있는지 → 두 벽이 섞이는 흐린 경계의 자리. 벽 빛은 걸어간 만큼 옆으로 흘러감
   const forkEl = $('#dg-fork'), fork = dgMid(forkEl), W = Math.max(200, forkEl.offsetWidth * 1.15);
   dg.fx = forkEl.offsetLeft + forkEl.offsetWidth / 2 - x;
   dg.root.style.setProperty('--fx', dg.fx.toFixed(1) + 'px');
@@ -78,7 +77,7 @@ function dgProgress() {
     $('#dg-count').textContent = side === 'uxui' ? `UX/UI · 웹 · ${dg.counts.uxui}명` : side === 'visual' ? `Visual · ${dg.counts.visual}명` : `${dg.total}명의 디자이너`;
   }
 }
-/* 크기 맞추기: 벽 그림 한 장의 너비(벽 높이의 4배), 팻말 기둥이 석고상 받침대와 같은 바닥 높이에 서게 */
+/* 크기 맞추기: 벽 빛 무늬 한 번의 너비(벽 높이의 4배), 팻말 기둥이 석고상 받침대와 같은 바닥 높이에 서게 */
 function dgLayout() {
   const wall = $('.dg-wall', dg.root), li = $('.dg-item', dg.row); if (!wall || !li) return;
   dg.tile = Math.max(200, wall.offsetHeight * 4); dg.root.style.setProperty('--tile', dg.tile.toFixed(0) + 'px');
