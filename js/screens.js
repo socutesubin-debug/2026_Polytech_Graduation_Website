@@ -17,7 +17,7 @@ function go(name) {
   page = name;
   topbar.classList.toggle('on', name !== 'intro' && name !== 'opening');
   topbar.classList.toggle('no-brand', name === 'lobby' || name === 'gallery');
-  topbar.dataset.theme = name === 'designer' ? 'dark' : ['list', 'about', 'project'].includes(name) ? 'light' : ''; // Designer는 어두운 방이라 메뉴 글자를 밝게
+  topbar.dataset.theme = ['list', 'about', 'project', 'designer'].includes(name) ? 'light' : '';
   if (name === 'list') renderList();
   if (name === 'test-room') enterTestRoom();
   if (HALLS[name]) enterHall(name);
