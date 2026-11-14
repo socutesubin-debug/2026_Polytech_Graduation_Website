@@ -13,6 +13,13 @@
   <link rel="stylesheet" href="css/gallery.css">
   <link rel="stylesheet" href="css/detail.css">
   <link rel="stylesheet" href="css/list.css">
+  <link rel="stylesheet" href="css/test-room.css">
+  <link rel="stylesheet" href="css/hall.css">
+  <link rel="stylesheet" href="css/opening.css">
+  <link rel="stylesheet" href="css/lobby3d.css">
+  <link rel="stylesheet" href="css/about.css">
+  <link rel="stylesheet" href="css/project.css">
+  <link rel="stylesheet" href="css/designer.css">
   <script type="importmap">
   {
     "imports": {
@@ -104,8 +111,8 @@
     <button class="room-arrow next" id="room-next" type="button" aria-label="다음 전시실">→</button>
   </section>
 
-  <!-- ⑤ 작가 목록 LIST  (css/list.css, js/list.js) -->
-  <section class="screen list" id="list" aria-label="작가 목록">
+  <!-- ⑤ 학생 목록 LIST — 스토리보드 s8  (css/list.css, js/list.js) — 주소 끝 #list -->
+  <section class="screen list" id="list" aria-label="학생 목록">
     <div class="list-inner">
       <h2>LIST</h2>
       <div class="tools">
@@ -114,25 +121,176 @@
           <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           <input class="search" id="search" type="search" placeholder="학생 이름 검색" autocomplete="off">
         </label>
-        <label class="filter-label" for="gallery-filter">전시실
-          <select id="gallery-filter"><option value="-1">전체</option><option value="0">GALLERY 01</option><option value="1">GALLERY 02</option><option value="2">GALLERY 03</option></select>
-        </label>
-        <span class="total" id="total"></span>
+        <div class="field-filter" id="field-filter" role="group" aria-label="분야 선택">
+          <button type="button" data-field="all" aria-pressed="true">전체</button>
+          <button type="button" data-field="uxui" aria-pressed="false">UX/UI</button>
+          <button type="button" data-field="visual" aria-pressed="false">Visual</button>
+        </div>
+        <span class="total" id="total" aria-live="polite"></span>
       </div>
       <div class="grid" id="grid"></div>
       <p class="empty-msg" id="empty" hidden>찾는 이름이 없어요. 이름을 다시 확인해 주세요.</p>
     </div>
   </section>
 
+  <!-- ⑥ 시험 방: 기둥 1개 + 석고상 3개, 스크롤로 나비 비행  (css/test-room.css, js/test-room.js) — 주소 끝 #test-room -->
+  <section class="screen test-room" id="test-room" aria-label="시험 방" tabindex="-1">
+    <div class="tr-track" id="tr-track">
+      <div class="tr-view" id="tr-view">
+        <div class="tr-tags" id="tr-tags"></div>
+        <div class="tr-hud">
+          <p class="tr-title">TEST ROOM <span>시험 방</span></p>
+          <p class="tr-hint">스크롤을 내리면 앞으로, 올리면 뒤로 날아가요</p>
+          <div class="tr-steps">
+            <button type="button" id="tr-prev" aria-label="이전 지점으로">↑ 이전</button>
+            <button type="button" id="tr-next" aria-label="다음 지점으로">다음 ↓</button>
+          </div>
+          <div class="tr-bar" aria-hidden="true"><i id="tr-progress"></i></div>
+        </div>
+        <div class="tr-fail" id="tr-fail" role="alert" hidden>
+          <p>3D 전시실을 불러오지 못했어요.</p>
+          <div>
+            <button type="button" id="tr-to-list">전체 학생 보기</button>
+            <button type="button" id="tr-retry">다시 시도</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑦ V2 전시관: UX/UI · Visual. 안쪽 내용은 js/hall.js가 채움 (css/hall.css) — 주소 끝 #hall-uxui, #hall-visual -->
+  <section class="screen test-room hall" id="hall-uxui" aria-label="UX/UI · 웹 전시관" tabindex="-1"></section>
+  <section class="screen test-room hall" id="hall-visual" aria-label="Visual 전시관" tabindex="-1"></section>
+
+  <!-- ⑧ V2 오프닝 — 스토리보드 s1~s3: 나비 등장 → 포스터 → 빛나는 입구 + [입장하기]  (css/opening.css, js/opening.js) — 주소 끝 #opening
+       지금은 코드로 그린 임시 그림. 영상 파일을 넣고 js/opening.js의 OPENING.video에 이름을 적으면 그 영상이 대신 나옴 -->
+  <section class="screen opening" id="opening" aria-label="오프닝">
+    <video class="op-video" id="op-video" muted playsinline preload="none" hidden></video>
+    <svg class="op-art" id="op-art" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="op-glow" cx=".5" cy=".62" r=".6"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3e3c4"/></radialGradient>
+        <radialGradient id="op-halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="#fff3d6" stop-opacity=".5"/><stop offset="1" stop-color="#fff3d6" stop-opacity="0"/></radialGradient>
+        <linearGradient id="op-wall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e2ddd3"/><stop offset="1" stop-color="#cfc9bd"/></linearGradient>
+        <linearGradient id="op-stone" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f1e9da"/><stop offset="1" stop-color="#e2d6c1"/></linearGradient>
+        <pattern id="op-blocks" width="260" height="130" patternUnits="userSpaceOnUse"><path d="M0 .5H260M0 65.5H260M0 0V65M130 65V130" fill="none" stroke="#8a8172" stroke-opacity=".22"/></pattern>
+      </defs>
+      <!-- s1: 하얀 화면 + 점선 길 -->
+      <g class="op-shot" data-shot="1">
+        <rect width="1600" height="900" fill="#fdfcf9"/>
+        <path class="op-path" id="op-path-1" d="M-80 640 C 180 600 260 300 480 330 S 700 620 900 520 S 1180 200 1330 300 S 1500 520 1700 380" fill="none" stroke="#2a2622" stroke-width="2.5" stroke-dasharray="3 13" stroke-linecap="round"/>
+      </g>
+      <!-- s2: 미술관 돌벽 + 졸업전시 포스터 + 파란 비행 길 -->
+      <g class="op-shot" data-shot="2">
+        <rect width="1600" height="900" fill="url(#op-wall)"/><rect width="1600" height="900" fill="url(#op-blocks)"/>
+        <rect x="0" y="790" width="1600" height="110" fill="#b9b2a5"/><rect x="0" y="776" width="1600" height="16" fill="#d9d3c8"/>
+        <rect x="604" y="96" width="392" height="640" fill="#2a2622" opacity=".18" transform="translate(10 14)"/>
+        <rect x="604" y="96" width="392" height="640" fill="#f1e5d3"/>
+        <image id="op-poster" x="604" y="96" width="392" height="640" preserveAspectRatio="xMidYMid slice"/>
+        <path class="op-path" id="op-path-2" d="M-80 420 C 200 380 420 560 640 470 C 820 400 900 220 780 190 C 660 160 600 330 760 400 C 960 480 1200 300 1700 260" fill="none" stroke="#2f6bff" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+      </g>
+      <!-- s3: 크림색 돌 아치 입구 + 빛 -->
+      <g class="op-shot" data-shot="3">
+        <rect width="1600" height="900" fill="url(#op-glow)"/>
+        <path fill-rule="evenodd" fill="url(#op-stone)" d="M0 0H1600V900H0Z M560 900V470A240 240 0 0 1 1040 470V900Z"/>
+        <path fill="url(#op-blocks)" fill-rule="evenodd" d="M0 0H1600V900H0Z M560 900V470A240 240 0 0 1 1040 470V900Z"/>
+        <path d="M520 900V470A280 280 0 0 1 1080 470V900" fill="none" stroke="#fbf5ea" stroke-width="26"/>
+        <path d="M506 900V470A294 294 0 0 1 1094 470V900" fill="none" stroke="#c9bca4" stroke-opacity=".5" stroke-width="2"/>
+        <rect x="430" y="842" width="740" height="58" fill="#e9decb"/><rect x="470" y="808" width="660" height="36" fill="#f0e7d6"/>
+        <ellipse class="op-halo" cx="800" cy="560" rx="420" ry="460" fill="url(#op-halo)"/>
+        <path class="op-path" id="op-path-3" d="M-80 300 C 260 240 420 660 800 560" fill="none" stroke="none"/>
+      </g>
+    </svg>
+    <div class="op-fly" id="op-fly" aria-hidden="true">
+      <svg viewBox="-60 -50 120 100"><g class="op-wing l"><path d="M-3 -4C-22 -44 -58 -40 -52 -10C-48 8 -22 6 -3 2Z"/><path d="M-3 3C-26 6 -42 22 -30 36C-18 46 -6 22 -3 8Z"/></g><g class="op-wing r"><path d="M3 -4C22 -44 58 -40 52 -10C48 8 22 6 3 2Z"/><path d="M3 3C26 6 42 22 30 36C18 46 6 22 3 8Z"/></g><ellipse cx="0" cy="2" rx="3.4" ry="15" fill="#2a2622"/></svg>
+    </div>
+    <div class="op-white" id="op-white" aria-hidden="true"></div>
+    <div class="op-copy" id="op-copy">
+      <p class="op-eyebrow">2026 한국폴리텍대학 정수캠퍼스 시각디자인과 졸업전시</p>
+      <h1>프레임을 넘어, 우리를 만나다</h1>
+      <div class="op-doors">
+        <button class="op-enter" id="op-enter" type="button" data-to="project">Project</button>
+        <button class="op-enter" id="op-enter-2" type="button" data-to="designer">Designer</button>
+      </div>
+    </div>
+    <button class="op-skip" id="op-skip" type="button">건너뛰기 →</button>
+    <p class="op-note" id="op-note">임시 오프닝 · 영상이 준비되면 바뀌어요</p>
+  </section>
+
+  <!-- ⑨ V2 로비 — 스토리보드 s5: 아치 3개 중 방 고르기  (css/lobby3d.css, js/lobby3d.js) — 주소 끝 #lobby3d
+       3D 아치는 js/lobby3d.js가 그림. 아래 버튼 3개는 키보드·모바일·3D 실패 때도 똑같이 쓰는 입구 -->
+  <section class="screen lobby3d" id="lobby3d" aria-label="로비">
+    <div class="lb-view" id="lb-view"></div>
+    <div class="lb-copy"><p>LOBBY</p><h2>어느 방으로 날아갈까요?</h2></div>
+    <div class="lb-doors" id="lb-doors">
+      <button class="lb-door" type="button" data-door="0" data-go="hall-uxui"><i aria-hidden="true"></i><small>GALLERY 01</small><b>UX/UI의 방</b><span id="lb-count-0"></span></button>
+      <button class="lb-door" type="button" data-door="1" data-go="hall-visual"><i aria-hidden="true"></i><small>GALLERY 02</small><b>비주얼의 방</b><span id="lb-count-1"></span></button>
+      <button class="lb-door" type="button" data-door="2" data-go="special"><i aria-hidden="true"></i><small>GALLERY 03</small><b>갤러리</b><span id="lb-count-2"></span></button>
+    </div>
+    <button class="lb-all" id="lb-all" type="button">전체 학생 바로가기 →</button>
+  </section>
+
+  <!-- ⑫ About — 전시 소개: 왼쪽 포스터, 오른쪽 서문·개요  (css/about.css, js/about.js) — 주소 끝 #about. 글은 js/data.js의 ABOUT -->
+  <section class="screen about" id="about" aria-label="About: 전시 소개" tabindex="-1">
+    <div class="ab-wrap">
+      <figure class="ab-poster"><img id="ab-poster" alt="전시 포스터" decoding="async"></figure>
+      <div class="ab-copy">
+        <p class="ab-eyebrow">ABOUT</p>
+        <h2 id="ab-title"></h2>
+        <p class="ab-sub" id="ab-sub"></p>
+        <div class="ab-text" id="ab-text"></div>
+        <dl class="ab-info" id="ab-info"></dl>
+        <div class="ab-go">
+          <button type="button" data-to="project">작품 보러 가기</button>
+          <button type="button" data-to="designer">디자이너 만나기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑩ Project 방 — 작품 15개: 떠다니는 카드(공 → 도넛) → 작품 상세  (css/project.css, js/project.js) — 주소 끝 #project
+       떠다니는 카드(pj-cloud 안), 상세 그림(pj-d-images 안)은 js/project.js가 js/data.js를 보고 만듦 -->
+  <section class="screen project" id="project" aria-label="Project: 작품" tabindex="-1">
+    <div class="pj-track" id="pj-track">
+    <div class="pj-hero" id="pj-hero">
+      <div class="pj-scene" aria-hidden="true"><div class="pj-space" id="pj-space"><div class="pj-cloud" id="pj-cloud"></div></div></div>
+      <!-- 화면에는 작품 썸네일만. 아래 한 줄은 화면 읽기 프로그램용 (눈에는 안 보임) -->
+      <p class="pj-live" id="pj-live" aria-live="polite"></p>
+    </div>
+    </div>
+    <!-- 작품 상세: 왼쪽 = 제목 · 이름 · 설명 · (맨 아래) 메일, 오른쪽 = 내려 보는 그림들, 오른쪽 위 X = 닫기 -->
+    <div class="pj-detail" id="pj-detail" role="dialog" aria-modal="true" aria-labelledby="pj-d-title" hidden>
+      <aside class="pj-d-side">
+        <h2 id="pj-d-title"></h2>
+        <button type="button" class="pj-d-who" id="pj-d-who"></button>
+        <p class="pj-d-desc" id="pj-d-desc"></p>
+        <a class="pj-d-mail" id="pj-d-mail" hidden></a>
+      </aside>
+      <div class="pj-d-images" id="pj-d-images"></div>
+      <button type="button" class="pj-d-close" id="pj-d-close" aria-label="닫기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16M20 4L4 20"/></svg></button>
+    </div>
+  </section>
+
+  <!-- ⑪ Designer — 어두운 전시실: 가운데 화살표 팻말에서 왼쪽 = UX/UI · 웹, 오른쪽 = Visual (벽 빛의 색이 다르고, 팻말 뒤에서 흐릿하게 섞임). 석고상 + 작품안내 표찰(누르면 포트폴리오)  (css/designer.css, js/designer.js) — 주소 끝 #designer
+       석고상·표찰(dg-row 안)은 js/designer.js가 js/data.js를 보고 만듦 -->
+  <section class="screen designer" id="designer" aria-label="Designer: 디자이너" tabindex="-1">
+    <!-- 어두운 전시실의 빛나는 벽 두 장: 팻말 왼쪽 = UX/UI · 웹 벽, 오른쪽 = Visual 벽. 팻말 뒤(dg-seam)에서 흐릿하게 섞임 -->
+    <div class="dg-amb ux" id="dg-amb-ux" aria-hidden="true"><i class="dg-wall"></i><i class="dg-glow"></i></div>
+    <div class="dg-amb vi" id="dg-amb-vi" aria-hidden="true"><i class="dg-wall"></i><i class="dg-glow"></i></div>
+    <div class="dg-seam" aria-hidden="true"></div>
+    <ul class="dg-row" id="dg-row" aria-label="디자이너 석고상 (옆으로 넘겨 보세요)"></ul>
+    <button type="button" class="dg-arrow prev" id="dg-prev" aria-label="왼쪽 석고상">←</button>
+    <button type="button" class="dg-arrow next" id="dg-next" aria-label="오른쪽 석고상">→</button>
+    <div class="dg-track" aria-hidden="true"><i id="dg-bar"></i></div>
+  </section>
+
   <!-- 공통: 상단 메뉴, 안내 문구, 화면 전환 효과  (css/common.css, js/screens.js) -->
   <nav class="topbar" id="topbar" aria-label="전시 메뉴">
-    <button class="brand" id="brand" type="button" title="인트로 다시 보기">BEYOND THE FRAME</button>
+    <button class="brand" id="brand" type="button" title="오프닝 다시 보기">BEYOND THE FRAME</button>
     <div class="pill">
-      <button type="button" data-go="lobby">HOME</button>
-      <button type="button" data-room="0">GALLERY 01</button>
-      <button type="button" data-room="1">GALLERY 02</button>
-      <button type="button" data-room="2">GALLERY 03</button>
-      <button type="button" data-go="list">LIST</button>
+      <button type="button" data-go="opening">Intro</button>
+      <button type="button" data-go="about">About</button>
+      <button type="button" data-go="project">Project</button>
+      <button type="button" data-go="designer">Designer</button>
     </div>
   </nav>
   <div class="toast" id="toast" role="status"></div>
@@ -166,6 +324,16 @@
 <script src="js/gallery.js"></script>
 <script src="js/detail.js"></script>
 <script src="js/list.js"></script>
+<!-- 스크롤과 비행 연결: GSAP ScrollTrigger (인터넷이 끊겨도 test-room.js가 직접 계산해서 동작) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/test-room.js"></script>
+<script src="js/hall.js"></script>
+<script src="js/opening.js"></script>
+<script src="js/lobby3d.js"></script>
+<script src="js/about.js"></script>
+<script src="js/project.js"></script>
+<script src="js/designer.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
