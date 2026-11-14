@@ -110,14 +110,21 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.mouse.wheel(0,600);await p.waitForTimeout(300);const x1=await p.evaluate(()=>dg.row.scrollLeft);assert(x1>300,`휠로 옆으로 움직임 (${x1})`);
  await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await p.waitForTimeout(900);
  assert(await p.evaluate(()=>dg.row.scrollLeft)>x1,'→ 키로 다음 석고상');
- // 갈림길 복도: 가운데 갈림길, 왼쪽 UX/UI(8명), 오른쪽 Visual(6명). 방에 들어가면 분위기가 바뀜
+ // 어두운 전시실: 가운데 화살표 팻말, 왼쪽 UX/UI(8명), 오른쪽 Visual(6명). 벽 그림 두 장이 팻말 뒤에서 흐릿하게 섞임
  const order=await p.evaluate(()=>[...dg.row.children].map(li=>li.id==='dg-fork'?'fork':li.dataset.field||'sign'));
  assert.equal(order.indexOf('fork'),9,'갈림길 왼쪽에 UX/UI 표지 + 8명');assert(order.slice(1,9).every(f=>f==='uxui'));assert(order.slice(10,16).every(f=>f==='visual'));assert.equal(order.length,16,'분야 확인 중 표지는 없음');
  assert.equal(await p.locator('.dg-item').count(),14,'조민영은 Designer에서 빠짐');assert.equal(await p.locator('.dg-item[data-i="9"]').count(),0);
- await p.locator('#dg-filter [data-side="visual"]').click();await p.waitForFunction(()=>dg.root.classList.contains('dark')&&+getComputedStyle($('#dg-amb-vi')).opacity>0.9,null,{timeout:4000});
+ assert.equal(await p.locator('#dg-fork .dg-post .dg-board').count(),2,'팻말에 화살표 판 두 개');assert.equal(await p.locator('#dg-amb-ux .dg-wall, #dg-amb-vi .dg-wall, .dg-seam').count(),3);
+ const fx=()=>p.evaluate(()=>parseFloat(dg.root.style.getPropertyValue('--fx'))/innerWidth);
+ await p.locator('#dg-filter [data-side="fork"]').click();await p.waitForFunction(()=>Math.abs(dg.fx-innerWidth/2)<4,null,{timeout:4000});
+ assert(Math.abs(await fx()-0.5)<0.01,'팻말 앞에서는 흐린 경계가 화면 가운데');
+ assert.match(await p.evaluate(()=>getComputedStyle($('#dg-amb-ux')).maskImage||getComputedStyle($('#dg-amb-ux')).webkitMaskImage),/linear-gradient/);
+ const post=await p.evaluate(()=>{const a=$('#dg-fork .dg-post').getBoundingClientRect(),b=$('.dg-item .dg-stand').getBoundingClientRect();return Math.abs(a.bottom-b.bottom);});assert(post<3,'팻말 기둥이 받침대와 같은 바닥에 섬: '+post);
+ await p.locator('#dg-fork [data-side="visual"]').click();await p.waitForFunction(()=>dg.side==='visual',null,{timeout:4000});await p.waitForTimeout(700);
+ assert(await fx()<0.3,'Visual 쪽으로 가면 경계(팻말)는 왼쪽으로');assert.notEqual(await p.evaluate(()=>dg.root.style.getPropertyValue('--wx')),'0.0px','벽 그림이 같이 흘러감');
  assert.match(await p.locator('#dg-count').textContent(),/Visual · 6명/);
  await p.locator('#dg-filter [data-side="uxui"]').click();
- await p.waitForFunction(()=>+getComputedStyle($('#dg-amb-ux')).opacity>0.9&&!dg.root.classList.contains('dark'),null,{timeout:4000});
+ await p.waitForFunction(()=>dg.side==='uxui',null,{timeout:4000});await p.waitForTimeout(700);assert(await fx()>0.7,'UX/UI 쪽으로 가면 경계(팻말)는 오른쪽으로');
  assert.match(await p.locator('#dg-count').textContent(),/UX\/UI · 웹 · 8명/);
  await p.locator('#dg-filter [data-side="fork"]').click();await p.waitForTimeout(900);assert.match(await p.locator('#dg-count').textContent(),/^14명의 디자이너$/);
  // [대표 작품 보기] → Project 방의 그 작품 상세
@@ -150,6 +157,6 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: intro buttons + skip + menu, about (poster + text), project reveal + flat cards by depth + drag/glide → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer crossroads corridor (UX/UI left bright grid, Visual right dark; wheel/keys/jump/portfolio plaque), reduced motion, mobile; no page errors.');
+ console.log('PASS: intro buttons + skip + menu, about (poster + text), project reveal + flat cards by depth + drag/glide → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer dark media-wall room (arrow signpost, UX/UI wall left / Visual wall right, blurred seam; wheel/keys/jump/portfolio plaque), reduced motion, mobile; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

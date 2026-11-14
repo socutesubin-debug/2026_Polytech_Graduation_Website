@@ -270,17 +270,18 @@
     </div>
   </section>
 
-  <!-- ⑪ Designer — 갈림길 복도: 가운데에서 왼쪽 = UX/UI · 웹, 오른쪽 = Visual. 석고상 + 작품안내 표찰(누르면 포트폴리오)  (css/designer.css, js/designer.js) — 주소 끝 #designer
+  <!-- ⑪ Designer — 어두운 전시실: 가운데 화살표 팻말에서 왼쪽 = UX/UI · 웹, 오른쪽 = Visual (벽 그림이 다르고, 팻말 뒤에서 흐릿하게 섞임). 석고상 + 작품안내 표찰(누르면 포트폴리오)  (css/designer.css, js/designer.js) — 주소 끝 #designer
        석고상·표찰(dg-row 안)은 js/designer.js가 js/data.js를 보고 만듦 -->
   <section class="screen designer" id="designer" aria-label="Designer: 디자이너" tabindex="-1">
-    <!-- 분위기: 왼쪽으로 가면 UX/UI · 웹(밝은 도면 격자), 오른쪽으로 가면 Visual(어두운 조명). 스크롤에 따라 서서히 바뀜 -->
-    <div class="dg-amb ux" id="dg-amb-ux" aria-hidden="true"><span>UX/UI · Web</span></div>
-    <div class="dg-amb vi" id="dg-amb-vi" aria-hidden="true"><span>Visual</span></div>
+    <!-- 어두운 전시실의 빛나는 벽 두 장: 팻말 왼쪽 = UX/UI · 웹 벽, 오른쪽 = Visual 벽. 팻말 뒤(dg-seam)에서 흐릿하게 섞임 -->
+    <div class="dg-amb ux" id="dg-amb-ux" aria-hidden="true"><i class="dg-wall"></i><i class="dg-glow"></i></div>
+    <div class="dg-amb vi" id="dg-amb-vi" aria-hidden="true"><i class="dg-wall"></i><i class="dg-glow"></i></div>
+    <div class="dg-seam" aria-hidden="true"></div>
     <div class="dg-head">
       <h2>Designer<small id="dg-count"></small></h2>
       <div class="dg-filter" id="dg-filter" role="group" aria-label="방 옮기기">
         <button type="button" data-side="uxui" aria-pressed="false">← UX/UI · 웹</button>
-        <button type="button" data-side="fork" aria-pressed="true">갈림길</button>
+        <button type="button" data-side="fork" aria-pressed="true">팻말</button>
         <button type="button" data-side="visual" aria-pressed="false">Visual →</button>
       </div>
     </div>
