@@ -9,14 +9,14 @@
 .pj-space{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform} /* 카드가 떠다니는 3D 공간 */
 .pj-cloud{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
 .pj-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.pj-card{position:absolute;left:calc(var(--cw) / -2);top:calc(var(--cw) * -.375);width:var(--cw);height:calc(var(--cw) * .75);overflow:hidden;border-radius:calc(var(--cw) * .07);background:#9a9186;
-  box-shadow:0 6px 18px rgba(30,20,10,.16);will-change:transform;cursor:pointer}
-.pj-card:hover{outline:2px solid #2f6bff;outline-offset:2px}
-.pj-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.pj-temp{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;padding:9%;color:#2a2622;text-align:left;background:linear-gradient(160deg,#c9c2b6,#9a9186)}
-.pj-temp em{position:absolute;left:9%;top:9%;font-style:normal;font-size:calc(var(--cw) * .07);letter-spacing:.12em}
-.pj-temp b{font-size:calc(var(--cw) * .17);font-weight:700;letter-spacing:-.02em;line-height:1.05}
-.pj-temp small{display:none}
+.pj-card{position:absolute;left:0;top:0;width:0;height:0;padding:0;border:0;background:none;transform-style:preserve-3d;cursor:pointer} /* 카드 = 얇은 띠(pj-strip) 여러 개 */
+.pj-strip{position:absolute;left:calc(var(--sw) / -2);top:calc(var(--cw) * -.375);width:calc(var(--sw) + 1.5px);height:calc(var(--cw) * .75);background-color:#9a9186;background-size:var(--cw) 100%;background-repeat:no-repeat;
+  backface-visibility:hidden;will-change:transform}
+.pj-strip::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#1f1b17;opacity:var(--sh,0);pointer-events:none} /* 휜 종이의 그림자 */
+.pj-strip::before{content:"";position:absolute;z-index:1;inset:0;border-radius:inherit;background:#fbfaf7;opacity:var(--fog,0);pointer-events:none} /* 뒤쪽 카드를 흐리게 (배경색 안개) */
+.pj-strip.l{border-radius:calc(var(--cw) * .045) 0 0 calc(var(--cw) * .045)}
+.pj-strip.r{border-radius:0 calc(var(--cw) * .045) calc(var(--cw) * .045) 0}
+.pj-card:hover .pj-strip{filter:brightness(1.08)}
 
 /* 분야 고르기 버튼 (Designer 방에서 씀) */
 .dg-filter{display:flex;gap:8px;flex-wrap:wrap}
