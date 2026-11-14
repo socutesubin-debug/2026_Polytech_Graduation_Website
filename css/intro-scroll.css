@@ -2,9 +2,10 @@
    --iw / --ih = 무대 너비·높이의 1/100 (js가 넣어 줌) */
 .is-stage { --iw: 1vw; --ih: 1vh; font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
 .is-stage * { box-sizing: border-box; }
-.is-stage { position: absolute; inset: 0; overflow: hidden; background: #cfe0f0; }
+.is-stage { position: absolute; inset: 0; overflow: hidden; background: #8f97b3; }
 .is-stage .layer { position: absolute; inset: 0; }
-.is-s1 { background: url("../assets/images/intro/s1-sky.jpg") center / cover no-repeat; }
+.is-s1 { background: #8f97b3 url("../assets/images/intro/s1-sky-dusk.jpg") center / cover no-repeat; }
+.is-s1 .sky-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* scene 2: sky + ground behind, and the poster wall as one flat plane we can turn */
 .is-s2 { opacity: 0; background: linear-gradient(to bottom, #a9c6e3 0%, #e4edf5 60%, #d9d2c7 60%, #c9c1b6 100%); }
 .is-cam { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 50%; }
@@ -42,21 +43,6 @@
 @keyframes isDrop { 0% { transform: scaleY(0); } 60% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
 
 /* ---- 햇빛 (세기는 js/intro-scroll.js CFG.sun) ---- */
-/* 장면 1: 왼쪽 위 화면 밖의 해. 따뜻한 빛 번짐 + 천천히 흔들리는 빛줄기 (하늘 그림에 붙어 있어 카메라와 같이 움직임) */
-.is-s1 i { position: absolute; pointer-events: none; mix-blend-mode: screen; }
-.is-s1 .sun-glow { left: -45%; top: -70%; width: 110%; height: 150%; opacity: calc(var(--sun) * .9); animation: isSunBreath 7s ease-in-out infinite alternate;
-  background: radial-gradient(closest-side, rgba(255,250,232,.95) 0, rgba(255,240,205,.6) 18%, rgba(255,232,190,.26) 42%, rgba(255,232,190,0) 100%); }
-.is-s1 .sun-rays { left: -110%; top: -150%; width: 240%; height: 300%; opacity: calc(var(--sun) * .5); transform-origin: 50% 50%; animation: isSunRays 16s ease-in-out infinite alternate;
-  background: repeating-conic-gradient(from 96deg at 50% 50%, rgba(255,246,220,0) 0deg, rgba(255,246,220,.5) 2.2deg, rgba(255,246,220,0) 5deg, rgba(255,246,220,0) 8.5deg, rgba(255,246,220,.28) 10deg, rgba(255,246,220,0) 13deg);
-  -webkit-mask-image: radial-gradient(closest-side, #000 0, rgba(0,0,0,.55) 30%, transparent 78%); mask-image: radial-gradient(closest-side, #000 0, rgba(0,0,0,.55) 30%, transparent 78%); }
-@keyframes isSunBreath { from { transform: scale(.94); opacity: calc(var(--sun) * .7); } to { transform: scale(1.06); opacity: calc(var(--sun) * .95); } }
-@keyframes isSunRays { from { transform: rotate(-5deg); } to { transform: rotate(6deg); } }
-/* 렌즈에 맺히는 작은 빛 (화면 기준, 카메라가 움직이면 미끄러짐) */
-.is-flare { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; mix-blend-mode: screen; }
-.is-flare i { position: absolute; border-radius: 50%; will-change: transform; }
-.is-flare .f1 { left: -3vmin; top: -3vmin; width: 6vmin; height: 6vmin; background: radial-gradient(circle, rgba(255,236,190,.32) 0, rgba(255,236,190,.16) 55%, rgba(255,236,190,0) 70%); }
-.is-flare .f2 { left: -7vmin; top: -7vmin; width: 14vmin; height: 14vmin; background: radial-gradient(circle, rgba(200,225,255,0) 52%, rgba(215,232,255,.22) 62%, rgba(215,232,255,0) 72%); }
-.is-flare .f3 { left: -2vmin; top: -2vmin; width: 4vmin; height: 4vmin; background: radial-gradient(circle, rgba(255,214,170,.36) 0, rgba(255,214,170,0) 70%); }
 /* 장면 2: 나뭇잎 사이로 들어온 햇살이 벽과 포스터 위에서 천천히 일렁임 + 비스듬한 빛 한 줄기가 지나감 (벽에 붙어 있어 카메라와 같이 움직임) */
 .is-light { position: absolute; transform: translateZ(27px); pointer-events: none; overflow: hidden; opacity: var(--sun); }
 .is-light i { position: absolute; inset: -6%; mix-blend-mode: soft-light; will-change: transform, opacity; }
@@ -71,4 +57,4 @@
 @keyframes isDapA { from { transform: translate(-1.2%, .6%) rotate(-.6deg) scale(1.5); opacity: .2; } to { transform: translate(1.4%, -.8%) rotate(.7deg) scale(1.5); opacity: .5; } }
 @keyframes isDapB { from { transform: translate(1%, -1%) scale(1.7); opacity: .45; } to { transform: translate(-1.5%, .9%) scale(1.6); opacity: .15; } }
 @keyframes isShaft { from { transform: translateX(-22%); opacity: .5; } to { transform: translateX(20%); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .is-s1 i, .is-light i { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .is-light i { animation: none; } }
