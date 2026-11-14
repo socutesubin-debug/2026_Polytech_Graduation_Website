@@ -71,11 +71,7 @@ function dgProgress() {
   // 팻말에서 얼마나 왼쪽/오른쪽으로 왔는지 (0 = 팻말 앞, 1 = 그쪽 안)
   const ux = clamp((fork - x) / W, 0, 1), vi = clamp((x - fork) / W, 0, 1);
   const side = ux > 0.5 ? 'uxui' : vi > 0.5 ? 'visual' : 'fork';
-  if (side !== dg.side || !$('#dg-count').textContent) {
-    dg.side = side;
-    $$('#dg-filter button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.side === side)));
-    $('#dg-count').textContent = side === 'uxui' ? `UX/UI · 웹 · ${dg.counts.uxui}명` : side === 'visual' ? `Visual · ${dg.counts.visual}명` : `${dg.total}명의 디자이너`;
-  }
+  dg.side = side;
 }
 /* 크기 맞추기: 벽 빛 무늬 한 번의 너비(벽 높이의 4배), 팻말 기둥이 석고상 받침대와 같은 바닥 높이에 서게 */
 function dgLayout() {
@@ -136,5 +132,4 @@ dg.row.addEventListener('wheel', (e) => {
 }, { passive: false });
 $('#dg-prev').addEventListener('click', () => dgStep(-1));
 $('#dg-next').addEventListener('click', () => dgStep(1));
-$$('#dg-filter button').forEach((b) => b.addEventListener('click', () => dgGo(b.dataset.side)));
 addEventListener('resize', () => { if (page === 'designer') { dgLayout(); dgProgress(); } });

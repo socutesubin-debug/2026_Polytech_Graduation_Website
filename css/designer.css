@@ -9,12 +9,6 @@
   background:radial-gradient(circle at 12% 34%,rgba(255,244,222,.85) 0 2px,rgba(255,244,222,.14) 3px,transparent 26px),radial-gradient(circle at 31% 22%,rgba(255,244,222,.8) 0 2px,rgba(255,244,222,.12) 3px,transparent 24px),
     radial-gradient(circle at 50% 30%,rgba(255,244,222,.85) 0 2px,rgba(255,244,222,.14) 3px,transparent 26px),radial-gradient(circle at 69% 22%,rgba(255,244,222,.8) 0 2px,rgba(255,244,222,.12) 3px,transparent 24px),
     radial-gradient(circle at 88% 34%,rgba(255,244,222,.85) 0 2px,rgba(255,244,222,.14) 3px,transparent 26px)}
-.dg-head{position:absolute;z-index:3;left:clamp(16px,4vw,56px);right:clamp(16px,4vw,56px);top:calc(86px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;pointer-events:none}
-.dg-head>*{pointer-events:auto}
-.designer .dg-head h2 small{color:#b9ad9c}
-.designer .dg-filter button{border-color:rgba(255,255,255,.3);color:#f3ede4}
-.designer .dg-filter button:hover{border-color:#fff}
-.designer .dg-filter button[aria-pressed="true"]{background:#f3ede4;border-color:#f3ede4;color:#1f1b17}
 .designer .dg-plate,.designer .dg-arrow{color:#1f1b17} /* 하얀 표찰·버튼 글자는 검게 */
 
 /* 빛나는 벽 두 장: 팻말(--fx)을 기준으로 왼쪽은 UX/UI 벽만, 오른쪽은 Visual 벽만 보이고, 그 사이는 서서히 섞임 */
@@ -69,8 +63,6 @@
 .dg-sign{flex:0 0 auto;width:220px;align-self:center;display:flex;flex-direction:column;gap:6px;margin-bottom:6vh;padding:14px 18px;border-radius:10px;background:rgba(12,11,10,.7);color:#f3ede4}
 .dg-sign b{font-size:20px;font-weight:700;letter-spacing:-.02em}
 .dg-sign span{font-size:13px;opacity:.7}
-.dg-head h2{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(36px,5vw,72px);letter-spacing:-.04em;line-height:.95}
-.dg-head h2 small{display:block;margin-top:10px;font-size:13px;font-weight:400;letter-spacing:.02em;color:#b9ad9c}
 
 /* 가로 한 줄 */
 .dg-row{position:absolute;inset:0;z-index:2;list-style:none;margin:0;display:flex;align-items:flex-end;gap:clamp(40px,6vw,110px);
@@ -128,14 +120,11 @@ a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-2px);filter:brig
   .dg-board b{font-size:15px}
   .dg-post{height:min(36vh,320px)}
   .dg-arrow{display:none}
-  .dg-head{top:calc(76px + env(safe-area-inset-top,0px))}
-  .dg-head h2 small{margin-top:6px}
-  .dg-filter button{height:32px;padding:0 12px;font-size:12px}
   .dg-bust{width:min(170px,44vw);margin-bottom:-12px}
   .dg-stand{width:min(280px,100%)}
   .dg-cap::before{height:24px}
   .dg-shaft{padding:20px 14px 16px}
 }
-@media(max-height:720px){.dg-head h2{font-size:clamp(30px,4vw,48px)}.dg-slogan{min-height:0}}
+@media(max-height:720px){.dg-slogan{min-height:0}}
 @media(max-height:780px) and (min-width:761px){.dg-post{height:min(36vh,280px)}.dg-shaft{padding-top:18px;padding-bottom:14px}}
 @media(prefers-reduced-motion:reduce){.dg-item.hi .dg-plate{animation:none}.dg-bust,.dg-plate{transition:none}}
