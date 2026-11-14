@@ -15,7 +15,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  // 0) 맨 처음: 로고 + 동그란 로딩바가 0 → 100% 차오른 뒤 사라지고 오프닝 시작
  let p=await open();
  assert.equal(await state(p),'opening');assert.equal(await p.locator('#topbar.on').count(),0);
- await p.locator('#op-load:not(.done)').waitFor({state:'visible'});assert.equal(await p.locator('#op-load .op-load-logo').getAttribute('alt'),'Beyond the Frame');
+ await p.locator('#op-load:not(.done)').waitFor({state:'visible'});assert.equal(await p.locator('#op-load .op-ring .op-load-logo').count(),1,'로고는 동그라미 로딩바 안에');assert.equal(await p.locator('#op-load .op-load-logo').getAttribute('alt'),'Beyond the Frame');
  assert(await p.locator('#op-load-bar').count()===1&&await p.evaluate(()=>op.shot===0),'로딩 중에는 오프닝이 아직 시작 안 함');
  await p.waitForFunction(()=>+document.querySelector('#op-load-num').textContent>=40&&+document.querySelector('#op-load-num').textContent<100,null,{timeout:6000});
  await p.locator('#op-load.done').waitFor({state:'attached',timeout:12000});assert.equal(await p.locator('#op-load-num').textContent(),'100');
