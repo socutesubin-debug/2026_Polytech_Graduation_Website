@@ -44,31 +44,33 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.deepEqual(await p.evaluate(()=>pj.cards.map(c=>c.s).sort((x,y)=>x-y)),[...Array(15).keys()],'15명 모두 한 장씩');
  const t0=await p.locator('.pj-card').first().evaluate(el=>el.style.transform);await p.waitForTimeout(300);
  assert.notEqual(await p.locator('.pj-card').first().evaluate(el=>el.style.transform),t0,'카드가 떠다님');
- // 스크롤하면 공 → 도넛: 카드들이 위아래로 덜 퍼짐. 도넛에서는 한 장씩 맨 앞에 옴
+ // 스크롤하면 공 → 도넛: 카드들이 위아래로 덜 퍼짐
  const spread=()=>p.evaluate(()=>{const ys=[...document.querySelectorAll('.pj-card')].map(el=>{const r=el.getBoundingClientRect();return r.top+r.height/2;});return Math.max(...ys)-Math.min(...ys);});
  const sphere=await spread();
  await p.waitForTimeout(1000);await p.evaluate(()=>pjGotoCard(0));
- await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(0))<0.01&&Math.abs(pj.k)<0.02,null,{timeout:6000});
- await p.waitForTimeout(300);assert(await spread()<sphere*0.7,'도넛은 공보다 납작함');
- const big=await p.evaluate(()=>{const w=[...document.querySelectorAll('.pj-card')].map(el=>el.getBoundingClientRect().width);return w.indexOf(Math.max(...w));});assert.equal(big,0,'맨 앞 작품이 가장 큼');
- const nameOf=(j)=>p.evaluate((j)=>STUDENTS[pj.cards[j].s].name,j);
- assert.match(await p.locator('#pj-live').textContent(),new RegExp('^'+await nameOf(0)));
- await p.locator('#project').focus();await p.keyboard.press('ArrowRight');
- await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(1))<0.01&&Math.abs(pj.k-1)<0.02,null,{timeout:6000});
- // 어중간한 자리에서 스크롤을 멈추면 가장 가까운 작품에 딱 멈춤
- await p.evaluate(()=>{pj.root.scrollTop=(pjCardAt(3)+PROJECT.perCard*0.3)*pj.root.clientHeight;});
- await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(3))<0.01,null,{timeout:6000});
- await p.waitForFunction(()=>Math.abs(pj.k-3)<0.02,null,{timeout:6000});
- // 맨 앞 카드를 누르면 그 작품 상세, Enter 키도 같음
- const who3=await nameOf(3);
- await p.waitForFunction(()=>Math.abs(pj.k-3)<0.002&&Math.abs(pj.mx-pj.tmx)<0.002,null,{timeout:6000}); await p.locator('.pj-card').nth(3).click({force:true});await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
+ await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(0))<0.01,null,{timeout:6000});
+ await p.waitForTimeout(600);assert(await spread()<sphere*0.75,'도넛은 공보다 납작함');
+ // 도넛은 스크롤을 안 해도 저절로 계속 돌고, 카드는 종이처럼 팔랑임
+ const a0=await p.evaluate(()=>pj.auto);await p.waitForTimeout(500);assert(await p.evaluate(a0=>pj.auto>a0+1,a0),'도넛이 계속 돎');
+ const c0=await p.evaluate(()=>pj.cards[0].el.style.transform);await p.waitForTimeout(200);assert.notEqual(await p.evaluate(()=>pj.cards[0].el.style.transform),c0,'카드가 팔랑임');
+ // ← → 키 = 한 장만큼 스크롤
+ await p.locator('#project').focus();const u0=await p.evaluate(()=>pj.root.scrollTop/pj.root.clientHeight);await p.keyboard.press('ArrowRight');
+ await p.waitForFunction(u0=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-(u0+PROJECT.perCard))<0.02,u0,{timeout:6000});
+ // 빨리 스크롤하면 바람이 불어 카드가 흩어졌다가 다시 모임
+ await p.mouse.move(720,700);for(let i=0;i<8;i++){await p.mouse.wheel(0,160);await p.waitForTimeout(30);}
+ assert(await p.evaluate(()=>pj.sv>0.5),'빨리 스크롤하면 바람이 붊');
+ await p.waitForFunction(()=>pj.sv<0.05,null,{timeout:8000});
+ // 카드를 누르면 그 작품 상세, Enter 키 = 맨 앞 카드
+ const j=await p.evaluate(()=>pj.frontIdx);const who3=await p.evaluate(j=>STUDENTS[pj.cards[j].s].name,j);
+ await p.evaluate(j=>pj.cards[j].el.click(),j);await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
  await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
- await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
+ await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();
+ assert(await p.evaluate(()=>pj.at===pj.cards[pj.frontIdx].s),'Enter = 맨 앞 카드');
  await p.keyboard.press('Escape');await p.waitForTimeout(400);
- // 끝까지 내리면 마지막 작품에서 멈춤 (작품 목록 없음)
+ // 끝까지 내려도 작품 목록은 없음
  assert.equal(await p.locator('#pj-list, #pj-grid, .pj-item').count(),0,'작품 목록 없음');
  await p.evaluate(()=>{pj.root.scrollTop=1e7;});await p.waitForTimeout(100);
- assert(await p.evaluate(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjEndAt())<0.02),'스크롤 끝 = 마지막 작품');
+ assert(await p.evaluate(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjEndAt())<0.02),'스크롤 끝');
  // 작품 상세: 그림 14칸, ← → 이전/다음, Esc 닫기
  await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();
  assert.equal(await p.locator('.pj-shot').count(),14);
@@ -128,6 +130,6 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut one by one (snap/keys) → end at last work (no list) → detail (14 images) → designer, designer row (wheel/keys/filter/portfolio plaque), reduced motion, mobile; no page errors.');
+ console.log('PASS: intro buttons + skip + menu, about (poster + text), project floating cards → donut keeps spinning + paper flutter + scroll gust (keys) → no list → detail (14 images) → designer, designer row (wheel/keys/filter/portfolio plaque), reduced motion, mobile; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
