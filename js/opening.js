@@ -16,7 +16,8 @@ function playOpening() {
   cancelTransition();
   op.root.classList.toggle('seen', opSeen());
   go('opening');
-  if (!op.intro) op.intro = createIntroScroll(op.stage.appendChild(document.createElement('div')), { scroller: op.root, onEnd: opLeave });
+  const make = new URLSearchParams(location.search).get('intro') === 'video' ? createIntroVideo : createIntroScroll;   // ?intro=video = 영상 시험 버전
+  if (!op.intro) op.intro = make(op.stage.appendChild(document.createElement('div')), { scroller: op.root, onEnd: opLeave });
   op.root.scrollTop = 0; op.intro.reset();
   op.playing = true; op.intro.start();
 }
