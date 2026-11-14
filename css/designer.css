@@ -90,20 +90,14 @@
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.2) 0 1px,rgba(0,0,0,.04) 1px 2px),linear-gradient(104deg,#bfc3c7 0,#f1f2f3 24%,#b5b9be 50%,#e7e9ea 74%,#a5aaaf 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(0,0,0,.2),0 0 0 1px rgba(36,38,42,.4),0 6px 10px rgba(0,0,0,.34);transition:transform .3s,filter .3s,box-shadow .3s}
 a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-2px);filter:brightness(1.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(0,0,0,.2),0 0 0 1px rgba(36,38,42,.6),0 10px 16px rgba(0,0,0,.4)}
-.dg-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.dg-line{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid rgba(27,29,32,.55)}
 .dg-name{font-size:19px;font-weight:700;letter-spacing:-.02em}
 .dg-field{font-size:13px;font-weight:500;color:#2d3035}
-.dg-no{margin-top:3px;padding-bottom:8px;border-bottom:1px solid rgba(27,29,32,.55);font-size:10.5px;letter-spacing:.12em;color:#3a3d42}
 .dg-slogan{margin-top:8px;font-size:12.5px;line-height:1.55;word-break:keep-all;color:#24262a;min-height:3.1em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden} /* 두 줄까지: 판 높이를 맞춰 받침대가 나란히 서게 */
 .dg-desc{margin-top:4px;font-size:12px;line-height:1.6;word-break:keep-all;color:#33363b;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .dg-row.has-desc .dg-desc{min-height:4.8em} /* 소개글이 있는 사람이 한 명이라도 있으면 모두 같은 높이로 */
 .dg-go{margin-top:8px;font-size:12px;font-weight:700;letter-spacing:.01em}
 .dg-plate.is-empty .dg-go{color:#5d6167;font-weight:500}
-/* 대표 작품 보기: 설명판 아래에 붙은 작은 금속 이름표 */
-.dg-work{position:relative;z-index:1;height:30px;padding:0 14px;border-radius:4px;font-size:12px;font-weight:600;color:#1b1d20;border:0;
-  background:repeating-linear-gradient(0deg,rgba(255,255,255,.2) 0 1px,rgba(0,0,0,.04) 1px 2px),linear-gradient(104deg,#b9bdc2 0,#eceeef 30%,#b3b7bc 62%,#dfe1e3 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 0 1px rgba(36,38,42,.4),0 4px 8px rgba(0,0,0,.3);transition:transform .25s,filter .25s}
-.dg-work:hover,.dg-work:focus-visible{transform:translateY(-2px);filter:brightness(1.08)}
 .dg-item.hi .dg-plate{animation:dgHi 1.6s ease-out}
 @keyframes dgHi{0%,40%{box-shadow:0 0 0 3px #2f6bff,0 10px 16px rgba(0,0,0,.4)}100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(0,0,0,.2),0 0 0 1px rgba(36,38,42,.4),0 6px 10px rgba(0,0,0,.34)}}
 
@@ -134,4 +128,4 @@ a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-2px);filter:brig
 }
 @media(max-height:720px){.dg-head h2{font-size:clamp(30px,4vw,48px)}.dg-slogan{min-height:0}}
 @media(max-height:780px) and (min-width:761px){.dg-post{height:min(36vh,280px)}.dg-shaft{padding-top:18px;padding-bottom:14px}}
-@media(prefers-reduced-motion:reduce){.dg-item.hi .dg-plate{animation:none}.dg-bust,.dg-plate,.dg-work{transition:none}}
+@media(prefers-reduced-motion:reduce){.dg-item.hi .dg-plate{animation:none}.dg-bust,.dg-plate{transition:none}}

@@ -127,8 +127,10 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.waitForFunction(()=>dg.side==='uxui',null,{timeout:4000});await p.waitForTimeout(700);assert(await fx()>0.7,'UX/UI 쪽으로 가면 경계(팻말)는 오른쪽으로');
  assert.match(await p.locator('#dg-count').textContent(),/UX\/UI · 웹 · 8명/);
  await p.locator('#dg-filter [data-side="fork"]').click();await p.waitForTimeout(900);assert.match(await p.locator('#dg-count').textContent(),/^14명의 디자이너$/);
- // [대표 작품 보기] → Project 방의 그 작품 상세
- await p.locator('.dg-item[data-i="1"] .dg-work').click();await p.locator('#pj-detail.on').waitFor();
+ // 설명판에는 포트폴리오 보기만 있고 (대표 작품 보기 버튼·번호·연도 줄은 없음), Project 방의 작품 상세는 따로 열어 봄
+ assert.equal(await p.locator('.dg-work, .dg-no').count(),0,'대표 작품 보기 버튼·번호 줄 없음');
+ assert.match(await p.locator('.dg-item[data-i="1"] .dg-go').textContent(),/포트폴리오 보기/);
+ await p.evaluate(()=>{go('project');pjOpen(1,null);});await p.locator('#pj-detail.on').waitFor();
  assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도');
  // 상세: 검은 화면, 위 메뉴는 숨김, 오른쪽 위 X로 닫으면 메뉴가 다시 보임
  assert.equal(await p.locator('.topbar').isVisible(),false,'상세에서는 위 메뉴 숨김');assert.equal(await p.locator('#pj-d-mail').isHidden(),true,'메일이 없으면 안 보임');
