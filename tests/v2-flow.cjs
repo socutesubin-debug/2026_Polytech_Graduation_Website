@@ -1,4 +1,4 @@
-// 새 기획(2026-11-14) 흐름 검사: 로딩 화면(로고 + 동그란 로딩바) → Intro(오프닝) → Project 방 / Designer 방
+// 새 기획(2026-11-14) 흐름 검사: Intro(오프닝) → Project 방 / Designer 방
 // Intro 끝의 [Project] [Designer] 버튼, 건너뛰기, 메뉴 3개, Project 첫 화면(떠다니는 카드) → 작품 목록 → 작품 상세(그림 14칸) → 만든 사람 → Designer 석고상,
 // Designer 가로 한 줄(휠·화살표·키보드), 표찰 = 포트폴리오 새 탭, 분야 고르기, 움직임 줄이기, 모바일
 // 실행: 8765 포트로 서버를 켠 뒤  node tests/v2-flow.cjs   (인터넷이 막힌 곳은 CDN_DIR 설정, README 참고)
@@ -12,15 +12,9 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  const open=async(opts={},url=base)=>{const ctx=await browser.newContext({viewport:{width:1440,height:900},...opts});await route(ctx,process.env.CDN_DIR);const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(url);return p;};
  const state=(p)=>p.evaluate(()=>page);
 
- // 0) 맨 처음: 로고 + 동그란 로딩바가 0 → 100% 차오른 뒤 사라지고 오프닝 시작
+ // 1) Intro: s1 → s2 → s3 다음 [Project] [Designer] 버튼. 메뉴는 숨어 있고 건너뛰기는 항상 보임
  let p=await open();
  assert.equal(await state(p),'opening');assert.equal(await p.locator('#topbar.on').count(),0);
- await p.locator('#op-load:not(.done)').waitFor({state:'visible'});assert.equal(await p.locator('#op-load .op-ring .op-load-logo').count(),1,'로고는 동그라미 로딩바 안에');assert.equal(await p.locator('#op-load .op-load-logo').getAttribute('alt'),'Beyond the Frame');
- assert(await p.locator('#op-load-bar').count()===1&&await p.evaluate(()=>op.shot===0),'로딩 중에는 오프닝이 아직 시작 안 함');
- await p.waitForFunction(()=>+document.querySelector('#op-load-num').textContent>=40&&+document.querySelector('#op-load-num').textContent<100,null,{timeout:6000});
- await p.locator('#op-load.done').waitFor({state:'attached',timeout:12000});assert.equal(await p.locator('#op-load-num').textContent(),'100');
- await p.waitForFunction(()=>op.shot===1,null,{timeout:2000});
- // 1) Intro: s1 → s2 → s3 다음 [Project] [Designer] 버튼. 메뉴는 숨어 있고 건너뛰기는 항상 보임
  await p.locator('#op-skip').waitFor({state:'visible'});
  await p.waitForFunction(()=>document.querySelector('#opening').dataset.shot==='3',null,{timeout:12000});
  await p.locator('#op-copy.on').waitFor({timeout:6000});
@@ -30,8 +24,8 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.waitForFunction(()=>page==='designer',null,{timeout:5000});
  assert.equal(new URL(p.url()).hash,'#designer');assert.equal(await p.locator('#topbar.on').count(),1);
  assert.deepEqual(await p.locator('.pill button').allTextContents(),['Intro','About','Project','Designer']);
- // 메뉴 Intro → 오프닝 다시 (로딩 화면 없이 바로), 건너뛰기(Esc) → Project 방
- await p.locator('.pill [data-go="opening"]').click();assert.equal(await state(p),'opening');assert.equal(await p.locator('#op-load.done').count(),1,'두 번째부터는 로딩 화면 없음');
+ // 메뉴 Intro → 오프닝 다시, 건너뛰기(Esc) → Project 방
+ await p.locator('.pill [data-go="opening"]').click();assert.equal(await state(p),'opening');
  await p.keyboard.press('Escape');assert.equal(await state(p),'project');assert.equal(new URL(p.url()).hash,'#project');
  console.log('intro ok');
 
@@ -145,7 +139,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 4) 움직임 줄이기: Intro는 버튼이 바로 보이고, 카드는 떠다니지 않음
  p=await open({reducedMotion:'reduce'});
- assert.equal(await p.locator('#opening').getAttribute('data-shot'),'3');await p.locator('#op-copy.on').waitFor({timeout:4000});
+ assert.equal(await p.locator('#opening').getAttribute('data-shot'),'3');await p.locator('#op-copy.on').waitFor({timeout:2000});
  await p.locator('#op-enter').click();await p.waitForFunction(()=>page==='project',null,{timeout:3000});
  assert.equal(await p.locator('#project.still').count(),1);
  const s0=await p.locator('.pj-strip').first().evaluate(el=>el.style.transform);await p.waitForTimeout(300);
@@ -155,7 +149,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 5) 모바일: 메뉴 3개, Designer는 손가락으로 옆으로 넘김(한 명씩 딱 멈춤)
  p=await open({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
- await p.locator('#op-load.done').waitFor({state:'attached',timeout:12000});await p.locator('#op-skip').tap();assert.equal(await state(p),'project');
+ await p.locator('#op-skip').tap();assert.equal(await state(p),'project');
  await p.locator('.pill [data-go="designer"]').tap();assert.equal(await state(p),'designer');
  assert.equal(await p.locator('.dg-row').evaluate(el=>getComputedStyle(el).scrollSnapType),'x mandatory');
  const w=await p.locator('.dg-item').first().evaluate(el=>el.getBoundingClientRect().width);assert(w>280&&w<320,`모바일 석고상 칸 너비 (${w})`);

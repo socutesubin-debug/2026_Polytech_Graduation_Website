@@ -65,7 +65,6 @@ $$('[data-asset]').forEach((img) => { img.src = ASSETS[img.dataset.asset]; });
 // 주소 끝(#lobby, #gallery-2 …)은 setRoom이 주소를 고치기 전에 먼저 읽어 둠
 const start = location.hash.slice(1);
 requestAnimationFrame(tick);
-if (start) opBootDone(); // 다른 화면 주소(#project 등)로 바로 들어오면 로딩 화면 없이
 if (start === 'lobby') go('lobby');
 else if (['list', 'lobby3d', 'special', 'about', 'project', 'designer'].includes(start)) go(start);
 else if (start === 'test-room') go('test-room');
