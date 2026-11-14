@@ -162,9 +162,17 @@
   <section class="screen test-room hall" id="hall-uxui" aria-label="UX/UI · 웹 전시관" tabindex="-1"></section>
   <section class="screen test-room hall" id="hall-visual" aria-label="Visual 전시관" tabindex="-1"></section>
 
-  <!-- ⑧ V2 오프닝 — 스토리보드 s1~s3: 나비 등장 → 포스터 → 빛나는 입구 + [입장하기]  (css/opening.css, js/opening.js) — 주소 끝 #opening
+  <!-- ⑧ V2 오프닝 — 맨 처음 로딩 화면(Beyond the Frame 로고 + 동그란 로딩바) → 스토리보드 s1~s3: 나비 등장 → 포스터 → 빛나는 입구 + [입장하기]  (css/opening.css, js/opening.js) — 주소 끝 #opening
        지금은 코드로 그린 임시 그림. 영상 파일을 넣고 js/opening.js의 OPENING.video에 이름을 적으면 그 영상이 대신 나옴 -->
   <section class="screen opening" id="opening" aria-label="오프닝">
+    <!-- 로딩 화면: 사이트에 처음 들어올 때 한 번. 로고 아래 동그란 로딩바가 차오르면 사라지고 오프닝이 시작됨 (로고 파일: assets/images/logo-beyond-the-frame.webp) -->
+    <div class="op-load" id="op-load" role="status" aria-label="불러오는 중">
+      <img class="op-load-logo" src="assets/images/logo-beyond-the-frame.webp" alt="Beyond the Frame" decoding="async" fetchpriority="high">
+      <div class="op-ring" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><circle class="op-ring-track" cx="32" cy="32" r="28"/><circle class="op-ring-bar" id="op-load-bar" cx="32" cy="32" r="28" pathLength="100"/></svg>
+        <span id="op-load-num">0</span>
+      </div>
+    </div>
     <video class="op-video" id="op-video" muted playsinline preload="none" hidden></video>
     <svg class="op-art" id="op-art" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>

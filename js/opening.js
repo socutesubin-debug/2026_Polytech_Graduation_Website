@@ -1,4 +1,7 @@
-/* V2 오프닝 (#opening) — 스토리보드 s1~s3
+/* V2 오프닝 (#opening) — 맨 처음 로딩 화면 → 스토리보드 s1~s3
+   0 로딩 화면: 사이트에 처음 들어오면 Beyond the Frame 로고 + 아래 동그란 로딩바가 0 → 100% 차오름
+     (그림·글꼴이 다 불러와지고, 최소 OPENING.loadMin 동안 보임). 다 차면 부드럽게 사라지고 나비 오프닝이 시작됨
+     메뉴의 Intro를 다시 누르거나 다른 화면 주소(#project 등)로 들어왔을 때는 로딩 화면 없이 바로 오프닝
    s1 나비 등장 → s2 포스터 앞을 지나감 → s3 빛나는 아치 입구 + [Project] [Designer] 버튼 두 개
    - 지금은 코드로 그린 임시 그림(SVG)과 나비. 영상 파일을 넣고 아래 OPENING.video에 이름을 적으면 그 영상이 대신 재생됨
    - [건너뛰기]는 항상 보임 (누르면 바로 Project 방). 한 번 본 사람에게는 더 눈에 띄게 보임
@@ -11,12 +14,15 @@ const OPENING = {
   loopTail: 2,                // 영상일 때: 마지막 2초를 반복 재생
   video: [],                  // 영상이 준비되면 파일 이름을 적어요: ['assets/video/intro.webm', 'assets/video/intro.mp4']
   next: 'project',            // [건너뛰기]·Enter 키로 갈 화면
+  loadMin: 2400,              // 로딩 화면이 최소로 보이는 시간 (짧으면 로딩바가 휙 지나가서 아쉬움)
+  loadMax: 9000,              // 그림이 너무 늦게 와도 이 시간이 지나면 오프닝 시작
   seenKey: 'btf-opening-seen',
 };
 const op = {
   root: $('#opening'), art: $('#op-art'), fly: $('#op-fly'), copy: $('#op-copy'), white: $('#op-white'),
   video: $('#op-video'), paths: [1, 2, 3].map((n) => $('#op-path-' + n)),
   t0: 0, shot: 0, playing: false, leaving: false, mode: 'art', raf: 0,
+  load: $('#op-load'), booted: false,
 };
 $('#op-poster').setAttribute('href', ASSETS.poster);
 
@@ -74,7 +80,42 @@ function opTryVideo() {
   });
   v.load();
 }
+/* 로딩 화면: 실제로 불러오는 것(페이지 전체, 글꼴, 로고, 포스터)이 끝난 만큼 + 시간이 지난 만큼 로딩바가 차오름. 다 차면 끝 */
+function opBootDone() { op.booted = true; op.load.classList.add('done'); }
+function opLoading() {
+  op.booted = true;
+  const img = (src) => new Promise((ok) => { const i = new Image(); i.onload = i.onerror = ok; i.src = src; });
+  const jobs = [
+    document.readyState === 'complete' ? Promise.resolve() : new Promise((ok) => addEventListener('load', ok, { once: true })),
+    document.fonts ? document.fonts.ready : Promise.resolve(),
+    img($('.op-load-logo').src), img(ASSETS.poster),
+  ];
+  let done = 0; jobs.forEach((j) => Promise.resolve(j).then(() => { done++; }, () => { done++; }));
+  const bar = op.load, num = $('#op-load-num'), t0 = performance.now(), min = reduce ? 600 : OPENING.loadMin;
+  let p = 0, last = t0;
+  return new Promise((finish) => {
+    const step = (t) => {
+      const e = t - t0, dt = Math.min(64, t - last); last = t;
+      const real = done / jobs.length, all = done === jobs.length || e > OPENING.loadMax;
+      let target = Math.min(e / min, 0.12 + 0.83 * real);                     // 시간이 지난 만큼, 불러온 만큼 (둘 중 작은 쪽)
+      if (all && e >= min) target = 1;
+      p += (target - p) * (reduce ? 1 : 1 - Math.exp(-dt / 180));
+      if (target === 1 && p > 0.996) p = 1;
+      bar.style.setProperty('--p', (p * 100).toFixed(1)); num.textContent = String(Math.round(p * 100));
+      if (p >= 1) { setTimeout(finish, reduce ? 0 : 260); return; }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
 function playOpening() {
+  if (!op.booted) {                                                          // 맨 처음 한 번: 로딩 화면 먼저
+    op.root.classList.toggle('seen', opSeen()); go('opening');
+    if (reduce) { opSetShot(3); op.root.classList.add('still'); }
+    opLoading().then(() => { op.load.classList.add('done'); if (page === 'opening' && !op.leaving) playOpening(); });
+    return;
+  }
+  op.load.classList.add('done');
   cancelTransition();
   op.leaving = false; op.mode = 'art';
   op.copy.classList.remove('on'); op.white.classList.remove('on'); op.fly.classList.remove('in');
