@@ -35,10 +35,10 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.locator('.hot').last().focus();await p.keyboard.press('Enter');await p.locator('#d-next').click();assert.equal(await p.locator('#d-name').textContent(),'김예일');assert.equal(await p.evaluate(()=>room),0);
  const pose=await p.evaluate(()=>[gallery.cx,gallery.cy,gallery.z]);await p.waitForTimeout(200);assert.deepEqual(await p.evaluate(()=>[gallery.cx,gallery.cy,gallery.z]),pose);
  await p.keyboard.press('Escape');
- // 옛 V1 로비: 들어가는 도중 LIST를 누르면 전환이 취소되고 목록에 그대로 있음
+ // 옛 V1 로비: 들어가는 도중 메뉴 Project를 누르면 전환이 취소되고 Project 방에 그대로 있음
  await p.evaluate(()=>go('lobby'));await p.waitForTimeout(1000);
- await p.locator('.frame-btn').first().click({force:true});await p.locator('[data-go="list"]').click();await p.waitForTimeout(1100);
- assert.equal(await p.evaluate(()=>page),'list');assert.equal(new URL(p.url()).hash,'#list');
+ await p.locator('.frame-btn').first().click({force:true});await p.locator('[data-go="project"]').click();await p.waitForTimeout(1100);
+ assert.equal(await p.evaluate(()=>page),'project');assert.equal(new URL(p.url()).hash,'#project');
  await p.evaluate(()=>go('lobby'));
  assert.deepEqual(await p.evaluate(()=>[lobby.frozen,lobby.el.style.transform,lobby.el.classList.contains('zooming')]),[false,'',false]);
  console.log('desktop passed');

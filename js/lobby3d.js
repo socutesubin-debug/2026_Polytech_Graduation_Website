@@ -14,7 +14,7 @@ const LOBBY3D = {
   rooms: [0xeadfcb, 0xdde2e3, 0x2b2118], // 아치 안쪽 방 색: UX/UI(따뜻함) · Visual(차가움) · 스페셜(짙음)
   flyMs: 1100,
 };
-const LOBBY_DOORS = ['hall-uxui', 'hall-visual', 'special'];
+const LOBBY_DOORS = ['hall-uxui', 'hall-visual', 'project'];
 const lb = {
   root: $('#lobby3d'), view: $('#lb-view'), doors: $$('#lb-doors .lb-door'),
   ready: null, failed: false, hover: -1, flying: null, lamps: [], hits: [], w: 0, h: 0,

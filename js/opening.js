@@ -1,16 +1,16 @@
 /* V2 오프닝 (#opening) — 스토리보드 s1~s3
-   s1 나비 등장 → s2 포스터 앞을 지나감 → s3 빛나는 아치 입구 + [입장하기]
+   s1 나비 등장 → s2 포스터 앞을 지나감 → s3 빛나는 아치 입구 + [Project] [Designer] 버튼 두 개
    - 지금은 코드로 그린 임시 그림(SVG)과 나비. 영상 파일을 넣고 아래 OPENING.video에 이름을 적으면 그 영상이 대신 재생됨
-   - [건너뛰기]는 항상 보임 (누르면 바로 로비). 한 번 본 사람에게는 더 눈에 띄게 보임
+   - [건너뛰기]는 항상 보임 (누르면 바로 Project 방). 한 번 본 사람에게는 더 눈에 띄게 보임
    - 움직임 줄이기: 움직임 없이 입구 그림 + [입장하기]만 보여 줌
-   - [입장하기] → 나비가 빛 속으로 → 하얗게 밝아짐 → 로비 (s4 슬로건 모션이 생기면 OPENING.next만 바꾸면 됨)
+   - [Project] / [Designer] → 나비가 빛 속으로 → 하얗게 밝아짐 → 고른 방
    시간을 바꾸고 싶으면 아래 OPENING 숫자만 고치면 됩니다 (단위: 1000 = 1초) */
 const OPENING = {
   shots: [3400, 4200, 2200],  // s1, s2, s3에서 나비가 날아가는 시간
   enterAt: 1300,              // s3이 시작되고 이만큼 뒤에 [입장하기]가 나타남
   loopTail: 2,                // 영상일 때: 마지막 2초를 반복 재생
   video: [],                  // 영상이 준비되면 파일 이름을 적어요: ['assets/video/intro.webm', 'assets/video/intro.mp4']
-  next: 'lobby3d',            // 입장한 뒤 갈 화면
+  next: 'project',            // [건너뛰기]·Enter 키로 갈 화면
   seenKey: 'btf-opening-seen',
 };
 const op = {
@@ -92,19 +92,20 @@ function playOpening() {
   if (op.video.readyState >= 2) { op.mode = 'video'; op.video.currentTime = 0; op.video.play().catch(() => {}); }
 }
 /* [입장하기]: 나비가 빛 속으로 → 하얗게 → 다음 화면 */
-async function opEnter() {
+async function opEnter(to) {
   if (op.leaving || page !== 'opening') return;
+  op.to = typeof to === 'string' ? to : OPENING.next;
   op.leaving = true; opMarkSeen();
   const my = ++seq;
   op.fly.classList.add('in'); op.white.classList.add('on'); op.copy.classList.remove('on');
   await wait(900); if (my !== seq) return;
   opLeave();
 }
-function opSkip() { if (page !== 'opening') return; opMarkSeen(); ++seq; opLeave(); }
+function opSkip() { if (page !== 'opening') return; opMarkSeen(); ++seq; op.to = OPENING.next; opLeave(); }
 function opLeave() {
   op.playing = false; op.video.pause();
-  go(OPENING.next);
+  go(op.to || OPENING.next);
 }
-$('#op-enter').addEventListener('click', opEnter);
+$$('.op-enter').forEach((b) => b.addEventListener('click', () => opEnter(b.dataset.to)));
 $('#op-skip').addEventListener('click', opSkip);
 addEventListener('resize', () => { if (page === 'opening' && (reduce || op.shot === 3)) opPlaceFly(op.paths[2], 1, 0); });

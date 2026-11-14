@@ -4,34 +4,35 @@
 React 프로젝트가 아니라서 `src`·`public`·`package.json`은 없습니다. 빌드 도구 없이 **HTML + CSS + JavaScript** 로만 만든 정적 사이트라서, 이 폴더를 그대로 GitHub Pages에 올리면 바로 배포됩니다.
 CSS와 JavaScript는 **화면(방)별로 파일을 나눠** 두었습니다.
 
-## V2 화면 흐름 (2026-11-13) — "프레임을 넘어, 우리를 만나다"
+## 화면 흐름 (2026-11-14 새 기획) — Intro · Project · Designer
 
-지금 사이트를 열면 V2 화면이 나와요. 스토리보드(`docs/storyboard/README.md`)의 s4(슬로건 글자 모션)만 아직 없어요.
+메뉴는 **Intro · Project · Designer** 세 개예요. 다른 학교 졸업전시처럼 "작품 보기"와 "사람 보기" 두 갈래로 단순하게 바꿨어요.
 
 ```
-오프닝(s1 나비 → s2 포스터 → s3 입구 + [입장하기]) → 로비(s5 아치 3개)
-   → GALLERY 01 UX/UI 전시관 / GALLERY 02 Visual 전시관 (s6)
-   → GALLERY 03 갤러리 (s7)          어디서든 위 메뉴로 로비(HOME)·목록(LIST)
+Intro (나비 → 포스터 → 빛나는 입구) → [Project] 또는 [Designer]
+   Project 방: 떠다니는 작품 카드 → 스크롤하면 작품 목록 → 작품 상세(그림 14장) → 만든 사람 이름 → Designer 방
+   Designer 방: 석고상 15개 가로 한 줄 + 작품안내 표찰(누르면 포트폴리오 새 탭) → [대표 작품 보기] → Project 방
 ```
 
-| 장면 | 주소 끝 | HTML (`index.html` 주석) | CSS | JavaScript | 숫자 고치는 곳 |
+| 화면 | 주소 끝 | HTML (`index.html` 주석) | CSS | JavaScript | 숫자 고치는 곳 |
 |---|---|---|---|---|---|
-| s1~s3 오프닝 | (없음) | `⑧ V2 오프닝` | `css/opening.css` | `js/opening.js` | 맨 위 `OPENING` |
-| s5 로비 | `#lobby3d` | `⑨ V2 로비` | `css/lobby3d.css` | `js/lobby3d.js` | 맨 위 `LOBBY3D` |
-| s6 전시관 | `#hall-uxui`, `#hall-visual` | `⑦ V2 전시관` | `css/hall.css` | `js/hall.js` | 맨 위 `HALL_LAYOUT`, `HALL_THEMES` |
-| s7 갤러리 (옛 이름 스페셜룸. 떠다니는 카드 구 → 도넛 → 금 액자 + 랜덤 작품) | `#special` | `⑩ V2 스페셜룸` | `css/special.css` | `js/special.js` | 맨 위 `SPECIAL` |
-| s8 학생 목록 | `#list` | `⑤ 학생 목록` | `css/list.css` | `js/list.js` | |
+| Intro (오프닝) | (없음) | `⑧ V2 오프닝` | `css/opening.css` | `js/opening.js` | 맨 위 `OPENING` |
+| Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
+| Designer 방 | `#designer` | `⑪ Designer 방` | `css/designer.css` | `js/designer.js` | 맨 위 `DESIGNER` (휠 빠르기) |
 
-**아직 임시인 것 (자료를 받으면 바꾸는 곳)**
+예전 V2 화면(3D 로비 `#lobby3d`, 전시관 `#hall-uxui`·`#hall-visual`, 목록 `#list`)은 메뉴에서 뺐어요. 파일은 남아 있어서 주소로는 볼 수 있어요. 필요 없다고 정해지면 지워도 돼요.
 
-- 오프닝 영상: 지금은 코드로 그린 임시 그림이에요. 힉스필드 영상을 `assets/video/intro.webm`(+ `.mp4`)로 넣고 `js/opening.js`의 `OPENING.video`에 파일 이름을 적으면 영상이 대신 나와요. 영상 마지막 2초가 반복되면서 [입장하기]가 떠요.
-- 대표 작품 15점: `js/data.js`에서 학생마다 `work: { src: 'assets/works/01.webp', title: '작품 제목' }`을 채우면 갤러리(GALLERY 03)의 떠 있는 썸네일과 액자에 그 그림이 나와요 (가로로 긴 3:2 그림이 잘 맞아요). 비어 있으면 이름이 적힌 회색 카드가 나와요.
-- 분야 미정 4명(김준서·김우선·조민영·조예빈): `js/data.js`의 `field`를 `'uxui'` 또는 `'visual'`로 적으면 전시관에 나타나요. 목록에는 지금도 보여요.
-- s4 슬로건 모션: 만들면 `js/opening.js`의 `OPENING.next`를 그 화면 이름으로 바꾸면 [입장하기] 다음에 나와요.
+**아직 임시인 것 (자료를 받으면 바꾸는 곳)** — 모두 `js/data.js`의 `STUDENTS`
 
-**목록의 석고상 사진**은 3D 파일을 미리 찍어 둔 그림(`assets/images/busts/01~15.webp`, 합계 0.4MB)이에요. 그래서 목록은 3D 없이 열리고, 3D가 안 되는 기기의 대피소가 돼요.
+- 작품: 학생마다 `work: { src: '대표 그림', title: '작품 제목', desc: '작품 설명', images: ['그림1', … '그림14'] }`. 비어 있으면 회색 임시 카드와 회색 그림 칸 14개가 나와요.
+- 소개글: `desc` 칸. 표찰에 세 줄까지 나와요. 표찰은 한국어만 써요.
+- 포트폴리오 주소: `portfolio` 칸. 비어 있으면 표찰에 "포트폴리오 준비 중"이 나와요 (지금 김예일·송예준).
+- 분야 미정 4명(김준서·김우선·조민영·조예빈): `field`를 `'uxui'` 또는 `'visual'`로 적으면 분야 버튼에서 걸러져요.
+- 오프닝 영상: 힉스필드 영상을 `assets/video/intro.webm`(+ `.mp4`)로 넣고 `js/opening.js`의 `OPENING.video`에 파일 이름을 적으면 영상이 대신 나와요.
 
-**직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(전체 흐름), `node tests/hall.cjs`(전시관), `node tests/browser-smoke.cjs`(목록)예요.
+**Designer 방의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명, 합계 0.4MB)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요.
+
+**직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(Intro · Project · Designer 흐름), `node tests/browser-smoke.cjs`(목록 · V1), `node tests/hall.cjs`(예전 전시관)예요.
 
 옛 V1 화면(티켓 인트로, 액자 로비, 그림 전시실)은 지우지 않았어요. 주소 끝에 `#intro`, `#lobby`, `#gallery-1`~`#gallery-3`을 붙이면 볼 수 있어요. 아래 표는 그 V1 화면 설명이에요.
 
@@ -117,7 +118,7 @@ beyond-the-frame/
 
 JavaScript 파일들은 모듈(`import`)이 아니라 `index.html`에서 차례로 불러오는 일반 스크립트입니다. 앞 파일에서 만든 변수·함수를 뒤 파일에서 그대로 쓰므로 `<script>` 순서를 바꾸지 마세요.
 
-주소 끝에 `#lobby3d`, `#hall-uxui`, `#hall-visual`, `#special`, `#list` 를 붙이면 오프닝 없이 해당 화면으로 바로 갑니다. (옛 V1 화면: `#intro`, `#lobby`, `#gallery-1` ~ `#gallery-3`)
+주소 끝에 `#project`, `#designer` (예전 화면: `#lobby3d`, `#hall-uxui`, `#hall-visual`, `#list`)를 붙이면 오프닝 없이 해당 화면으로 바로 갑니다. (옛 V1 화면: `#intro`, `#lobby`, `#gallery-1` ~ `#gallery-3`)
 
 ## 석고상 파일 줄이기 (2026-11-13)
 

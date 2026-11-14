@@ -59,7 +59,7 @@ function openDetail(i) {
       ? listRows().map((s) => s.no - 1)
       : page === 'test-room' ? trStudents().map((s) => s.no - 1)
       : HALLS[page] ? HALLS[page].students.map((s) => s.no - 1)
-      : page === 'special' ? STUDENTS.map((s) => s.no - 1)
+      : page === 'project' || page === 'designer' ? STUDENTS.map((s) => s.no - 1)
       : STUDENTS.filter((s) => s.room === room).map((s) => s.no - 1);
     modalBackground = [...new Set([...Object.values(screens), topbar])].map((el) => [el, el.inert]);
     for (const [el] of modalBackground) el.inert = true;

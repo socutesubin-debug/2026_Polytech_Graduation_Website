@@ -1,0 +1,56 @@
+/* Designer 방 (#designer): 밝은 전시실에 석고상 15개가 받침대 위에 가로 한 줄 + 작품안내 표찰 */
+.designer{background:linear-gradient(180deg,#f6f3ee 0%,#f1ede6 64%,#e6e0d6 64.2%,#ebe6dd 100%);color:#1f1b17}
+.dg-head{position:absolute;z-index:3;left:clamp(16px,4vw,56px);right:clamp(16px,4vw,56px);top:calc(86px + env(safe-area-inset-top,0px));display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;pointer-events:none}
+.dg-head>*{pointer-events:auto}
+.dg-head h2{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(36px,5vw,72px);letter-spacing:-.04em;line-height:.95}
+.dg-head h2 small{display:block;margin-top:10px;font-size:13px;font-weight:400;letter-spacing:.02em;color:#6b5d4b}
+
+/* 가로 한 줄 */
+.dg-row{position:absolute;inset:0;z-index:2;list-style:none;margin:0;display:flex;align-items:flex-end;gap:clamp(40px,6vw,110px);
+  padding:0 max(24px,calc(50vw - 170px)) calc(64px + env(safe-area-inset-bottom,0px));overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.dg-row::-webkit-scrollbar{display:none}
+.dg-item{position:relative;flex:0 0 auto;width:340px;display:flex;flex-direction:column;align-items:center}
+.dg-item::before{content:"";position:absolute;left:50%;bottom:120px;width:520px;height:120%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .5s;
+  background:radial-gradient(ellipse 34% 48% at 50% 40%,rgba(255,250,236,.95),rgba(255,250,236,0) 70%)} /* 마우스를 올리면 위에서 비추는 빛 */
+.dg-item:hover::before,.dg-item:focus-within::before,.dg-item.hi::before{opacity:1}
+.dg-bust{position:relative;width:min(240px,26vh);aspect-ratio:480/560;margin-bottom:-4px;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.dg-bust img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 18px 18px rgba(40,30,20,.16))}
+.dg-item:hover .dg-bust{transform:translateY(-6px)}
+.dg-stand{width:min(200px,22vh);height:min(26vh,230px);background:linear-gradient(90deg,#e9e4db 0%,#f8f6f1 38%,#f2eee7 70%,#dcd5ca 100%);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 26px 30px -18px rgba(40,30,20,.35)}
+
+/* 작품안내 표찰: 받침대 앞에 붙은 하얀 카드 */
+.dg-plate{position:relative;z-index:1;display:flex;flex-direction:column;gap:5px;width:100%;margin-top:-56px;padding:16px 18px 15px;background:#fff;border-radius:4px;text-align:left;text-decoration:none;color:inherit;
+  box-shadow:0 0 0 1px rgba(31,27,23,.08),0 10px 24px rgba(40,30,20,.1);transition:transform .3s,box-shadow .3s}
+a.dg-plate:hover,a.dg-plate:focus-visible{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(31,27,23,.3),0 16px 30px rgba(40,30,20,.16)}
+.dg-no{font-size:11px;letter-spacing:.14em;color:#8a7d6a}
+.dg-name{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.dg-slogan{font-size:13px;line-height:1.55;color:#4a4036;min-height:3.1em;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden} /* 두 줄까지: 표찰 높이를 맞춰 받침대가 나란히 서게 */
+.dg-desc{font-size:12.5px;line-height:1.6;color:#6b5d4b;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.dg-go{margin-top:6px;padding-top:10px;border-top:1px solid rgba(31,27,23,.12);font-size:13px;font-weight:600}
+.dg-plate.is-empty .dg-go{color:#a39684;font-weight:400}
+.dg-work{margin-top:10px;height:34px;padding:0 14px;border-radius:99px;font-size:12.5px;color:#4a4036;border:1px solid rgba(31,27,23,.2);background:rgba(255,255,255,.6)}
+.dg-work:hover{border-color:#1f1b17;color:#1f1b17}
+.dg-item.hi .dg-plate{animation:dgHi 1.6s ease-out}
+@keyframes dgHi{0%,40%{box-shadow:0 0 0 3px #2f6bff,0 16px 30px rgba(40,30,20,.16)}100%{box-shadow:0 0 0 1px rgba(31,27,23,.08),0 10px 24px rgba(40,30,20,.1)}}
+
+/* 옆으로 넘기기 버튼 + 진행 막대 */
+.dg-arrow{position:absolute;z-index:4;top:50%;width:52px;height:52px;margin-top:-26px;border-radius:50%;background:rgba(255,255,255,.85);border:1px solid rgba(31,27,23,.2);font-size:20px;transition:opacity .2s,background .2s}
+.dg-arrow:hover{background:#fff;border-color:#1f1b17}
+.dg-arrow:disabled{opacity:0;pointer-events:none}
+.dg-arrow.prev{left:clamp(12px,2vw,28px)}.dg-arrow.next{right:clamp(12px,2vw,28px)}
+.dg-track{position:absolute;z-index:4;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));width:min(320px,60vw);height:2px;transform:translateX(-50%);background:rgba(31,27,23,.14);border-radius:2px;overflow:hidden}
+.dg-track i{position:absolute;inset:0;background:#1f1b17;transform-origin:left;transform:scaleX(0)}
+
+@media(max-width:760px){
+  .dg-row{gap:28px;padding:0 11vw calc(56px + env(safe-area-inset-bottom,0px));scroll-snap-type:x mandatory}
+  .dg-item{width:78vw;scroll-snap-align:center}
+  .dg-arrow{display:none}
+  .dg-head{top:calc(76px + env(safe-area-inset-top,0px))}
+  .dg-head h2 small{margin-top:6px}
+  .dg-filter button{height:32px;padding:0 12px;font-size:12px}
+  .dg-bust{width:min(170px,44vw)}
+  .dg-stand{width:min(150px,38vw);height:15vh}
+  .dg-plate{margin-top:-40px;padding:14px 16px 13px}
+}
+@media(max-height:720px){.dg-head h2{font-size:clamp(30px,4vw,48px)}.dg-slogan{min-height:0}}
+@media(prefers-reduced-motion:reduce){.dg-item.hi .dg-plate{animation:none}.dg-bust,.dg-plate{transition:none}}

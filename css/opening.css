@@ -36,9 +36,12 @@
 .op-copy.on{opacity:1;visibility:visible;transform:none;transition:opacity .7s,transform .8s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .op-eyebrow{margin:0;font-size:11px;letter-spacing:.22em;color:#6b5d4b}
 .op-copy h1{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(22px,3vw,40px);letter-spacing:-.02em;color:#2a2622}
-.op-enter{margin-top:14px;min-width:190px;height:54px;padding:0 34px;border-radius:99px;background:#2a2622;color:#fbf6ec;font-size:16px;font-weight:500;letter-spacing:.08em;
+.op-doors{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.op-enter{min-width:170px;height:54px;padding:0 34px;border-radius:99px;background:#2a2622;color:#fbf6ec;font-size:16px;font-weight:500;letter-spacing:.08em;
   box-shadow:0 0 0 0 rgba(255,236,196,.9),0 12px 30px rgba(60,40,20,.22);animation:opPulse 2.4s ease-out infinite;transition:transform .25s,background .25s}
 .op-enter:hover{transform:translateY(-2px);background:#000}
+.op-enter+.op-enter{background:#fbf6ec;color:#2a2622;box-shadow:0 0 0 1px rgba(42,38,34,.5),0 12px 30px rgba(60,40,20,.14);animation:none}
+.op-enter+.op-enter:hover{background:#fff}
 @keyframes opPulse{0%{box-shadow:0 0 0 0 rgba(255,226,170,.85),0 12px 30px rgba(60,40,20,.22)}100%{box-shadow:0 0 0 22px rgba(255,226,170,0),0 12px 30px rgba(60,40,20,.22)}}
 
 .op-skip{position:absolute;z-index:6;right:clamp(16px,3vw,36px);top:calc(18px + env(safe-area-inset-top,0px));height:40px;padding:0 18px;border-radius:99px;
