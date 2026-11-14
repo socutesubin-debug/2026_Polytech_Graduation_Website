@@ -20,9 +20,10 @@ function createIntroScroll(root, opts) {
     zoom: 3.4,         // how far the camera pushes into the poster after the butterfly
     chaseZoom: .65,    // how much closer the camera is while it chases the butterfly into scene 2
     chaseTilt: 5,      // how much the camera banks during the chase (degrees)
-    skyZoom: .36,      // scene 1: how much closer the camera gets while it follows the butterfly across the sky
-    skyTilt: 2.5,      // scene 1: how much the camera banks while following (degrees)
-    glide: 4.5,        // how quickly the picture catches up with the scroll (smaller = softer, more gliding)
+    skyZoom: .34,      // scene 1: how much closer the camera gets while it follows the butterfly across the sky
+    skyRest: 1.2,      // scene 1: how close the camera already is before any scroll (1 = whole picture; closer leaves room to follow the butterfly up, down and sideways)
+    skyTilt: 3,         // scene 1: how much the camera banks while following (degrees)
+    glide: 3.6,        // how quickly the picture catches up with the scroll (smaller = softer, more gliding)
     wave: 1            // how strongly the poster's surface ripples like water when the butterfly goes in (0 = off)
   };
   var GL = window.createButterflyGL ? createButterflyGL(glc, { sky: true, dense: CFG.dense }) : null, glB = GL && GL.butterflies[0], lastX = null;
@@ -57,7 +58,7 @@ function createIntroScroll(root, opts) {
     pfx.style.left = L + CX + 'px'; pfx.style.top = T + CY + 'px'; rfx.style.left = pw / 2 + 'px'; rfx.style.top = ph * .47 + 'px';
     wall.style.transformOrigin = (L + CX) + 'px ' + (T + CY) + 'px';
   }
-  var CX = 0, CY = 0, ZB = 1;
+  var CX = 0, CY = 0, ZB = 1, cam1 = { x: 0, y: 0, r: 0 };
 
   // the poster's surface as water: a small WebGL layer on the poster that bends the picture with ripples from the point of entry.
   // (if the picture cannot be used as a texture, e.g. opened as a local file, the soft CSS ripples are used instead)
@@ -114,7 +115,7 @@ function createIntroScroll(root, opts) {
   var target = 0, p = 0;
   // pacing: how much of the scroll each part of the story gets. [share of the scroll, point in the story (p)].
   // Quiet parts (nothing moving) get little scroll, busy parts (flight, dive, ripples) get more, so it never feels stuck or rushed.
-  var PACE = [[0, 0], [.03, .06], [.29, .265], [.33, .29], [.63, .62], [.66, .69], [.79, .765], [.96, .915], [1, .98]];
+  var PACE = [[0, 0], [.025, .06], [.25, .265], [.28, .29], [.66, .62], [.685, .69], [.80, .765], [.965, .915], [1, .98]];
   function pace(v) {
     for (var i = 1; i < PACE.length; i++) if (v <= PACE[i][0]) return lerp(PACE[i - 1][1], PACE[i][1], (v - PACE[i - 1][0]) / (PACE[i][0] - PACE[i - 1][0]));
     return 1;
@@ -156,8 +157,8 @@ function createIntroScroll(root, opts) {
 
     // S2 flight path in wall space: a straight run from off-screen left to the waiting spot, with one full loop added on the way
     function pathAt(k) {
-      var e = 1 - Math.pow(1 - k, 1.6), a = 2 * Math.PI * ease(seg(k, .28, .84)), R = .15 * u;   // fast at first: it is already in the picture when the scene opens
-      return [lerp(-.13 * W, CX - .09 * W, e) + R * Math.sin(a), lerp(.36 * H, CY + .12 * H, e) - R * (1 - Math.cos(a))];
+      var e = 1 - Math.pow(1 - k, 1.25), a = 2 * Math.PI * ease(seg(k, .28, .84)), R = .15 * u;   // fast at first: it is already in the picture when the scene opens
+      return [lerp(-.06 * W, CX - .09 * W, e) + R * Math.sin(a), lerp(.36 * H, CY + .12 * H, e) - R * (1 - Math.cos(a))];
     }
     var bw = pathAt(kIn), bw2 = pathAt(Math.min(1, kIn + .01));
     // camera: always frontal, but alive. It starts close on the butterfly, chases it through the loop (pan, zoom and a little tilt), then eases back to the full view
@@ -190,14 +191,20 @@ function createIntroScroll(root, opts) {
     var x, y, pitch, roll, yaw, scale = 1;
     var th = 0;
     if (p < .27) {                       // scene 1
-      // the camera follows the butterfly across the sky: it moves in closer, pans and banks with it; near the end the butterfly outruns the camera and leaves to the right
-      var z1 = 1.05 + CFG.skyZoom * ease(seg(p, .05, .2)), slackX = (z1 - 1) / 2 * W, slackY = (z1 - 1) / 2 * H;
-      var wx = .62 * W * (.35 * kFly + .65 * kFly * kFly) + sway * (1 - kFly), wy = -.06 * H - Math.sin(kFly * Math.PI) * .09 * H + bob;   // where it is in the sky (0,0 = middle of the picture)
-      var c1x = clamp2(wx * .92, -.62 * slackX / z1, .62 * slackX / z1), c1y = clamp2(wy * .75, -.4 * slackY / z1, .4 * slackY / z1);        // where the camera looks (it cannot leave the picture)
-      var r1 = CFG.skyTilt * (z1 - 1.05) / (CFG.skyZoom || 1) * Math.sin(kFly * Math.PI * 1.4 + .3);
-      s1.style.transform = 'translate(' + (-c1x * z1) + 'px,' + (-c1y * z1) + 'px) rotate(' + r1 + 'deg) scale(' + z1 + ')';
+      // the butterfly wanders up, down and sideways as it flutters, and the camera keeps following it (a little behind, like a hand-held shot):
+      // it pans with it, moves in closer and banks. Near the end the butterfly outruns the camera and leaves to the right
+      var z1 = CFG.skyRest + CFG.skyZoom * ease(seg(p, .05, .2)) + .025 * Math.sin(t * .5), slackX = (z1 - 1) / 2 * W, slackY = (z1 - 1) / 2 * H;
+      var wanX = (Math.sin(t * .43) * .05 + Math.sin(t * .97 + 2) * .018) * W + sway, wanY = (Math.sin(t * .62 + 1) * .055 + Math.sin(t * 1.31) * .02) * H + bob;
+      var wx = .64 * W * (.35 * kFly + .65 * kFly * kFly) + wanX * (1 - .7 * kFly);                                   // where it is in the sky (0,0 = middle of the picture)
+      var wy = -.05 * H - Math.sin(kFly * Math.PI) * .06 * H + Math.sin(kFly * Math.PI * 3) * .07 * H + wanY * (1 - .45 * kFly);
+      var g1 = fixed !== null && !manual ? 1 : Math.min(1, dt * 2.4);                                                 // how fast the camera catches up
+      cam1.x += (wx * .92 - cam1.x) * g1; cam1.y += (wy * .85 - cam1.y) * g1;
+      var c1x = clamp2(cam1.x, -.66 * slackX / z1, .66 * slackX / z1), c1y = clamp2(cam1.y, -.5 * slackY / z1, .5 * slackY / z1);   // it cannot look past the edge of the picture
+      var r1 = CFG.skyTilt * Math.min(1, (z1 - 1) / .3) * clamp2((wx * .92 - cam1.x) / (.05 * W) + .5 * Math.sin(kFly * Math.PI * 1.4), -1, 1);   // banks towards where the butterfly is heading
+      cam1.r += (r1 - cam1.r) * g1;
+      s1.style.transform = 'translate(' + (-c1x * z1) + 'px,' + (-c1y * z1) + 'px) rotate(' + cam1.r + 'deg) scale(' + z1 + ')';
       x = .5 * W + (wx - c1x) * z1; y = .5 * H + (wy - c1y) * z1;
-      scale = 1 + .5 * (z1 - 1.05);
+      scale = 1 + .5 * (z1 - CFG.skyRest);
       pitch = lerp(-36, -74, kSide); roll = lerp(6 * Math.sin(t * .9), -90, kSide);   // roll -90 = head to the right
       yaw = lerp(10 * Math.sin(t * .5), 0, kSide);
     } else {                             // scene 2
@@ -242,7 +249,7 @@ function createIntroScroll(root, opts) {
     cfg: CFG,
     start: function () { if (manual || running) return; running = true; layout(); if (GL) GL.resize(); readScroll(); last = performance.now(); raf = requestAnimationFrame(frame); },
     stop: function () { running = false; cancelAnimationFrame(raf); },
-    reset: function () { p = target = 0; ended = false; lastX = null; if (GL) GL.clearDust(); },   // back to the first frame
+    reset: function () { p = target = 0; cam1.x = cam1.y = cam1.r = 0; ended = false; lastX = null; if (GL) GL.clearDust(); },   // back to the first frame
     pace: pace,                                                                                    // scroll share (0..1) -> story point p
     tick: function (v) { fixed = v; clock += 1000 / 30; frame(clock); }                             // recording: one step of 1/30 s at progress v
   };

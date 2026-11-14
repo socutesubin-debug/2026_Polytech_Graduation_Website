@@ -1,7 +1,7 @@
 /* Intro (#opening) — 스크롤 인트로를 담는 화면. 장면 자체의 모양은 css/intro-scroll.css */
 .opening{background:#fff;overflow-y:auto;overscroll-behavior:none;scrollbar-width:none}
 .opening::-webkit-scrollbar{display:none}
-.op-track{height:700%}                 /* 스크롤 길이: 화면 7개 분량. 길수록 천천히 진행 */
+.op-track{height:850%}                 /* 스크롤 길이: 화면 7개 분량. 길수록 천천히 진행 */
 .op-stage{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
 .op-skip{position:absolute;z-index:6;right:clamp(16px,3vw,36px);top:calc(18px + env(safe-area-inset-top,0px));height:40px;padding:0 18px;border-radius:99px;
 .op-skip:hover{background:#fff}
