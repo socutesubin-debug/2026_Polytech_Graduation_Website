@@ -15,17 +15,25 @@
   /* scene 2: sky + ground behind, and the poster wall as one flat plane we can turn */
   #s2 { opacity: 0; background: linear-gradient(to bottom, #a9c6e3 0%, #e4edf5 60%, #d9d2c7 60%, #c9c1b6 100%); }
   #cam { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 50%; }
-  #wall { position: absolute; left: -400vw; top: -100vh; width: 650vw; height: 300vh; background: #d2c9c2; transform-origin: 450vw 148vh; }
-  #wall .img { position: absolute; left: 400vw; top: 100vh; width: 100vw; height: 100vh;
-          background: url("assets/images/intro/s2-poster-wall.jpg") center / cover no-repeat;
-          -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
-          -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 7%, #000 93%, transparent 100%);
-          mask-composite: intersect; }
-  /* effects on the poster's own surface (they turn with the wall): inner glow + ripples where the butterfly goes in */
-  #pfx { position: absolute; left: 450vw; top: 148vh; width: 0; height: 0; }
-  #pfx i { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0; will-change: transform, opacity; }
+  #wall { position: absolute; left: -400vw; top: -100vh; width: 650vw; height: 300vh; background: #d2c9c2; transform-origin: 450vw 150vh; transform-style: preserve-3d; }
+  #wall .img, #wall .tile { position: absolute; left: 400vw; top: 100vh; width: 100vw; height: 100vh;
+          background: url("assets/images/intro/s2-poster-wall.jpg") center / cover no-repeat; }
+  /* the same photo mirrored outwards, so the stone and the leaf shadows carry on past the edge of the screen (only the strips next to the seam, which have no poster in them) */
+  #wall .tile.l { left: 300vw; transform: scaleX(-1); clip-path: inset(0 64% 0 0); }
+  #wall .tile.r { left: 500vw; transform: scaleX(-1); clip-path: inset(0 0 0 64%); }
+  #wall .tile.t { top: 0; transform: scaleY(-1); clip-path: inset(0 0 86% 0); }
+  #wall .tile.b { top: 200vh; transform: scaleY(-1); clip-path: inset(86% 0 0 0); }
+  /* the poster again as its own layer, a little in front of the wall: real depth when the camera moves */
+  #poster { position: absolute; overflow: hidden; background: url("assets/images/intro/s2-poster-wall.jpg") no-repeat; transform: translateZ(26px);
+          box-shadow: 0 1.4vmin 3.2vmin rgba(70,50,28,.38), 0 .3vmin .8vmin rgba(70,50,28,.3); }
+  /* effects on the poster's own surface (they turn with the wall): inner glow + soft ripples where the butterfly goes in */
+  #pfx, #rfx { position: absolute; width: 0; height: 0; }
+  #pfx { transform: translateZ(28px); }
+  #pfx i, #rfx i { position: absolute; border-radius: 50%; pointer-events: none; opacity: 0; will-change: transform, opacity; }
   #pfx .pglow { left: -19vmin; top: -19vmin; width: 38vmin; height: 38vmin; background: radial-gradient(circle, rgba(255,255,255,1) 0, rgba(255,244,214,.85) 22%, rgba(255,226,170,.35) 48%, rgba(255,226,170,0) 70%); }
-  #pfx .rip { left: -9vmin; top: -9vmin; width: 18vmin; height: 18vmin; border: .5vmin solid #fff; box-shadow: 0 0 1vmin .5vmin rgba(214,160,72,.75), inset 0 0 1vmin .5vmin rgba(214,160,72,.6), 0 0 4vmin rgba(255,236,190,.9); }
+  /* a ripple = a wide soft band of light with a faint shadow behind it, like a wave on glass; clipped to the poster */
+  #rfx .rip { left: -20vmin; top: -20vmin; width: 40vmin; height: 40vmin; mix-blend-mode: soft-light;
+          background: radial-gradient(circle, rgba(255,255,255,0) 40%, rgba(120,84,40,.22) 50%, rgba(255,255,255,.95) 60%, rgba(255,246,222,.5) 67%, rgba(255,255,255,0) 76%); }
   /* light that bursts out at the spot where it enters (screen space) */
   #flash { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; opacity: 0; }
   #flash i { position: absolute; left: -22vmin; top: -22vmin; width: 44vmin; height: 44vmin; border-radius: 50%;
@@ -35,9 +43,6 @@
   #gl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .ring { position: absolute; border: 1px solid rgba(150,118,70,.6); pointer-events: none; }
   #white { background: #fff; opacity: 0; }
-  #title { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; color: var(--ink); text-align: center; letter-spacing: .32em; }
-  #title b { display: block; font-weight: 300; font-size: clamp(22px, 4.2vw, 56px); }
-  #title span { display: block; margin-top: 18px; font-size: clamp(11px, 1.2vw, 15px); letter-spacing: .2em; }
   #hint { position: absolute; left: 0; right: 0; bottom: 28px; text-align: center; color: #fff; font-size: 12px; letter-spacing: .4em; text-shadow: 0 1px 6px rgba(60,90,130,.5); }
   #hint i { display: block; width: 1px; height: 34px; margin: 10px auto 0; background: #fff; animation: drop 1.6s ease-in-out infinite; transform-origin: top; }
   @keyframes drop { 0% { transform: scaleY(0); } 60% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
@@ -46,12 +51,11 @@
 <body>
 <div id="stage">
   <div id="s1" class="layer"></div>
-  <div id="s2" class="layer"><div id="cam"><div id="wall"><div class="img"></div><div id="pfx"><i class="pglow"></i><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div></div></div>
+  <div id="s2" class="layer"><div id="cam"><div id="wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div id="poster"><div id="rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div id="pfx"><i class="pglow"></i></div></div></div></div>
   <div id="fx" class="layer"></div>
   <canvas id="gl"></canvas>
   <div id="flash"><i></i></div>
   <div id="white" class="layer"></div>
-  <div id="title"><div><b>BEYOND THE FRAME</b><span>프레임 너머, 우리를 만나다</span></div></div>
   <div id="hint">SCROLL<i></i></div>
 </div>
 
@@ -60,8 +64,8 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var s1 = $('s1'), s2 = $('s2'), wall = $('wall'), glc = $('gl'), flash = $('flash'),
-      pglow = document.querySelector('#pfx .pglow'), rips = document.querySelectorAll('#pfx .rip'),
-      white = $('white'), title = $('title'), hint = $('hint'), fx = $('fx');
+      pglow = document.querySelector('#pfx .pglow'), rips = document.querySelectorAll('#rfx .rip'), poster = $('poster'), pfx = $('pfx'), rfx = $('rfx'),
+      white = $('white'), hint = $('hint'), fx = $('fx');
   // knobs
   var CFG = {
     size: .105,        // butterfly size (share of the shorter screen side)
@@ -79,7 +83,20 @@
   function lerp(a, b, u) { return a + (b - a) * u; }
   function hex(a, b, u) { return 'rgb(' + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], u)); }).join(',') + ')'; }
 
-  function layout() { W = innerWidth; H = innerHeight; }
+  // where the poster sits inside the photo (px in the 1672 x 941 image), so its own layer and the effects line up at any screen shape
+  var IMG = { w: 1672, h: 941, x0: 606, x1: 1066, y0: 148, y1: 794 };
+  function layout() {
+    W = innerWidth; H = innerHeight;
+    var k = Math.max(W / IMG.w, H / IMG.h), ox = (W - IMG.w * k) / 2, oy = (H - IMG.h * k) / 2;       // same maths as background: center / cover
+    var px = ox + IMG.x0 * k, py = oy + IMG.y0 * k, pw = (IMG.x1 - IMG.x0) * k, ph = (IMG.y1 - IMG.y0) * k;
+    var L = 4 * W, T = H;                                                                              // the photo's corner inside #wall
+    poster.style.left = L + px + 'px'; poster.style.top = T + py + 'px'; poster.style.width = pw + 'px'; poster.style.height = ph + 'px';
+    poster.style.backgroundSize = IMG.w * k + 'px ' + IMG.h * k + 'px'; poster.style.backgroundPosition = (ox - px) + 'px ' + (oy - py) + 'px';
+    CX = px + pw / 2; CY = py + ph * .47;                                                              // the poster's butterfly
+    pfx.style.left = L + CX + 'px'; pfx.style.top = T + CY + 'px'; rfx.style.left = pw / 2 + 'px'; rfx.style.top = ph * .47 + 'px';
+    wall.style.transformOrigin = (L + CX) + 'px ' + (T + CY) + 'px';
+  }
+  var CX = 0, CY = 0;
   addEventListener('resize', layout); layout();
 
   var target = 0, p = 0;
@@ -112,7 +129,6 @@
     var kDive = seg(p, .69, .765); kDive = kDive * kDive;   // the butterfly darts into the poster
     var kThru = Math.pow(seg(p, .70, .93), 2.6); // camera drifts right with the dive, then speeds up through the wall once it is in
     var kWhite = ease(seg(p, .80, .89));
-    var kTitle = ease(seg(p, .92, .99));
 
     s2.style.opacity = kCut;
     s1.style.visibility = kCut >= 1 ? 'hidden' : 'visible';
@@ -128,10 +144,11 @@
     pglow.style.opacity = near * (1 - .55 * ease(after));
     pglow.style.transform = 'scale(' + (.5 + .7 * near + 1.6 * after) + ')';
     for (var r = 0; r < rips.length; r++) {
-      var e = seg(p, .762 + r * .022, .85 + r * .022);
-      rips[r].style.opacity = e > 0 && e < 1 ? (1 - e) * (1 - e) : 0;
-      rips[r].style.transform = 'scale(' + (.25 + 3.6 * ease(e)) + ')';
+      var e = seg(p, .764 + r * .03, .875 + r * .03);
+      rips[r].style.opacity = e > 0 && e < 1 ? Math.sin(Math.PI * Math.pow(e, .6)) * .9 : 0;     // swells in, then dies away
+      rips[r].style.transform = 'scale(' + (.15 + 2.9 * (1 - Math.pow(1 - e, 2))) + ')';
     }
+    poster.style.transform = 'translateZ(26px) scale(' + (1 + .012 * Math.sin(Math.PI * seg(p, .76, .82))) + ')';   // the poster gives a tiny pulse as it takes the butterfly in
 
     // ---- butterfly path ----
     var bob = Math.sin(t * 2.1) * 9 * sc + Math.sin(t * 3.7) * 4 * sc, sway = Math.sin(t * 1.3) * 12 * sc;
@@ -143,18 +160,18 @@
       pitch = lerp(-36, -74, kSide); roll = lerp(6 * Math.sin(t * .9), -90, kSide);   // roll -90 = head to the right
       yaw = lerp(10 * Math.sin(t * .5), 0, kSide);
     } else {                             // scene 2
-      var posterX = .5 * W + wallX; th = theta * RAD;
+      var posterX = CX + wallX; th = theta * RAD;
       // it waits a little in front of the poster (nearer to us = lower left and bigger), then flies away from us into it
       var frontX = posterX - .09 * W * (1 - kDive);
       x = lerp(-.14 * W, frontX, kIn) + sway * .5 * (1 - kDive);
-      y = lerp(.40 * H, lerp(.60 * H, .48 * H, kDive), kIn) + bob * (1 - kDive);
+      y = lerp(.40 * H, lerp(CY + .12 * H, CY, kDive), kIn) + bob * (1 - kDive);
       pitch = lerp(-74, -62, kFace); roll = lerp(-90, lerp(-16, 0, kDive), kFace);   // side flight, then nose towards the poster
       yaw = -theta;                                          // it turns with the wall, so from the side we see it in profile
       scale = lerp(1, 1.35, kIn) * (1 - .84 * kDive);
       // burst of light exactly where it goes in
       var fl = seg(p, .745, .775) * (1 - seg(p, .775, .86));
       flash.style.opacity = fl;
-      flash.style.transform = 'translate(' + posterX + 'px,' + (.48 * H) + 'px) scale(' + ((.5 + 1.6 * seg(p, .745, .86))) + ',' + (.5 + 1.6 * seg(p, .745, .86)) + ')';
+      flash.style.transform = 'translate(' + posterX + 'px,' + CY + 'px) scale(' + ((.5 + 1.6 * seg(p, .745, .86))) + ',' + (.5 + 1.6 * seg(p, .745, .86)) + ')';
     }
     if (p < .3) flash.style.opacity = 0;
     var hidden = (p > .285 && p < .32) || p > .79;
@@ -175,7 +192,6 @@
     if (alpha > .5 && p < .08 && now - lastRing > 2600) { spawnRing(x, y, sc); lastRing = now; }
 
     white.style.opacity = kWhite;
-    title.style.opacity = kTitle;
     hint.style.opacity = 1 - seg(p, .01, .06);
     if (!manual) requestAnimationFrame(frame);
   }
