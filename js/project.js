@@ -1,13 +1,13 @@
 /* Project 방 (#project) — 작품 15개를 보는 방
-   ① 첫 화면: 가운데 큰 글자 "Project" 둘레로 작품 카드가 공(구) 모양으로 떠다님. 마우스 쪽으로 기울고, 옆으로 빨리 움직이면 휙 돎
+   ① 첫 화면: 글자 없이 작품 썸네일만 공(구) 모양으로 떠다님. 순서는 들어올 때마다 랜덤. 마우스 쪽으로 기울고, 옆으로 빨리 움직이면 휙 돎
    ② 스크롤하면 카드들이 모여 도넛(고리) 모양이 됨
-   ③ 계속 스크롤하면 도넛이 돌면서 작품이 한 장씩 맨 앞에 크게 옴. 아래에 번호·제목·이름, [작품 보기]
-      스크롤을 멈추면 가장 가까운 작품에 딱 멈춤. ← → 키나 버튼으로도 한 장씩
+   ③ 계속 스크롤하면 도넛이 돌면서 작품이 한 장씩 맨 앞에 크게 옴. 카드를 누르거나 Enter 키 = 작품 상세
+      스크롤을 멈추면 가장 가까운 작품에 딱 멈춤. ← → 키로도 한 장씩
    ④ 도넛을 다 보면 아래에서 작품 목록(격자)이 올라옴. 분야(전체 / UX/UI · 웹 / Visual)를 고를 수 있음
    ⑤ 작품을 누르면 작품 상세: 제목·설명·만든 사람 + 아래로 내리며 보는 그림 (작품마다 14장 정도)
       만든 사람 이름을 누르면 Designer 방의 그 사람 석고상으로 감
    - 작품 자료는 js/data.js의 work 칸: { src: 대표 그림, title, desc, images: [그림1, 그림2, …] }
-     아직 없으면(null) 이름이 적힌 회색 임시 카드, 상세 그림도 회색 임시 칸으로 보여 줌
+     아직 없으면(null) 떠다니는 카드는 글자 없는 회색 임시 카드, 작품 목록은 이름이 적힌 회색 카드, 상세 그림도 회색 임시 칸으로 보여 줌
    - 움직임 줄이기: 카드가 저절로 떠다니지 않음 (스크롤하면 자리만 바뀜)
    숫자를 바꾸고 싶으면 아래 PROJECT만 고치면 됩니다 (스크롤 길이는 화면 높이 1 = 한 화면) */
 const PROJECT = {
@@ -22,8 +22,8 @@ const PROJECT = {
   mouseTilt: 14, mouseSpin: 0.22, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 휙 도는 힘
 };
 const pj = {
-  root: $('#project'), track: $('#pj-track'), hero: $('#pj-hero'), space: $('#pj-space'), word: $('#pj-word'), cloud: $('#pj-cloud'),
-  focus: $('#pj-focus'), grid: $('#pj-grid'), view: $('#pj-detail'),
+  root: $('#project'), track: $('#pj-track'), hero: $('#pj-hero'), space: $('#pj-space'), cloud: $('#pj-cloud'),
+  live: $('#pj-live'), grid: $('#pj-grid'), view: $('#pj-detail'),
   cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, field: 'all', at: -1, back: null,
   u: 0, k: 0, ringBase: 0, front: -1, snapT: 0,
 };
@@ -32,6 +32,7 @@ const pjLerp = (a, b, t) => a + (b - a) * t;
 
 function pjThumb(s, small) {
   if (s.work && s.work.src) return `<img src="${s.work.src}" alt="${small ? '' : `${s.name}의 작품${s.work.title ? ': ' + s.work.title : ''}`}" loading="lazy" decoding="async">`;
+  if (small) return `<span class="pj-temp" style="filter:brightness(${(0.88 + ((s.no * 7) % 5) * 0.06).toFixed(2)})"></span>`; // 떠다니는 카드: 글자 없이
   return `<span class="pj-temp"><em>${pad(s.no)}</em><b>${s.name}</b><small>작품 준비 중</small></span>`;
 }
 const pjTitle = (s) => (s.work && s.work.title) || '작품 제목 준비 중';
@@ -45,10 +46,12 @@ const pjEndAt = () => pjCardAt(STUDENTS.length - 1) + PROJECT.tail;
 function pjBuild() {
   if (pj.built) return; pj.built = true;
   const n = STUDENTS.length, deg = 180 / Math.PI;
-  pj.cloud.innerHTML = STUDENTS.map((s, i) => `<button class="pj-card" type="button" tabindex="-1" aria-hidden="true" data-i="${i}">${pjThumb(s, true)}</button>`).join('');
-  pj.cards = $$('.pj-card', pj.cloud).map((el, i) => {
+  const order = STUDENTS.map((_, i) => i);                                   // 카드 순서를 랜덤으로 섞기
+  for (let j = n - 1; j > 0; j--) { const r = Math.floor(Math.random() * (j + 1)); [order[j], order[r]] = [order[r], order[j]]; }
+  pj.cloud.innerHTML = order.map((i) => `<button class="pj-card" type="button" tabindex="-1" aria-hidden="true" data-i="${i}">${pjThumb(STUDENTS[i], true)}</button>`).join('');
+  pj.cards = $$('.pj-card', pj.cloud).map((el, i) => {                       // i = 도넛 위 자리, s = 학생 번호
     const y = 1 - (2 * (i + 0.5)) / n; // 공 위에 골고루 퍼지는 자리 (나선)
-    return { el, i, th: (i * 137.508) % 360, ph: Math.asin(y) * deg * 0.92, tr: (i * 360) / n, // tr = 도넛 위 자리 (번호 순서)
+    return { el, i, s: +el.dataset.i, th: (i * 137.508) % 360, ph: Math.asin(y) * deg * 0.92, tr: (i * 360) / n, // tr = 도넛 위 자리
       sz: 0.72 + ((i * 7) % 5) * 0.14, f1: 0.5 + ((i * 3) % 7) * 0.09, f2: 0.4 + ((i * 5) % 6) * 0.11, p1: i * 1.7, p2: i * 2.9 };
   });
   pj.cloud.addEventListener('click', (e) => { const b = e.target.closest('.pj-card'); if (b) pjOpen(+b.dataset.i, b); });
@@ -98,7 +101,7 @@ function pjClose() {
   if (pj.view.hidden) return false;
   cancelAnimationFrame(pj.raf); pj.view.classList.remove('on'); pj.root.classList.remove('reading');
   setTimeout(() => { if (!pj.view.classList.contains('on')) pj.view.hidden = true; }, reduce ? 0 : 320);
-  const back = pj.back && pj.back.isConnected && !pj.back.closest('[hidden]') && pj.back.closest('#pj-grid, #pj-focus') ? pj.back : null;
+  const back = pj.back && pj.back.isConnected && !pj.back.closest('[hidden]') && pj.back.closest('#pj-grid') ? pj.back : null;
   if (back) back.focus({ preventScroll: true }); else pj.root.focus({ preventScroll: true });
   pj.at = -1; return true;
 }
@@ -117,8 +120,6 @@ function renderProject(t) {
   pj.k += (kTarget - pj.k) * (reduce ? 1 : 1 - Math.exp(-dt / 120));
   const out = pjSmooth(pjEndAt() - C.tail, pjEndAt() + 0.2, pj.u);             // 도넛이 끝나면 흐려짐
   pj.hero.style.opacity = (1 - out * 0.85).toFixed(3);
-  $('.pj-intro', pj.hero).style.opacity = (1 - pjSmooth(C.hold * 0.3, C.hold + C.gather * 0.4, pj.u)).toFixed(3);
-  pj.word.style.opacity = (1 - pjSmooth(C.hold * 0.5, C.hold + C.gather * 0.6, pj.u)).toFixed(3);
 
   const live = !reduce, ease = 1 - Math.exp(-dt / 260);
   pj.mx += (pj.tmx - pj.mx) * ease; pj.my += (pj.tmy - pj.my) * ease;
@@ -129,7 +130,7 @@ function renderProject(t) {
   const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4), Rr = W < 760 ? W * 0.4 : Math.min(W * 0.36, H * 0.46);
   const R = pjLerp(Rs, Rr, a);
   const tilt = pjLerp(-6, -13, a) - pj.my * mt * 0.7;
-  const cy = pjLerp(0, -H * 0.1, a);                                           // 도넛은 조금 위로: 아래에 이름표 자리
+  const cy = 0;                                                                // 도넛은 화면 한가운데
   pj.space.style.transform = `translate3d(0,${cy.toFixed(1)}px,${(-R * 0.35).toFixed(1)}px)`;
   pj.cloud.style.transform = `rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
   const cw = W < 760 ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), rad = Math.PI / 180, ts = t / 1000, wob = live ? C.float * (1 - 0.85 * a) : 0;
@@ -146,16 +147,11 @@ function renderProject(t) {
     const op = 1 - a * 0.55 * (1 - Math.cos(ang * rad)) / 2 - a * 0.25 * (1 - near); // 도넛 뒤쪽 카드는 흐리게
     if (Math.abs(op - (c.op ?? 1)) > 0.01) { c.op = op; c.el.style.opacity = op.toFixed(2); }
   }
-  // 맨 앞 작품의 이름표
-  const show = a > 0.85 && pj.u < pjEndAt() - C.tail * 0.4;
-  pj.focus.classList.toggle('on', show);
-  const f = clamp(Math.round(pj.k), 0, n - 1);
+  // 맨 앞 작품 (화면에는 글자 없이, 화면 읽기 프로그램에만 알림)
+  const f = a > 0.85 ? clamp(Math.round(pj.k), 0, n - 1) : -1;
   if (f !== pj.front) {
-    pj.front = f; const s = STUDENTS[f];
-    $('#pj-f-no').textContent = `${pad(s.no)} / ${pad(n)} · ${FIELD_LABEL[s.field] || '분야 확인 중'}`;
-    $('#pj-f-title').textContent = pjTitle(s);
-    $('#pj-f-who').textContent = s.name;
-    $('#pj-f-open').setAttribute('aria-label', `${s.name} 작품 보기`);
+    pj.front = f; const s = f >= 0 ? STUDENTS[pj.cards[f].s] : null;
+    pj.live.textContent = s ? `${s.name}, ${pjTitle(s)}. Enter 키를 누르면 작품 보기` : '';
   }
 }
 function enterProject() {
@@ -174,6 +170,7 @@ function projectKey(e) {
     const k = pj.u < pjRingAt() - 0.3 ? -1 : pjFrontNow();
     pjGotoCard(e.key === 'ArrowRight' ? k + 1 : k - 1); return true;
   }
+  if (e.key === 'Enter' && pjInRing() && (e.target === pj.root || e.target === document.body)) { pjOpen(pj.cards[pjFrontNow()].s); return true; }
   return false;
 }
 
@@ -194,11 +191,7 @@ pj.root.addEventListener('scroll', () => {
   }, 180);
 }, { passive: true });
 addEventListener('resize', () => { if (pj.built) pjSize(); });
-$('#pj-down').addEventListener('click', () => pjGotoCard(0));
-$('#pj-f-open').addEventListener('click', (e) => pjOpen(pjFrontNow(), e.currentTarget));
-$('#pj-f-prev').addEventListener('click', () => pjGotoCard(pjFrontNow() - 1));
-$('#pj-f-next').addEventListener('click', () => pjGotoCard(pjFrontNow() + 1));
-$('#pj-f-all').addEventListener('click', () => pjScrollToU(pjEndAt() + 1));
+
 $$('#pj-filter button').forEach((b) => b.addEventListener('click', () => pjFilter(b.dataset.field)));
 $('#pj-d-close').addEventListener('click', pjClose);
 $('#pj-d-prev').addEventListener('click', () => pjStep(-1));

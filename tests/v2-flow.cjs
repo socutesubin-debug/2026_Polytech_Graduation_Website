@@ -37,29 +37,36 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.locator('.ab-go [data-to="project"]').click();assert.equal(await state(p),'project');
  console.log('about ok');
 
- // 2) Project 방: 떠다니는 카드 15장 + 큰 글자, 스크롤하면 작품 목록, 분야 고르기
- assert.equal(await p.locator('.pj-card').count(),15);assert.equal(await p.locator('#pj-word').textContent(),'Project');
+ // 2) Project 방: 글자 없이 작품 썸네일 15장만 랜덤 순서로 떠다님, 스크롤하면 도넛 → 작품 목록
+ assert.equal(await p.locator('.pj-card').count(),15);
+ assert.equal((await p.locator('#pj-hero').innerText()).trim(),'','첫 화면에 보이는 글자 없음');
+ assert.equal(await p.locator('#pj-word, #pj-focus, #pj-down').count(),0);
+ assert.deepEqual(await p.evaluate(()=>pj.cards.map(c=>c.s).sort((x,y)=>x-y)),[...Array(15).keys()],'15명 모두 한 장씩');
  const t0=await p.locator('.pj-card').first().evaluate(el=>el.style.transform);await p.waitForTimeout(300);
  assert.notEqual(await p.locator('.pj-card').first().evaluate(el=>el.style.transform),t0,'카드가 떠다님');
-  // 스크롤하면 공 → 도넛: 카드들이 위아래로 덜 퍼짐. 도넛에서는 한 장씩 맨 앞에 오고 이름표가 바뀜
+ // 스크롤하면 공 → 도넛: 카드들이 위아래로 덜 퍼짐. 도넛에서는 한 장씩 맨 앞에 옴
  const spread=()=>p.evaluate(()=>{const ys=[...document.querySelectorAll('.pj-card')].map(el=>{const r=el.getBoundingClientRect();return r.top+r.height/2;});return Math.max(...ys)-Math.min(...ys);});
  const sphere=await spread();
- await p.waitForTimeout(1000);await p.locator('#pj-down').click({force:true});
+ await p.waitForTimeout(1000);await p.evaluate(()=>pjGotoCard(0));
  await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(0))<0.01&&Math.abs(pj.k)<0.02,null,{timeout:6000});
- await p.locator('#pj-focus.on').waitFor();assert(await spread()<sphere*0.7,'도넛은 공보다 납작함');
- assert.match(await p.locator('#pj-f-no').textContent(),/^01 \/ 15/);assert.equal(await p.locator('#pj-f-who').textContent(),'김예일');
+ await p.waitForTimeout(300);assert(await spread()<sphere*0.7,'도넛은 공보다 납작함');
  const big=await p.evaluate(()=>{const w=[...document.querySelectorAll('.pj-card')].map(el=>el.getBoundingClientRect().width);return w.indexOf(Math.max(...w));});assert.equal(big,0,'맨 앞 작품이 가장 큼');
+ const nameOf=(j)=>p.evaluate((j)=>STUDENTS[pj.cards[j].s].name,j);
+ assert.match(await p.locator('#pj-live').textContent(),new RegExp('^'+await nameOf(0)));
  await p.locator('#project').focus();await p.keyboard.press('ArrowRight');
  await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(1))<0.01&&Math.abs(pj.k-1)<0.02,null,{timeout:6000});
- assert.equal(await p.locator('#pj-f-who').textContent(),'민하도');
  // 어중간한 자리에서 스크롤을 멈추면 가장 가까운 작품에 딱 멈춤
  await p.evaluate(()=>{pj.root.scrollTop=(pjCardAt(3)+PROJECT.perCard*0.3)*pj.root.clientHeight;});
  await p.waitForFunction(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjCardAt(3))<0.01,null,{timeout:6000});
- await p.waitForFunction(()=>Math.abs(pj.k-3)<0.02,null,{timeout:6000});assert.equal(await p.locator('#pj-f-who').textContent(),'김우선');
- await p.locator('#pj-f-open').click();await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),'김우선 →');
+ await p.waitForFunction(()=>Math.abs(pj.k-3)<0.02,null,{timeout:6000});
+ // 맨 앞 카드를 누르면 그 작품 상세, Enter 키도 같음
+ const who3=await nameOf(3);
+ await p.locator('.pj-card').nth(3).click({force:true});await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
+ await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
+ await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3+' →');
  await p.keyboard.press('Escape');await p.waitForTimeout(400);
- // [전체 목록 보기] → 작품 목록
- await p.locator('#pj-f-all').click();await p.waitForFunction(()=>pj.root.scrollTop/pj.root.clientHeight>=pjEndAt()+0.99,null,{timeout:6000});
+ // 끝까지 내리면 작품 목록
+ await p.evaluate(()=>pjScrollToU(pjEndAt()+1,true));await p.waitForFunction(()=>pj.root.scrollTop/pj.root.clientHeight>=pjEndAt()+0.99,null,{timeout:6000});
  assert.equal(await p.locator('.pj-item:visible').count(),15);assert.equal(await p.locator('#pj-count').textContent(),'15개의 작품');
  await p.locator('#pj-filter [data-field="visual"]').click();assert.equal(await p.locator('.pj-item:visible').count(),4);
  await p.locator('#pj-filter [data-field="uxui"]').click();assert.equal(await p.locator('.pj-item:visible').count(),7);
