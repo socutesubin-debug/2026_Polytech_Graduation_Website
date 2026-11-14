@@ -52,7 +52,7 @@ const STUDENTS = [
   { name: '박호성', field: 'uxui', slogan: '감에 의존하지 않고, 데이터를 바탕으로 개선하는 디자이너', desc: '', email: '', portfolio: 'https://hoseong-graduation-portfolio.qkrghtjd4820.chatgpt.site/' },
   { name: '오수한', field: 'uxui', slogan: '익숙함의 결을 따라, 변화를 섬세하게 빚는 디자이너', desc: '', email: '', portfolio: 'https://suhan998.github.io/Web-Portfolio/' },
   { name: '조민영', field: '', designer: false, slogan: '경험을 내일로 잇는 디자이너', desc: '', email: '', portfolio: 'https://ddmom.github.io/my_portfolio/' },
-  { name: '조예빈', field: '', slogan: '익숙한 것에서 낯선 매력을 발견하는 디자이너', desc: '', email: '', portfolio: 'https://yobinnie.github.io/exhibition_2026/' },
+  { name: '조예빈', field: 'visual', slogan: '익숙한 것에서 낯선 매력을 발견하는 디자이너', desc: '', email: '', portfolio: 'https://yobinnie.github.io/exhibition_2026/' },
   { name: '손예진', field: 'uxui', slogan: '익숙한 것을 낯설게 듣고, 음악처럼 오래 남는 경험을 만드는 디자이너', desc: '', email: '', portfolio: 'https://pueon01-max.github.io/play-2/' },
   { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: '' },
   { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', email: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },

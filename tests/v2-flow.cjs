@@ -98,12 +98,12 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.mouse.wheel(0,600);await p.waitForTimeout(300);const x1=await p.evaluate(()=>dg.row.scrollLeft);assert(x1>300,`휠로 옆으로 움직임 (${x1})`);
  await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await p.waitForTimeout(900);
  assert(await p.evaluate(()=>dg.row.scrollLeft)>x1,'→ 키로 다음 석고상');
- // 갈림길 복도: 가운데 갈림길, 왼쪽 UX/UI(7명), 오른쪽 Visual(4명) + 분야 확인 중. 방에 들어가면 분위기가 바뀜
+ // 갈림길 복도: 가운데 갈림길, 왼쪽 UX/UI(8명), 오른쪽 Visual(6명). 방에 들어가면 분위기가 바뀜
  const order=await p.evaluate(()=>[...dg.row.children].map(li=>li.id==='dg-fork'?'fork':li.dataset.field||'sign'));
- assert.equal(order.indexOf('fork'),9,'갈림길 왼쪽에 UX/UI 표지 + 8명');assert(order.slice(1,9).every(f=>f==='uxui'));assert(order.slice(10,15).every(f=>f==='visual'));
+ assert.equal(order.indexOf('fork'),9,'갈림길 왼쪽에 UX/UI 표지 + 8명');assert(order.slice(1,9).every(f=>f==='uxui'));assert(order.slice(10,16).every(f=>f==='visual'));assert.equal(order.length,16,'분야 확인 중 표지는 없음');
  assert.equal(await p.locator('.dg-item').count(),14,'조민영은 Designer에서 빠짐');assert.equal(await p.locator('.dg-item[data-i="9"]').count(),0);
  await p.locator('#dg-filter [data-side="visual"]').click();await p.waitForFunction(()=>dg.root.classList.contains('dark')&&+getComputedStyle($('#dg-amb-vi')).opacity>0.9,null,{timeout:4000});
- assert.match(await p.locator('#dg-count').textContent(),/Visual · 5명/);
+ assert.match(await p.locator('#dg-count').textContent(),/Visual · 6명/);
  await p.locator('#dg-filter [data-side="uxui"]').click();
  await p.waitForFunction(()=>+getComputedStyle($('#dg-amb-ux')).opacity>0.9&&!dg.root.classList.contains('dark'),null,{timeout:4000});
  assert.match(await p.locator('#dg-count').textContent(),/UX\/UI · 웹 · 8명/);
