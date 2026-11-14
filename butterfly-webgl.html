@@ -101,21 +101,35 @@ vec3 shade(vec2 q, float t, float th, float r, float veinN, float hind){
   float grain = smoothstep(.34, .1, length(gp - gc))*step(.45, gr)*(1. + 2.5*step(.94, gr));
   float body = keep*(1. - smoothstep(.985, 1.0, t));              /* 막 부분 */
   float dust = grain*smoothstep(.74, .97, t)*(1. - smoothstep(1., 1.16, t))*(.25 + region)*(.4 + patchy); /* 가루 */
-  /* 날개맥 */
-  float wob = .25*sin(r*6. + th*3.);
+  /* 날개맥: 가늘고 불규칙하게 */
+  float wob = .25*sin(r*6. + th*3.) + .5*vnoise(vec2(th*5. + uSeed, r*2.));
   float v1 = abs(fract(th*veinN + wob) - .5);
-  float veins = smoothstep(.06, .0, v1)*smoothstep(.22, .4, t);
+  float veins = smoothstep(.035, .0, v1)*smoothstep(.2, .38, t)*(.5 + .5*vnoise(vec2(th*9., r*3.) + uSeed));
   float v2 = abs(fract(th*veinN*2. + wob + .25) - .5);
-  veins += .6*smoothstep(.07, .0, v2)*smoothstep(.62, .78, t);
+  veins += .5*smoothstep(.04, .0, v2)*smoothstep(.66, .8, t);
   /* 유리 같은 막 */
   float cloud = fbm(q*3.2 + 11. + uSeed);
-  float spots = smoothstep(.55, .75, fbm(q*9. + 3. + uSeed))*smoothstep(.55, .85, t)*hind;
-  float streak = fbm(vec2(th*13., r*1.6) + uSeed);
-  float mem = .07 + .22*cloud*cloud + .34*streak*streak*(1.2 - .7*t) + .28*exp(-r*5.) + .3*spots;
-  float rim = .35*smoothstep(.78, 1., t) + smoothstep(.95, .992, t);
-  float sheen = .25*smoothstep(.5, 1., sin(th*2.5 + r*4. - uTime*.8 + cloud*4.));
-  float I = body*(mem + .5*veins + .8*rim + sheen*mem) + dust*1.2;
-  float warm = clamp(.05 + .95*smoothstep(.5, 1., t) + .4*(cloud - .5) - .6*exp(-r*4.), 0., 1.);
+  float streak = fbm(vec2(th*16., r*1.3) + uSeed);                 /* 몸에서 퍼지는 빛줄기 */
+  float rays = exp(-r*3.4)*(.28 + .75*streak*streak*2.);
+  float hl = smoothstep(.5, .78, fbm(q*2.4 + 5. + uSeed*1.7));      /* 넓은 반사광 */
+  float hl2 = smoothstep(.62, .8, fbm(vec2(th*5., r*7.) + 9. + uSeed)); /* 결 따라 생기는 반사 */
+  /* 얼룩무늬: 바깥쪽 띠의 밝은 세포 무늬 */
+  vec2 sp = q*15. + uSeed; vec2 si = floor(sp); float f1 = 9., f2 = 9.;
+  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 g = si + vec2(i, j); vec2 c = g + vec2(hash(g), hash(g + 13.1)); float d = length(sp - c); if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d; }
+  float band = smoothstep(.5, .66, t)*(1. - smoothstep(.86, .97, t));
+  float spotArea = smoothstep(.48, .64, fbm(q*2.1 + 21. + uSeed))*mix(.6, 1., hind);
+  float spots = smoothstep(.06, .22, f2 - f1)*smoothstep(.75, .45, f1)*band*spotArea;
+  /* 표면 반짝이 */
+  vec2 kp = (q + uSeed*.7)*70.; vec2 ki = floor(kp); float kr = hash(ki + 3.1);
+  float glit = smoothstep(.3, .05, length(kp - ki - .2 - .6*vec2(hash(ki), hash(ki + 9.7))))*step(.72, kr)
+             *(.4 + .6*sin(uTime*3. + kr*40.))*smoothstep(.35, .95, t);
+  float mem = .055 + .15*cloud*cloud + rays + .2*hl*(.4 + cloud) + .2*hl2 + .38*spots + .5*glit;
+  float goldFill = smoothstep(.62, 1., t)*(.12 + .3*patchy);        /* 끝으로 갈수록 금가루가 짙어짐 */
+  float rimMod = .25 + .75*smoothstep(.3, .65, fbm(vec2(th*5., uSeed*3.)));
+  float rim = .3*smoothstep(.8, 1., t) + .9*smoothstep(.955, .992, t)*rimMod;
+  float sheen = .3*smoothstep(.5, 1., sin(th*2.5 + r*4. - uTime*.8 + cloud*4.));
+  float I = body*(mem + goldFill + .42*veins + rim + sheen*mem) + dust*1.3;
+  float warm = clamp(.02 + .98*smoothstep(.45, 1., t) + .5*(cloud - .5) - .8*exp(-r*3.) - .5*spots - .3*hl, 0., 1.);
   return mix(uCool, uWarm, warm)*I;
 }
 void main(){
@@ -150,7 +164,7 @@ void main(){
   float d = seg(p, vec2(0., -.58), vec2(0., .12)) - taper;
   d = min(d, length(p - vec2(0., .185)) - .042) + fuzz;
   float core = smoothstep(.006, -.006, d)*(.85 + .15*sin(p.y*85.));
-  float glow = .45*exp(-max(d, 0.)*38.) + .07*exp(-max(d, 0.)*9.);
+  float glow = .5*exp(-max(d, 0.)*34.) + .13*exp(-max(d, 0.)*8.);
   vec2 ap = vec2(abs(p.x), p.y);
   float da = curve(ap, vec2(.015, .21), vec2(.05, .46), vec2(.24, .66));
   float ant = smoothstep(.007, .0, da) + .5*exp(-da*60.);
@@ -197,7 +211,7 @@ const COMP_FS = `#version 300 es
 precision highp float;
 in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque;
 void main(){
-  vec3 c = texture(uScene, vUv).rgb + texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.6;
+  vec3 c = texture(uScene, vUv).rgb + texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.65;
   c = 1. - exp(-c*1.15);
   float a = mix(clamp(max(c.r, max(c.g, c.b))*.9, 0., 1.), 1., uOpaque);
   o = vec4(c, a);
