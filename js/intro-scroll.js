@@ -3,7 +3,7 @@
      root     = 무대가 될 빈 요소 (화면을 꽉 채우는 크기)
      scroller = 스크롤되는 요소 (없으면 페이지 전체 스크롤)
      onEnd    = 끝(하얀 화면)에 닿았을 때 한 번 불림
-   필요한 파일: js/butterfly-gl.js, css/intro-scroll.css, assets/images/intro/s1-sky.jpg · s2-poster-wall.jpg
+   필요한 파일: js/butterfly-gl.js, css/intro-scroll.css, assets/images/intro/s1-sky-dusk.jpg · assets/video/s1-sky-loop.mp4 · s2-poster-wall.jpg
    숫자를 고치고 싶으면 아래 CFG만 고치면 됩니다 */
 function createIntroScroll(root, opts) {
   opts = opts || {};
