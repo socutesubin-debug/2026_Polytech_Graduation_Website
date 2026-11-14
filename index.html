@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/hall.css">
   <link rel="stylesheet" href="css/opening.css">
   <link rel="stylesheet" href="css/lobby3d.css">
+  <link rel="stylesheet" href="css/about.css">
   <link rel="stylesheet" href="css/project.css">
   <link rel="stylesheet" href="css/designer.css">
   <script type="importmap">
@@ -228,15 +229,46 @@
     <button class="lb-all" id="lb-all" type="button">전체 학생 바로가기 →</button>
   </section>
 
+  <!-- ⑫ About — 전시 소개: 왼쪽 포스터, 오른쪽 서문·개요  (css/about.css, js/about.js) — 주소 끝 #about. 글은 js/data.js의 ABOUT -->
+  <section class="screen about" id="about" aria-label="About: 전시 소개" tabindex="-1">
+    <div class="ab-wrap">
+      <figure class="ab-poster"><img id="ab-poster" alt="전시 포스터" decoding="async"></figure>
+      <div class="ab-copy">
+        <p class="ab-eyebrow">ABOUT</p>
+        <h2 id="ab-title"></h2>
+        <p class="ab-sub" id="ab-sub"></p>
+        <div class="ab-text" id="ab-text"></div>
+        <dl class="ab-info" id="ab-info"></dl>
+        <div class="ab-go">
+          <button type="button" data-to="project">작품 보러 가기</button>
+          <button type="button" data-to="designer">디자이너 만나기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ⑩ Project 방 — 작품 15개: 떠다니는 카드 → 작품 목록 → 작품 상세  (css/project.css, js/project.js) — 주소 끝 #project
        떠다니는 카드(pj-cloud 안), 작품 목록(pj-grid 안), 상세 그림(pj-d-images 안)은 js/project.js가 js/data.js를 보고 만듦 -->
   <section class="screen project" id="project" aria-label="Project: 작품" tabindex="-1">
+    <div class="pj-track" id="pj-track">
     <div class="pj-hero" id="pj-hero">
       <div class="pj-scene" aria-hidden="true"><div class="pj-space" id="pj-space"><div class="pj-word" id="pj-word">Project</div><div class="pj-cloud" id="pj-cloud"></div></div></div>
       <div class="pj-intro">
         <p>2026 시각디자인과 졸업전시 · 작품</p>
-        <button type="button" id="pj-down">작품 모아 보기 ↓</button>
+        <button type="button" id="pj-down">스크롤해서 한 작품씩 보기 ↓</button>
       </div>
+      <div class="pj-focus" id="pj-focus" aria-live="polite">
+        <p class="pj-f-no" id="pj-f-no"></p>
+        <b id="pj-f-title"></b>
+        <span id="pj-f-who"></span>
+        <div class="pj-f-go">
+          <button type="button" id="pj-f-prev" aria-label="이전 작품">←</button>
+          <button type="button" id="pj-f-open" class="main">작품 보기</button>
+          <button type="button" id="pj-f-next" aria-label="다음 작품">→</button>
+        </div>
+        <button type="button" class="pj-f-all" id="pj-f-all">전체 목록 보기 ↓</button>
+      </div>
+    </div>
     </div>
     <div class="pj-list" id="pj-list">
       <div class="pj-head">
@@ -288,6 +320,7 @@
     <button class="brand" id="brand" type="button" title="오프닝 다시 보기">BEYOND THE FRAME</button>
     <div class="pill">
       <button type="button" data-go="opening">Intro</button>
+      <button type="button" data-go="about">About</button>
       <button type="button" data-go="project">Project</button>
       <button type="button" data-go="designer">Designer</button>
     </div>
@@ -330,6 +363,7 @@
 <script src="js/hall.js"></script>
 <script src="js/opening.js"></script>
 <script src="js/lobby3d.js"></script>
+<script src="js/about.js"></script>
 <script src="js/project.js"></script>
 <script src="js/designer.js"></script>
 <script src="js/main.js"></script>

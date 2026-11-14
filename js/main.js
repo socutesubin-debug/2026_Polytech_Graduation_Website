@@ -66,7 +66,7 @@ $$('[data-asset]').forEach((img) => { img.src = ASSETS[img.dataset.asset]; });
 const start = location.hash.slice(1);
 requestAnimationFrame(tick);
 if (start === 'lobby') go('lobby');
-else if (['list', 'lobby3d', 'special', 'project', 'designer'].includes(start)) go(start);
+else if (['list', 'lobby3d', 'special', 'about', 'project', 'designer'].includes(start)) go(start);
 else if (start === 'test-room') go('test-room');
 else if (HALLS[start]) go(start);
 else if (/^gallery-[123]$/.test(start)) { setRoom(+start.slice(-1) - 1); go('gallery'); }

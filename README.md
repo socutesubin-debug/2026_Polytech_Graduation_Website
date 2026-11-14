@@ -4,19 +4,21 @@
 React 프로젝트가 아니라서 `src`·`public`·`package.json`은 없습니다. 빌드 도구 없이 **HTML + CSS + JavaScript** 로만 만든 정적 사이트라서, 이 폴더를 그대로 GitHub Pages에 올리면 바로 배포됩니다.
 CSS와 JavaScript는 **화면(방)별로 파일을 나눠** 두었습니다.
 
-## 화면 흐름 (2026-11-14 새 기획) — Intro · Project · Designer
+## 화면 흐름 (2026-11-14 새 기획) — Intro · About · Project · Designer
 
-메뉴는 **Intro · Project · Designer** 세 개예요. 다른 학교 졸업전시처럼 "작품 보기"와 "사람 보기" 두 갈래로 단순하게 바꿨어요.
+메뉴는 **Intro · About · Project · Designer** 네 개예요. 다른 학교 졸업전시처럼 "작품 보기"와 "사람 보기" 두 갈래로 단순하게 바꿨어요.
 
 ```
 Intro (나비 → 포스터 → 빛나는 입구) → [Project] 또는 [Designer]
-   Project 방: 떠다니는 작품 카드 → 스크롤하면 작품 목록 → 작품 상세(그림 14장) → 만든 사람 이름 → Designer 방
+   About: 왼쪽 포스터 + 오른쪽 전시 소개 글과 전시 개요
+   Project 방: 떠다니는 작품 카드(공) → 스크롤하면 도넛으로 바뀌며 한 장씩 앞으로 → 작품 목록 → 작품 상세(그림 14장) → 만든 사람 이름 → Designer 방
    Designer 방: 석고상 15개 가로 한 줄 + 작품안내 표찰(누르면 포트폴리오 새 탭) → [대표 작품 보기] → Project 방
 ```
 
 | 화면 | 주소 끝 | HTML (`index.html` 주석) | CSS | JavaScript | 숫자 고치는 곳 |
 |---|---|---|---|---|---|
 | Intro (오프닝) | (없음) | `⑧ V2 오프닝` | `css/opening.css` | `js/opening.js` | 맨 위 `OPENING` |
+| About | `#about` | `⑫ About` | `css/about.css` | `js/about.js` | `js/data.js` 맨 아래 `ABOUT` (글, 개요 — 빈칸은 "확정 전") |
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer 방 | `#designer` | `⑪ Designer 방` | `css/designer.css` | `js/designer.js` | 맨 위 `DESIGNER` (휠 빠르기) |
 
@@ -32,7 +34,7 @@ Intro (나비 → 포스터 → 빛나는 입구) → [Project] 또는 [Designer
 
 **Designer 방의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명, 합계 0.4MB)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요.
 
-**직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(Intro · Project · Designer 흐름), `node tests/browser-smoke.cjs`(목록 · V1), `node tests/hall.cjs`(예전 전시관)예요.
+**직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(Intro · About · Project · Designer 흐름), `node tests/browser-smoke.cjs`(목록 · V1), `node tests/hall.cjs`(예전 전시관)예요.
 
 옛 V1 화면(티켓 인트로, 액자 로비, 그림 전시실)은 지우지 않았어요. 주소 끝에 `#intro`, `#lobby`, `#gallery-1`~`#gallery-3`을 붙이면 볼 수 있어요. 아래 표는 그 V1 화면 설명이에요.
 

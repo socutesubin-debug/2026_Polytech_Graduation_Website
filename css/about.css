@@ -1,0 +1,25 @@
+/* About (#about): 왼쪽 포스터, 오른쪽 전시 소개 */
+.about{background:#fbfaf7;color:#1f1b17;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ab-wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(32px,6vw,96px);align-items:start;max-width:1280px;min-height:100%;margin:0 auto;
+  padding:calc(110px + env(safe-area-inset-top,0px)) clamp(16px,4vw,56px) 72px}
+.ab-poster{position:sticky;top:calc(110px + env(safe-area-inset-top,0px));margin:0}
+.ab-poster img{display:block;width:auto;max-width:100%;max-height:calc(100vh - 170px);box-shadow:0 24px 50px rgba(40,30,20,.16)}
+.ab-eyebrow{margin:0 0 14px;font-size:11px;letter-spacing:.3em;color:#8a7d6a}
+.ab-copy h2{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(32px,4.2vw,60px);letter-spacing:-.035em;line-height:1.1}
+.ab-sub{margin:14px 0 0;font-size:14px;color:#6b5d4b}
+.ab-text{margin-top:36px;max-width:36em}
+.ab-text p{margin:0 0 1.1em;font-size:16px;line-height:1.9;color:#3a3129;word-break:keep-all}
+.ab-text .ab-sign{margin-top:1.6em;font-size:14px;color:#6b5d4b}
+.ab-info{margin:36px 0 0;padding:0;border-top:1px solid rgba(31,27,23,.16)}
+.ab-info div{display:grid;grid-template-columns:7.5em 1fr;gap:16px;padding:14px 0;border-bottom:1px solid rgba(31,27,23,.1)}
+.ab-info dt{font-size:13px;color:#8a7d6a}
+.ab-info dd{margin:0;font-size:14px}
+.ab-info dd.tbd{color:#a39684}
+.ab-go{display:flex;gap:10px;flex-wrap:wrap;margin-top:36px}
+.ab-go button{height:48px;padding:0 24px;border-radius:99px;border:1px solid #1f1b17;font-size:14px;transition:background .2s,color .2s}
+.ab-go button:first-child,.ab-go button:hover{background:#1f1b17;color:#fbfaf7}
+@media(max-width:860px){
+  .ab-wrap{grid-template-columns:1fr;padding-top:calc(90px + env(safe-area-inset-top,0px))}
+  .ab-poster{position:static;max-width:420px}
+  .ab-poster img{max-height:none}
+}
