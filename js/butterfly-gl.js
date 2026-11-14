@@ -188,9 +188,11 @@ void main(){
   /* 밝은 배경 위(투명 모드): 중간 밝기는 호박빛 유리처럼, 밝은 곳은 흰 빛 그대로 */
   vec3 onLight = c*mix(vec3(1., .84, .56), vec3(1.), smoothstep(.4, .85, m));
   /* uDense = 1 이면 날개가 덮은 곳만 배경을 가리고, 빛 번짐과 가루는 빛으로만 더해진다 (어두운 테두리 없음) */
-  float aGlass = clamp(m*1.2, 0., 1.), aSolid = clamp(sc.a, 0., 1.)*.82;
+  float aGlass = clamp(m*1.2, 0., 1.), aSolid = clamp(sc.a, 0., 1.)*.9;
   float a = mix(mix(aGlass, aSolid, uDense), 1., uOpaque);
-  o = vec4(mix(onLight, c, max(uOpaque, uDense)), a);
+  /* 불투명 모드: 밝은 배경에서도 보이도록 날개 면을 옅은 금빛으로 */
+  vec3 solid = c*mix(vec3(1., .9, .68), vec3(1.), smoothstep(.72, .98, m)*.8 + .2*(1. - clamp(sc.a, 0., 1.)));
+  o = vec4(mix(mix(onLight, solid, uDense), c, uOpaque), a);
 }`;
 
 function prog(vs, fs) {
