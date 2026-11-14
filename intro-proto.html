@@ -24,6 +24,8 @@
           mask-composite: intersect; }
   /* butterfly */
   #fx { position: absolute; inset: 0; pointer-events: none; }
+  #gl { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #bf .persp { display: none; }  /* 임시 벡터 나비는 WebGL 나비로 교체됨 */
   #bf { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; }
   #bf .persp { position: absolute; left: 0; top: 0; perspective: 700px; transform-style: preserve-3d; }
   #bf .rot { position: absolute; left: 0; top: 0; transform-style: preserve-3d; will-change: transform; }
@@ -50,6 +52,7 @@
   <div id="s1" class="layer"></div>
   <div id="s2" class="layer"><div id="cam"><div id="wall"><div class="img"></div></div></div></div>
   <div id="fx" class="layer"></div>
+  <canvas id="gl"></canvas>
   <div id="bf"><div class="glow"></div><div class="persp"><div class="rot">
     <div class="wing l"><svg viewBox="0 0 96 140"><use href="#wingShape"/></svg></div>
     <div class="wing r"><svg viewBox="0 0 96 140" style="transform:scaleX(-1)"><use href="#wingShape"/></svg></div>
@@ -80,12 +83,14 @@
   </defs>
 </svg>
 
+<script src="js/butterfly-gl.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var s1 = $('s1'), s2 = $('s2'), wall = $('wall'), bf = $('bf'), rot = bf.querySelector('.rot'),
       wl = bf.querySelector('.wing.l'), wr = bf.querySelector('.wing.r'), glow = bf.querySelector('.glow'),
       white = $('white'), title = $('title'), hint = $('hint'), fx = $('fx');
+  var GL = window.createButterflyGL ? createButterflyGL($('gl'), { sky: true }) : null, glB = GL && GL.butterflies[0], lastX = null;
   var W = innerWidth, H = innerHeight;
   addEventListener('resize', function () { W = innerWidth; H = innerHeight; });
 
@@ -161,6 +166,14 @@
     var gone = p > .28 ? seg(p, .755, .775) : 0;
     bf.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + (sc * scale) + ')';
     bf.style.opacity = (p > .262 && p < .30) ? 0 : 1 - gone;
+    if (GL) {   // WebGL butterfly follows the same path
+      var wpos = GL.toWorld(x, y), k = GL.unitsPerPx();
+      if (lastX !== null && Math.abs(x - lastX) > .5 * W) GL.clearDust();   // scene cut: drop the old dust
+      lastX = x;
+      glB.pose = { x: wpos[0], y: wpos[1], z: 0, scale: .21 * u * scale * k,
+                   yaw: turnY * Math.PI / 180, pitch: -tiltX * .75 * Math.PI / 180, roll: -heading * Math.PI / 180 };
+      $('gl').style.opacity = bf.style.opacity;
+    }
     rot.style.transform = 'rotateY(' + turnY + 'deg) rotateX(' + tiltX + 'deg) rotateZ(' + heading + 'deg)';
 
     // wing flap: quick down, slower up; faster while travelling
@@ -171,12 +184,13 @@
     wl.style.transform = 'rotateY(' + ang + 'deg)';
     wr.style.transform = 'rotateY(' + (-ang) + 'deg)';
     glow.style.transform = 'scale(' + (1 + .25 * flap + 5 * kDive) + ')';
-    glow.style.opacity = .75 + .25 * flap;
+    glow.style.opacity = GL ? kDive : .75 + .25 * flap;
+    if (GL) { glB.hzMul = speed; glB.dust = bf.style.opacity > .5 ? 1 : 0; GL.simulate(dt); GL.draw(); }
 
     // graphic effects tied to the wing beat
     var visible = bf.style.opacity > .5 && x > -40 && x < W + 40;
     if (visible && flap > .5 && prevFlap <= .5) {
-      for (var i = 0; i < 3; i++) spawnDot(x, y, sc * scale);
+      if (!GL) for (var i = 0; i < 3; i++) spawnDot(x, y, sc * scale);
       if (now - lastRing > 1300) { spawnRing(x, y, sc * scale); lastRing = now; }
     }
     prevFlap = flap;
@@ -184,9 +198,12 @@
     white.style.opacity = kWhite;
     title.style.opacity = kTitle;
     hint.style.opacity = 1 - seg(p, .01, .06);
-    requestAnimationFrame(frame);
+    if (!manual) requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  // ?rec=1: frames are stepped by hand (for recording): __tick(p) advances 1/30 s
+  var manual = new URLSearchParams(location.search).get('rec') === '1', clock = performance.now();
+  if (manual) window.__tick = function (v) { fixed = v; clock += 1000 / 30; frame(clock); };
+  else requestAnimationFrame(frame);
 })();
 </script>
 </body>
