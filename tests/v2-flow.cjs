@@ -29,17 +29,19 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 1-2) About: 왼쪽 포스터, 오른쪽 전시 소개 글과 개요. 정해지지 않은 칸은 "확정 전"
  await p.locator('.pill [data-go="about"]').click();assert.equal(await state(p),'about');assert.equal(new URL(p.url()).hash,'#about');
- assert.match(await p.locator('#ab-poster').getAttribute('src'),/poster\.webp$/);assert.equal(await p.locator('#ab-title').textContent(),'프레임을 넘어, 우리를 만나다');
- assert(await p.locator('#ab-text p').count()>=2);assert(await p.locator('#ab-info .tbd').count()>=1);
- const [pl,cl]=await p.evaluate(()=>[document.querySelector('.ab-poster').getBoundingClientRect().left,document.querySelector('.ab-copy').getBoundingClientRect().left]);assert(pl<cl,'포스터가 왼쪽');
- await p.locator('.ab-go [data-to="project"]').click();assert.equal(await state(p),'project');
+ assert.match(await p.locator('#ab-poster').getAttribute('src'),/about-poster\.webp$/);assert.match(await p.locator('#ab-title').textContent(),/프레임을 넘어 우리를 만나다/);
+ assert.equal(await p.locator('#ab-text p').count(),3,'한국어 두 문단 + 영어 한 문단');assert.equal(await p.locator('#ab-text b').count(),2,'굵은 질문 두 줄');
+ assert.deepEqual(await p.locator('#ab-info dt').allTextContents(),['일시','장소']);
+ const [pl,cl,pt,pr,cr]=await p.evaluate(()=>{const a=document.querySelector('.ab-poster').getBoundingClientRect(),c=document.querySelector('.ab-copy').getBoundingClientRect();return [a.left,c.left,a.top,a.right,c.right]});
+ assert(pl<cl&&pr<cl,'포스터가 왼쪽, 글과 겹치지 않음');assert(Math.abs(pt)<2,'포스터 줄이 화면 맨 위에서 시작');assert(cr<=p.viewportSize().width+1,'글이 화면 안');
+ await p.locator('.pill [data-go="project"]').click();assert.equal(await state(p),'project');
  console.log('about ok');
 
- // 2) Project 방: 글자 없이 작품 썸네일 15장만 랜덤 순서로 떠다님, 스크롤하면 도넛 → 작품 목록
- assert.equal(await p.locator('.pj-card').count(),15);
+ // 2) Project 방: 글자 없이 작품 썸네일(작품마다 한 장)만 랜덤 순서로 떠다님, 스크롤하면 도넛 → 작품 목록
+ assert.equal(await p.locator('.pj-card').count(),await p.evaluate(()=>PJ_ITEMS.length));assert(await p.evaluate(()=>PJ_ITEMS.length>=STUDENTS.length),'학생마다 카드 한 장 이상');
  assert.equal((await p.locator('#pj-hero').innerText()).trim(),'','첫 화면에 보이는 글자 없음');
  assert.equal(await p.locator('#pj-word, #pj-focus, #pj-down').count(),0);
- assert.deepEqual(await p.evaluate(()=>pj.cards.map(c=>c.s).sort((x,y)=>x-y)),[...Array(15).keys()],'15명 모두 한 장씩');
+ assert.deepEqual(await p.evaluate(()=>pj.cards.map(c=>c.s).sort((x,y)=>x-y)),await p.evaluate(()=>[...Array(PJ_ITEMS.length).keys()]),'작품 모두 한 장씩');
  const t0=await p.locator('.pj-strip').first().evaluate(el=>el.style.transform);await p.waitForTimeout(300);
  assert.notEqual(await p.locator('.pj-strip').first().evaluate(el=>el.style.transform),t0,'카드가 떠다님');
  // 스크롤하면 공 → 도넛: 카드들이 위아래로 덜 퍼짐
@@ -47,7 +49,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  // 들어오면 카드가 가운데에서 퍼져 나옴 → 다 퍼진 뒤: 카드는 공을 따라 기울지 않고 화면을 똑바로 봄 (가로:세로가 그대로 4:3), 앞 카드가 뒤 카드보다 큼
  assert(await p.evaluate(()=>pj.rev<1),'들어오면 카드가 퍼져 나오는 중');await p.waitForFunction(()=>pj.rev>=1,null,{timeout:8000});
  const boxes=await p.evaluate(()=>pj.cards.map(c=>{const rs=c.strips.map(el=>el.getBoundingClientRect());const w=Math.max(...rs.map(r=>r.right))-Math.min(...rs.map(r=>r.left)),h=Math.max(...rs.map(r=>r.bottom))-Math.min(...rs.map(r=>r.top));return {w,h};}));
- for(const b of boxes) assert(Math.abs(b.w/b.h-4/3)<0.2,'공일 때 카드는 화면을 똑바로 봄: '+(b.w/b.h).toFixed(2));
+ for(const b of boxes) assert(Math.abs(b.w/b.h-16/9)<0.25,'공일 때 카드는 화면을 똑바로 봄: '+(b.w/b.h).toFixed(2));
  const ws=boxes.map(b=>b.w);assert(Math.max(...ws)>Math.min(...ws)*1.6,'앞 카드는 크고 뒤 카드는 작음');
  // 끌면 공이 손을 따라 부드럽게 돌고, 손을 떼면 미끄러지듯 더 돎. 끌고 난 뒤에는 작품이 열리지 않음
  await p.mouse.move(600,450);await p.mouse.down();await p.mouse.move(820,430,{steps:6});
@@ -71,7 +73,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
 
  // 카드를 누르면 그 작품 상세, Enter 키 = 맨 앞 카드
- const j=await p.evaluate(()=>pj.frontIdx);const who3=await p.evaluate(j=>STUDENTS[pj.cards[j].s].name,j);
+ const j=await p.evaluate(()=>pj.frontIdx);const who3=await p.evaluate(j=>PJ_ITEMS[pj.cards[j].s].s.name,j);
  await p.evaluate(j=>pj.cards[j].el.click(),j);await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
  await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
  await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();
@@ -85,8 +87,12 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();
  assert.equal(await p.locator('.pj-shot').count(),14);
  assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
+ // 박수빈은 작품 2개: → 하면 같은 사람의 다이소 뷰티(그림 3장, 설명), 한 번 더 → 하면 다음 사람
+ await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
+ assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);assert.equal(await p.locator('#pj-d-images img').count(),3);
+ assert.match(await p.locator('#pj-d-desc').textContent(),/가상의 뷰티 브랜드/);
  await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박호성');
- await p.keyboard.press('ArrowLeft');await p.keyboard.press('Escape');await p.waitForTimeout(400);
+ await p.keyboard.press('ArrowLeft');await p.keyboard.press('ArrowLeft');await p.keyboard.press('Escape');await p.waitForTimeout(400);
  assert.equal(await p.locator('#pj-detail').isHidden(),true);
  assert(await p.evaluate(()=>document.activeElement===pj.root),'닫으면 Project 방에 초점');
  // 만든 사람 → Designer 방의 그 석고상이 가운데 + 표찰에 초점

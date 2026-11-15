@@ -41,6 +41,38 @@ const ROOM_ASSETS = [
   },
 ];
 
+/* Project 방 작품 썸네일 (2026-11-15 받음) — 그림은 assets/images/works/학생번호.webp (16:9, 1600×900)
+   title = 썸네일에 적힌 작품 이름. 이 표만 고치면 학생과 작품의 짝이 바뀌어요.
+   작품이 둘 이상이면 [ {…}, {…} ] 처럼 목록으로 적어요 → Project 방에 카드가 그만큼 나옴 (예: 박수빈)
+   desc = 상세 화면 왼쪽 설명 (빈 줄 = 문단 나눔), images = 상세 화면 오른쪽 그림들 (위에서부터 차례로)
+   짝은 원본 파일 이름(다운로드/project_학생프로젝트썸네일/학생이름.png, V2·V3 = 같은 학생의 다음 작품)으로 확인함 (2026-11-15)
+   상세 그림 원본: 다운로드/학생 프로젝트 내용/학생이름/학생이름_작품명1·2·3 → 숫자 순서대로 */
+const WORKS = {
+  '김예일': { src: 'assets/images/works/01.webp', title: '컬처패스' },
+  '민하도': { src: 'assets/images/works/02.webp', title: 'flowny' },
+  '김준서': { src: 'assets/images/works/03.webp', title: 'SoundCloud Promotion Web' },
+  '김우선': { src: 'assets/images/works/04.webp', title: '오늘의집 UI/UX 리디자인' },
+  '김수연': { src: 'assets/images/works/05.webp', title: '우리 언제 만나?' },
+  '박재연': { src: 'assets/images/works/06.webp', title: '동방구' },
+  '박호성': [                                                                              // 작품 2개 (ALIGNEX 그림은 2장 받음: 로고·사람 사진 → 썸네일은 사람 사진)
+    { src: 'assets/images/works/08.webp', title: 'ALIGNEX' },
+    { src: 'assets/images/works/08-2.webp', title: 'bmix studio' },
+  ],
+  '오수한': { src: 'assets/images/works/09.webp', title: 'GTA Online Promotion Website' },
+  '조민영': null,                                                                         // 아직 썸네일 없음 → 회색 임시 카드
+  '손예진': { src: 'assets/images/works/12.webp', title: 'Luckin Coffee Campaign' },
+  '송예준': { src: 'assets/images/works/13.webp', title: '春夏秋冬' },
+  '하태랑': { src: 'assets/images/works/15.webp', title: 'ONDO' },
+  '박수빈': [                                                                              // 작품 2개
+    { src: 'assets/images/works/07.webp', title: '프린트카페 (PRINT CAFE)' },
+    { src: 'assets/images/works/07-2.webp', title: '다이소 뷰티 (Daiso Beauty) BX',
+      desc: '‘다이소 뷰티’는 가성비 뷰티템을 발견하는 장소로 주목받는 다이소에서 출발한 가상의 뷰티 브랜드입니다. 합리적인 가격과 친근함을 바탕으로, 새로운 제품을 발견하고 취향을 시도하는 즐거움에 주목했습니다.\n\n사랑스럽고 생기 있는 시각 언어를 통해 소장하고 싶은 브랜드 이미지를 제안하고, 패키지부터 매장과 온라인까지 이어지는 뷰티 경험을 디자인했습니다.',
+      images: ['assets/images/works/07-2/01.webp', 'assets/images/works/07-2/02.webp', 'assets/images/works/07-2/03.webp'] },
+  ],
+  '조예빈': { src: 'assets/images/works/11.webp', title: "SQU'ARE LINE" },
+  '천승현': { src: 'assets/images/works/14.webp', title: 'FLUIDITY' },
+};
+
 const STUDENTS = [
   { name: '김예일', field: 'uxui', slogan: '구조와 흐름을 꿰뚫어 불편을 편리로 바꾸는 경험 디자이너', desc: '', email: '', portfolio: '' },
   { name: '민하도', field: 'visual', slogan: '아이디어를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://hadomin91-design.github.io/hadomin_design/' },
@@ -57,7 +89,7 @@ const STUDENTS = [
   { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: '' },
   { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', email: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },
   { name: '하태랑', field: 'visual', slogan: '현실과 꿈의 모호한 경계를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://lalalatototo10-alt.github.io/graduation/' },
-].map((s, i) => ({ ...s, work: null, no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
+].map((s, i) => ({ ...s, works: [].concat(WORKS[s.name] || []), no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
 /* V2 공통 칸 (2026-11-11 추가)
    field: 'uxui' = UX/UI·웹 전시관, 'visual' = Visual 전시관, '' = 아직 확인 안 됨
    work: 특별전 대표 작품 { src, title, desc, credit } — 자료를 받으면 채움. 지금은 null
@@ -80,23 +112,38 @@ const FRAMES = [
 const GALLERY_SPOTS = [[255, 250, 330, 420], [720, 300, 260, 380], [1052, 330, 260, 360], [1478, 290, 260, 400], [1850, 250, 320, 420]];
 const LOBBY_SPOTS = [[550, 360, 380, 380], [1000, 330, 380, 420], [1446, 360, 380, 380]];
 
-/* About(전시 소개) 화면의 글과 정보 — js/about.js가 읽음
-   text = 전시 서문 문단들, info = [항목, 내용] (내용을 ''로 두면 "확정 전"으로 보임)
-   서문은 "전시 소개서" 문서(2026-11-14 초안)에서 가져옴. 예전 구성(나비·전시관·목록)을 설명하던 두 문단은 뺌 */
+/* About(전시 소개) 화면의 글과 정보 — js/about.js가 읽음 (2026-11-15 시안대로)
+   title = 제목 줄들, text = 문단들(문단 하나 = 줄 목록. 큰 화면에서는 이 줄 그대로, 좁은 화면에서는 이어서 흐름),
+   <b>…</b> = 굵은 글씨, en: true = 영어 문단, info = [항목, 내용] (내용을 ''로 두면 "확정 전"으로 보임) */
 const ABOUT = {
-  poster: ASSETS.poster,
-  title: '프레임을 넘어, 우리를 만나다',
-  sub: '2026 한국폴리텍대학 정수캠퍼스 시각디자인과 졸업전시',
+  poster: 'assets/images/about-poster.webp',
+  title: ['2026 한국폴리텍대학 정수캠퍼스 시각디자인 졸업전시', '프레임을 넘어 우리를 만나다 | Beyond the Frame'],
   text: [
-    '우리는 늘 프레임 속에서 작업해 왔습니다. 모니터 화면, 아트보드, 종이 한 장의 테두리 안에서 생각을 그리고 지우고 다시 그렸습니다. 그래서 더욱 궁금해졌습니다. 그 프레임 바깥에 서 있는 우리는 어떤 사람일까요. 이번 전시는 테두리를 한 걸음 넘어, 작품을 만든 한 사람 한 사람을 만나는 자리입니다.',
-    '이 전시에는 UX/UI·웹과 Visual, 두 분야의 열다섯 디자이너가 참여합니다. 화면 속 경험을 설계한 사람도, 한 장의 이미지에 생각을 담은 사람도 있습니다. 서로 다른 방식으로 작업해 왔지만, 우리는 모두 보는 사람에게 닿는 디자인을 고민해 왔습니다.',
+    { lines: [
+      '우리는 늘 프레임 속에서 작업해 왔습니다. 모니터 화면, 아트보드, 종이 한 장의 테두리 안에서',
+      '생각을 그리고 지우고 다시 그렸습니다. 그래서 더욱 궁금해졌습니다.',
+      '<b>그 프레임 바깥에 서 있는 우리는 어떤 사람일까요?</b>',
+      '이번 전시는 테두리를 한 걸음 넘어, 작품을 만든 한 사람 한 사람을 만나는 자리입니다.',
+    ] },
+    { lines: [
+      '이 전시에는 디지털과 비주얼, 두 분야의 디자이너가 참여합니다.',
+      '화면 속 경험을 설계한 사람도, 한 장의 이미지에 생각을 담은 사람도 있습니다.',
+      '서로 다른 방식으로 작업해 왔지만, 우리는 모두 보는 사람에게 닿는 디자인을 고민해 왔습니다.',
+    ] },
+    { en: true, lines: [
+      'We have always worked within frames. Within the boundaries of monitor screens,',
+      'artboards, and sheets of paper, we have drawn, erased, and redrawn our ideas.',
+      'And somewhere along the way, we began to wonder: <b>Who are we beyond those frames?</b>',
+      'This exhibition is an invitation to step beyond the boundaries and meet the individuals',
+      'behind the work, one by one.',
+      'This exhibition brings together designers from two fields: Digital Design and Visual Design.',
+      'Some create experiences within digital screens, while others express their ideas through a',
+      'single image. Though we have worked in different ways,',
+      'we all share the same purpose: to create designs that connect with people.',
+    ] },
   ],
-  sign: '2026 한국폴리텍대학 정수캠퍼스 시각디자인과 졸업예정자 일동',
   info: [
-    ['주최', '한국폴리텍대학 정수캠퍼스 시각디자인과'],
-    ['기간', ''],
-    ['장소', ''],
-    ['참여 디자이너', '15명 (UX/UI · 웹, Visual)'],
-    ['지도 교수', ''],
+    ['일시', '2026. 11.17-11.18. &nbsp;AM 10:00 - 18:00'],
+    ['장소', '서울특별시 용산구 보광로 73, 제 3공학관 2층'],
   ],
 };

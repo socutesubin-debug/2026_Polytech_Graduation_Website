@@ -10,7 +10,7 @@ CSS와 JavaScript는 **화면(방)별로 파일을 나눠** 두었습니다.
 
 ```
 Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속으로, 표면이 물처럼 일렁임 → 하얗게) → About
-   About: 왼쪽 포스터 + 오른쪽 전시 소개 글과 전시 개요
+   About (2026-11-15 시안): 왼쪽 = 천장에서 줄로 매달린 포스터(assets/images/about-poster.webp), 오른쪽 = 제목 두 줄 · 한국어 서문 · 영어 서문 · 일시 · 장소. 큰 화면은 시안의 줄바꿈 그대로, 좁은 화면은 포스터 위 · 글 아래
    Project 방: 글자 없이 작품 썸네일만 랜덤 순서로 떠다님(공: 들어오면 가운데에서 퍼져 나오고, 카드는 늘 화면을 똑바로 보고, 끌면 부드럽게 돌고 손을 떼면 미끄러지듯 더 돎) → 스크롤하면 부드럽게 도넛으로 바뀜, 도넛은 계속 돌고 카드는 도넛을 따라 휘어진 종이처럼 보임(카드를 누르면 작품 상세: 검은 화면, 왼쪽 글 · 오른쪽 그림 14장) → 만든 사람 이름 → Designer 방
    Designer: 밝은 미술관(Three.js). 아이보리 벽 · 밝은 돌 바닥 · 직육면체 받침대 위에 석고상(투명 배경 사진을 판에 붙인 2.5D). 한 공간 안에 왼쪽 UX/UI · WEB 구역(벽에 옅은 블루그레이 빛), 오른쪽 VISUAL DESIGN 구역(옅은 피치·테라코타 빛), 가운데는 아이보리. 위 메뉴 전체 / UX/UI · WEB / VISUAL DESIGN, 좌우 버튼·← → 키·휠·손가락으로 밀기. 받침대 앞 이름표(이름·분야, 누르면 학생 소개) + 아래 짧은 소개·포트폴리오(새 탭). 3D가 안 되면 같은 내용의 목록(주소에 ?dg=list로 미리 볼 수 있음)
 ```
@@ -18,7 +18,7 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 | 화면 | 주소 끝 | HTML (`index.html` 주석) | CSS | JavaScript | 숫자 고치는 곳 |
 |---|---|---|---|---|---|
 | Intro (스크롤 인트로) | (없음) | `⑧ Intro` | `css/opening.css`, `css/intro-scroll.css` | `js/opening.js`, `js/intro-scroll.js`, `js/butterfly-gl.js` | `js/intro-scroll.js` 맨 위 `CFG` (나비 크기, 카메라, 물결 세기) · 인트로만 보기: `intro-proto.html` |
-| About | `#about` | `⑫ About` | `css/about.css` | `js/about.js` | `js/data.js` 맨 아래 `ABOUT` (글, 개요 — 빈칸은 "확정 전") |
+| About | `#about` | `⑫ About` | `css/about.css` | `js/about.js` | `js/data.js` 맨 아래 `ABOUT` (제목 · 문단별 줄 · 일시/장소 — 빈칸은 "확정 전") |
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer | `#designer` | `⑪ Designer` | `css/designer.css` | `js/designer.js` | 맨 위 `DG` (간격·받침대 크기·화각·벽 색·색 진하기) |
 
@@ -133,6 +133,7 @@ beyond-the-frame/
 | 이미지·3D 파일 경로 | `js/data.js` 맨 위 `ASSETS` |
 | 인트로 방식 | `js/screens.js`의 `INTRO_MODE` — `'combo'`(티켓→포스터→액자, 현재), `'ticket'`, `'frame'` |
 | 색·글꼴 | `css/common.css` 맨 위 `:root` 변수 |
+| 상단 메뉴 (왼쪽 로고, 오른쪽 글자 메뉴) | 로고 그림 `assets/images/logo.webp`, 모양 `css/common.css`의 `.topbar` · `.brand` · `.pill` |
 | 화면별 모양·동작 | 위 **화면(방) ↔ 파일** 표의 해당 파일 |
 
 JavaScript 파일들은 모듈(`import`)이 아니라 `index.html`에서 차례로 불러오는 일반 스크립트입니다. 앞 파일에서 만든 변수·함수를 뒤 파일에서 그대로 쓰므로 `<script>` 순서를 바꾸지 마세요.

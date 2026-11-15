@@ -12,7 +12,7 @@
       만든 사람 이름을 누르면 Designer 방의 그 사람 석고상으로 감
    - 메일은 js/data.js 학생마다 email 칸 (비어 있으면 안 보임)
    - 작품 자료는 js/data.js의 work 칸: { src: 대표 그림, title, desc, images: [그림1, 그림2, …] }
-     아직 없으면(null) 떠다니는 카드는 글자 없는 회색 임시 카드 (썸네일은 가로:세로 = 4:3이 가장 잘 맞음), 상세 그림도 회색 임시 칸으로 보여 줌
+     아직 없으면(null) 떠다니는 카드는 글자 없는 회색 임시 카드 (카드와 썸네일은 가로:세로 = 16:9), 상세 그림도 회색 임시 칸으로 보여 줌
    - 움직임 줄이기: 카드가 저절로 떠다니거나 돌지 않고, 퍼져 나오는 움직임·미끄러짐도 없음 (스크롤하거나 끌면 자리만 바뀜)
    숫자를 바꾸고 싶으면 아래 PROJECT만 고치면 됩니다 (스크롤 길이는 화면 높이 1 = 한 화면) */
 const PROJECT = {
@@ -24,6 +24,7 @@ const PROJECT = {
   spin: 7,                        // 공일 때 저절로 도는 속도 (도/초)
   float: 1,                       // 카드가 따로따로 둥둥 움직이는 정도 (0 = 안 움직임)
   ringSpin: 6,                    // 도넛이 저절로 계속 도는 속도 (도/초, 0 = 멈춤)
+  sharp: 3,                       // 선명도: 카드를 몇 배 크게 그린 뒤 줄여서 보여 줄지 (크게 그려 줄이면 선명함. 1 = 예전처럼 작게 그려 늘림 → 흐림)
   strips: 10, stripsMobile: 7,    // 카드 한 장을 몇 개의 띠로 나눠 휘게 할지 (많을수록 매끄럽지만 무거움)
   paper: 1,                       // 종이가 물결치듯 휘는 정도 (0 = 도넛 모양대로만 휨)
   mouseTilt: 12, mouseSpin: 0.08, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 살짝 도는 힘
@@ -43,9 +44,10 @@ const PROJECT = {
     radius: 0.62, radiusMobile: 1.2,  // 도넛 반지름
     card: 0.19, cardMobile: 0.4,      // 도넛일 때 카드 너비
     camera: 0.6,                      // 도넛 안쪽으로 다가가는 정도 (클수록 가까움)
-    perspective: 1000,                // 원근 (작을수록 가까운 카드가 더 크게 휘어 보임)
+    perspective: 1000,                // 원근 (작을수록 가까운 카드가 더 크게 휘어 보임) — 화면 너비 1440 기준, 넓으면 비례해서 커짐
     tilt: -12, roll: -5,              // 위에서 내려다보는 각도, 비스듬히 기울인 각도
-    lift: 0.14,                       // 도넛을 위로 올리는 정도 (화면 높이 비율)
+    lift: 0.14,                       // 도넛을 위로 올리는 정도 (화면 높이 비율) — 아래 center가 켜져 있으면 시작값일 뿐
+    center: 0.5,                      // 맨 앞 카드가 오도록 맞추는 화면 높이 위치 (0.5 = 가운데, null = 끔). 카드 위치를 직접 재서 맞춤
   },
 };
 const pj = {
@@ -53,6 +55,7 @@ const pj = {
   live: $('#pj-live'), view: $('#pj-detail'),
   cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, at: -1, back: null,
   u: 0, us: 0, a: 0, k: 0, ringBase: 0, front: -1, auto: 0, frontIdx: 0,
+  ly: 0, lys: 0, lyN: 0, // 맨 앞 카드를 화면 가운데로 올리는 양 (재서 맞춤)
   dy: 0, dys: 0, dp: 0, dps: 0, dvy: 0, dvp: 0, down: null, dragged: false, hover: -1, revT: null, rev: 0, // 끌어서 돌리기, 마우스 올린 카드, 퍼져 나오기
   ver: /[?&]v=1\b/.test(location.search) ? 1 : PROJECT.version,
 };
@@ -63,22 +66,24 @@ const pjEase = (s, dt) => 1 - Math.pow(1 - clamp(s, 0, 1), dt / 16.7);         /
 
 // 썸네일이 아직 없을 때의 회색 임시 카드 (사람마다 밝기만 조금 다름)
 function pjTempBg(s) { const l = 74 + ((s.no * 7) % 5) * 3; return `linear-gradient(160deg,hsl(36 10% ${l}%),hsl(32 6% ${l - 18}%))`; }
-const pjTitle = (s) => (s.work && s.work.title) || '작품 제목 준비 중';
+// 카드 = 작품 하나. 학생이 작품을 여러 개 냈으면 카드도 여러 장, 아직 없으면 회색 임시 카드 한 장 (js/data.js의 WORKS)
+const PJ_ITEMS = STUDENTS.flatMap((s, si) => (s.works.length ? s.works : [null]).map((w) => ({ s, si, w })));
+const pjTitle = (it) => (it.w && it.w.title) || '작품 제목 준비 중';
 
 /* 스크롤 자리 (화면 높이 단위): 도넛이 시작되는 곳, k번째 작품이 맨 앞에 오는 곳, 도넛이 끝나는 곳 */
 const pjRingAt = () => PROJECT.hold + PROJECT.gather;
 const pjCardAt = (k) => pjRingAt() + k * PROJECT.perCard;
-const pjEndAt = () => pjCardAt(STUDENTS.length - 1); // 마지막 작품이 맨 앞에 오면 스크롤 끝
+const pjEndAt = () => pjCardAt(PJ_ITEMS.length - 1); // 마지막 작품이 맨 앞에 오면 스크롤 끝
 
 /* 떠다니는 카드 + 아래 작품 목록 만들기 (처음 들어올 때 한 번) */
 function pjBuild() {
   if (pj.built) return; pj.built = true;
-  const n = STUDENTS.length, deg = 180 / Math.PI;
-  const order = STUDENTS.map((_, i) => i);                                   // 카드 순서를 랜덤으로 섞기
+  const n = PJ_ITEMS.length, deg = 180 / Math.PI;
+  const order = PJ_ITEMS.map((_, i) => i);                                   // 카드 순서를 랜덤으로 섞기
   for (let j = n - 1; j > 0; j--) { const r = Math.floor(Math.random() * (j + 1)); [order[j], order[r]] = [order[r], order[j]]; }
   const K = pj.K = Math.max(2, innerWidth < 760 ? PROJECT.stripsMobile : PROJECT.strips);
   pj.cloud.innerHTML = order.map((i) => {
-    const s = STUDENTS[i], bg = s.work && s.work.src ? `url("${s.work.src}")` : pjTempBg(s); // 썸네일 (없으면 회색 임시)
+    const it = PJ_ITEMS[i], bg = it.w && it.w.src ? `url("${it.w.src}")` : pjTempBg(it.s); // 썸네일 (없으면 회색 임시)
     const strips = Array.from({ length: K }, () => `<span class="pj-strip" style='background-image:${bg}'></span>`).join('');
     return `<button class="pj-card" type="button" tabindex="-1" aria-hidden="true" data-i="${i}">${strips}</button>`;
   }).join('');
@@ -94,22 +99,22 @@ function pjBuild() {
 function pjSize() { pj.track.style.height = `${((pjEndAt() + 1) * pj.root.clientHeight).toFixed(0)}px`; }
 function pjScrollToU(u, instant) { pj.root.scrollTo({ top: u * pj.root.clientHeight, behavior: instant || reduce ? 'auto' : 'smooth' }); }
 /* 도넛에서 k번째 작품을 맨 앞으로 */
-function pjGotoCard(k) { pjScrollToU(pjCardAt(clamp(k, 0, STUDENTS.length - 1))); }
+function pjGotoCard(k) { pjScrollToU(pjCardAt(clamp(k, 0, PJ_ITEMS.length - 1))); }
 function pjFrontNow() { return pj.frontIdx; } // 지금 맨 앞에 가장 가까운 카드 (도넛 위 자리)
 const pjInRing = () => pj.u > pjRingAt() - 0.3;
 
 /* 작품 상세 */
 function pjOpen(i, from) {
-  const s = STUDENTS[i]; pj.at = i; pj.back = from || pj.back;
-  const imgs = (s.work && s.work.images && s.work.images.length) ? s.work.images : null;
+  const it = PJ_ITEMS[i], s = it.s, w = it.w || {}; pj.at = i; pj.back = from || pj.back;
+  const imgs = (w.images && w.images.length) ? w.images : null;
   const count = imgs ? imgs.length : PROJECT.imageCount;
-  $('#pj-d-title').textContent = pjTitle(s);
-  $('#pj-d-desc').textContent = (s.work && s.work.desc) || '작품 설명은 자료를 받으면 채워져요.';
+  $('#pj-d-title').textContent = pjTitle(it);
+  $('#pj-d-desc').textContent = w.desc || '작품 설명은 자료를 받으면 채워져요.';
   const who = $('#pj-d-who'); who.textContent = s.name; who.setAttribute('aria-label', `${s.name} 디자이너 보기`);
   who.disabled = s.designer === false; // Designer에 없는 사람은 이름만 보여 줌
   const mail = $('#pj-d-mail'); mail.hidden = !s.email; mail.textContent = s.email || ''; if (s.email) mail.href = `mailto:${s.email}`; else mail.removeAttribute('href');
   $('#pj-d-images').innerHTML = Array.from({ length: count }, (_, k) => imgs
-    ? `<figure class="pj-shot"><img src="${imgs[k]}" alt="${pjTitle(s)} 그림 ${k + 1}" loading="lazy" decoding="async"></figure>`
+    ? `<figure class="pj-shot"><img src="${imgs[k]}" alt="${pjTitle(it)} 그림 ${k + 1}" loading="lazy" decoding="async"></figure>`
     : `<figure class="pj-shot pj-shot-temp"><span>그림 ${pad(k + 1)} / ${pad(count)}</span></figure>`).join('');
   pj.view.hidden = false; pj.root.classList.add('reading'); document.body.classList.add('pj-reading'); // 위 메뉴 숨김
   pj.view.scrollTop = 0;
@@ -123,12 +128,12 @@ function pjClose() {
   pj.root.focus({ preventScroll: true });
   pj.at = -1; return true;
 }
-function pjStep(d) { if (pj.at >= 0) pjOpen((pj.at + d + STUDENTS.length) % STUDENTS.length); }
+function pjStep(d) { if (pj.at >= 0) pjOpen((pj.at + d + PJ_ITEMS.length) % PJ_ITEMS.length); }
 
 /* 매 프레임: 카드 자리 계산 (공 ↔ 도넛, 도넛 돌리기) */
 function renderProject(t) {
   if (!pj.built) return;
-  const C = PROJECT, W = pj.hero.clientWidth, H = pj.hero.clientHeight, n = STUDENTS.length; if (!W || !H) return;
+  const C = PROJECT, W = pj.hero.clientWidth, H = pj.hero.clientHeight, n = PJ_ITEMS.length; if (!W || !H) return;
   const dt = Math.min(64, t - (pj.lastT || t)); pj.lastT = t;
   if (pj.root.classList.contains('reading')) return;
   const live = !reduce, rad = Math.PI / 180, ts = t / 1000;
@@ -156,7 +161,8 @@ function renderProject(t) {
     }
     pj.dp = clamp(pj.dp, -60, 60);
     const s = pjEase(C.smoothing, dt); pj.dys += (pj.dy - pj.dys) * s; pj.dps += (pj.dp - pj.dps) * s;
-    pj.angle += (C.spin * (1 - a) + pj.vel) * dt / 1000; pj.vel *= Math.exp(-dt / 700); pj.auto += C.ringSpin * a * dt / 1000;
+    // 공 · 도넛 · 스크롤로 넘기기가 모두 같은 방향으로 늘 돎 (예전: 공만 반대 방향이라 공 → 도넛 중간에 멈췄다가 거꾸로 돎)
+    pj.angle += (-C.spin + pj.vel) * dt / 1000; pj.vel *= Math.exp(-dt / 700); pj.auto += C.ringSpin * dt / 1000;
   } else { pj.dp = clamp(pj.dp, -60, 60); pj.dys = pj.dy; pj.dps = pj.dp; }
   if (a < 0.01) { pj.ringBase = 360 * Math.round(pj.angle / 360); pj.auto = 0; } // 도넛으로 바뀌기 시작할 때의 기준 각도
   const step = 360 / n, mt = C.mouseTilt * (1 - 0.7 * a);
@@ -164,10 +170,12 @@ function renderProject(t) {
     - (1 - pjOut(pj.rev)) * 50;                                                // 들어올 때 살짝 감겼다 풀림
   const V2 = pj.ver === 2, N = C.near, mob = W < 760;
   const cw = mob ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), wob = live ? C.float * (1 - 0.85 * a) : 0;
-  if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px'); }
+  if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px');
+    pj.res = Math.max(C.sharp, Math.ceil(0.37 * W / cw)); pj.hero.style.setProperty('--res', pj.res); } // 넓은 화면은 맨 앞 카드가 커서 더 크게 그림
   // 도넛일 때의 모양: 버전 1 = 멀리서 작은 도넛, 버전 2 = 가까이에서 크게
   const ring = V2
-    ? { R: W * (mob ? N.radiusMobile : N.radius), z: -(mob ? 0.55 : N.camera), tilt: N.tilt, roll: N.roll, persp: mob ? 760 : N.perspective,
+    ? { R: W * (mob ? N.radiusMobile : N.radius), z: -(mob ? 0.55 : N.camera), tilt: N.tilt, roll: N.roll, persp: mob ? 760 : N.perspective * W / 1440, // 원근도 화면 너비에 비례 (넓은 화면에서 맨 앞 카드가 지나치게 커지지 않게)
+       
         y: -H * (mob ? 0.04 : N.lift), sc: (W * (mob ? N.cardMobile : N.card)) / cw, fs: 1.05, fo: 0.06, dimBack: 0.35, dimSide: 0.08 }
     : { R: mob ? W * 0.4 : Math.min(W * 0.36, H * 0.46), y: 0, z: -0.35, tilt: -13, roll: 0, persp: 1400, sc: 0.9, fs: C.focusScale, fo: C.focusOut, dimBack: 0.55, dimSide: 0.25 };
   const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4);
@@ -175,7 +183,8 @@ function renderProject(t) {
   const tilt = pjLerp(-6, ring.tilt, a) - pj.my * mt * 0.7 + pj.dps * (1 - a) + Math.sin(ts * 0.21) * 4 * wob; // 공은 위아래로도 아주 천천히 흔들림
   const persp = pjLerp(1400, ring.persp, a);
   if (Math.abs(persp - (pj.persp || 0)) > 0.5) { pj.persp = persp; pj.scene.style.perspective = persp.toFixed(0) + 'px'; }
-  pj.space.style.transform = `translate3d(0,${(ring.y * a).toFixed(1)}px,${(R * pjLerp(-0.35, ring.z, a)).toFixed(1)}px)`;
+  pj.lys += (pj.ly - pj.lys) * (1 - Math.exp(-dt / 260));
+  pj.space.style.transform = `translate3d(0,${((ring.y + (V2 ? pj.lys : 0)) * a).toFixed(1)}px,${(R * pjLerp(-0.35, ring.z, a)).toFixed(1)}px)`;
   pj.cloud.style.transform = `rotateZ(${(ring.roll * a).toFixed(2)}deg) rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
   const K = pj.K, mid = (K - 1) / 2, pap = live ? C.paper * (0.35 + 0.65 * a) : 0;
   const hvE = live ? 1 - Math.exp(-dt / 170) : 1, offD = Math.exp(-dt / 220);
@@ -220,16 +229,23 @@ function renderProject(t) {
       const ph2 = x * 2.2 + ts * 0.8 + c.p2;
       const wave = amp * Math.sin(ph2), slope = Math.atan(amp * Math.cos(ph2) * 2.2 * 2 / (cw * sc)) / rad;
       const el = c.strips[j];
-      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad)).toFixed(3)}, ${sc.toFixed(3)})`;
+      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad) / pj.res).toFixed(4)}, ${(sc / pj.res).toFixed(4)})`;
       el.style.setProperty('--sh', (0.34 * (1 - Math.abs(Math.cos(nrm + be)))).toFixed(3)); // 옆으로 돌아간 띠일수록 어둡게 = 휜 종이 그림자
       if (setFog) el.style.setProperty('--fog', fog);
     }
   }
+  // 도넛일 때 맨 앞 카드가 화면 가운데(N.center)에 오도록: 몇 프레임마다 카드 위치를 재서 벗어난 만큼 도넛을 올리고 내림
+  if (V2 && N.center != null && a > 0.98 && !pj.down && ++pj.lyN % 8 === 0) {
+    let top = 1e9, bot = -1e9;
+    for (const el of pj.cards[pj.frontIdx].strips) { const b = el.getBoundingClientRect(); if (b.top < top) top = b.top; if (b.bottom > bot) bot = b.bottom; }
+    const err = (top + bot) / 2 - pj.hero.getBoundingClientRect().top - H * N.center;
+    if (Math.abs(err) > 1) pj.ly = clamp(pj.lys - err * 0.6, -H, H);
+  }
   // 맨 앞 작품 (화면에는 글자 없이, 화면 읽기 프로그램에만 알림)
   const fr = a > 0.85 ? pj.frontIdx : -1;
   if (fr !== pj.front) {
-    pj.front = fr; const s = fr >= 0 ? STUDENTS[pj.cards[fr].s] : null;
-    pj.live.textContent = s ? `${s.name}, ${pjTitle(s)}. Enter 키를 누르면 작품 보기` : '';
+    pj.front = fr; const it = fr >= 0 ? PJ_ITEMS[pj.cards[fr].s] : null, s = it && it.s;
+    pj.live.textContent = s ? `${s.name}, ${pjTitle(it)}. Enter 키를 누르면 작품 보기` : '';
   }
 }
 function enterProject() {
@@ -301,4 +317,4 @@ pj.cloud.addEventListener('pointerout', (e) => { const b = e.target.closest('.pj
 addEventListener('resize', () => { if (pj.built) pjSize(); });
 
 $('#pj-d-close').addEventListener('click', pjClose);
-$('#pj-d-who').addEventListener('click', () => { const i = pj.at; pjClose(); go('designer'); dgFocus(i); });
+$('#pj-d-who').addEventListener('click', () => { const i = PJ_ITEMS[pj.at].si; pjClose(); go('designer'); dgFocus(i); });

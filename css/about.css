@@ -1,25 +1,56 @@
-/* About (#about): 왼쪽 포스터, 오른쪽 전시 소개 */
-.about{background:#fbfaf7;color:#1f1b17;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.ab-wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(32px,6vw,96px);align-items:start;max-width:1280px;min-height:100%;margin:0 auto;
-  padding:calc(110px + env(safe-area-inset-top,0px)) clamp(16px,4vw,56px) 72px}
-.ab-poster{position:sticky;top:calc(110px + env(safe-area-inset-top,0px));margin:0}
-.ab-poster img{display:block;width:auto;max-width:100%;max-height:calc(100vh - 170px);box-shadow:0 24px 50px rgba(40,30,20,.16)}
-.ab-eyebrow{margin:0 0 14px;font-size:11px;letter-spacing:.3em;color:#8a7d6a}
-.ab-copy h2{margin:0;font-family:var(--sans);font-weight:700;font-size:clamp(32px,4.2vw,60px);letter-spacing:-.035em;line-height:1.1}
-.ab-sub{margin:14px 0 0;font-size:14px;color:#6b5d4b}
-.ab-text{margin-top:36px;max-width:36em}
-.ab-text p{margin:0 0 1.1em;font-size:16px;line-height:1.9;color:#3a3129;word-break:keep-all}
-.ab-text .ab-sign{margin-top:1.6em;font-size:14px;color:#6b5d4b}
-.ab-info{margin:36px 0 0;padding:0;border-top:1px solid rgba(31,27,23,.16)}
-.ab-info div{display:grid;grid-template-columns:7.5em 1fr;gap:16px;padding:14px 0;border-bottom:1px solid rgba(31,27,23,.1)}
-.ab-info dt{font-size:13px;color:#8a7d6a}
-.ab-info dd{margin:0;font-size:14px}
+/* About (#about): 왼쪽 천장에 매달린 포스터, 오른쪽 제목·서문·일시·장소 (2026-11-15 시안)
+   큰 화면 숫자는 시안(1920×1080)을 화면 너비(vw)에 맞춰 옮긴 값이라, 화면 크기가 달라도 비율이 같게 보여요 */
+.about{background:#fff;color:#4a433b;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.ab-wrap{position:relative;min-height:100%}
+
+/* 포스터: 줄이 화면 맨 위에서 내려옴 (그림 안에 줄·봉·그림자까지 들어 있음) */
+.ab-poster{position:absolute;top:0;left:29.4vw;transform:translateX(-50%);margin:0;height:min(92.5vh,66vw)}
+.ab-poster img{display:block;height:100%;width:auto}
+
+/* 등장: 포스터가 봉에 말려 있다가 위에서 아래로 풀려 내려옴 → 끝에서 살짝 흔들리고 멈춤
+   --u = 펼쳐진 정도(0 → 1). 그림 안 위치: 봉 아래 끝 19.8%, 종이 좌우 2.1% ~ 97.6%, 종이 아래 끝 98.5%
+   빠르기는 아래 abUnroll(1.9초) · abSway(1.6초) 숫자로 고쳐요 */
+@property --u{syntax:"<number>";inherits:true;initial-value:1}
+.ab-poster{--u:1}
+.ab-poster img{clip-path:inset(0 0 calc(80.2% * (1 - var(--u))) 0);transform-origin:50% 0}
+.ab-poster::after{content:"";position:absolute;left:2.1%;right:2.4%;top:calc(19.8% + 78.7% * var(--u));height:1.6%;min-height:8px;transform:translateY(-50%);border-radius:99px;pointer-events:none;
+  background:linear-gradient(180deg,#cdbda6 0%,#f7f0e5 38%,#e6d9c6 62%,#b9a68b 100%);box-shadow:0 6px 10px rgba(60,40,20,.22);opacity:calc((1 - var(--u)) * 10)}
+.ab-poster.ab-unroll{animation:abUnroll 1.9s cubic-bezier(.5,.05,.2,1) .35s both}
+.ab-poster.ab-unroll img{animation:abSway 1.6s ease-in-out 1.95s both}
+@keyframes abUnroll{from{--u:0}to{--u:1}}
+@keyframes abSway{0%{transform:rotate(0)}30%{transform:rotate(.5deg)}60%{transform:rotate(-.3deg)}85%{transform:rotate(.1deg)}100%{transform:rotate(0)}}
+
+.ab-copy{margin-left:50vw;max-width:35vw;padding:max(110px,20.7vh) 0 8vh}
+/* 글자 규칙 (시안 1920 기준, 화면 너비에 비례): 모두 Noto Sans KR, 행간 150%
+   제목 = SemiBold 20pt · 한글 설명 = Medium 18pt · 영어 설명 = Regular 18pt · 자간 한글 -3%, 영어 +1%
+   20/1920 = 1.0417vw, 18/1920 = 0.9375vw → 2026-11-15 요청으로 0.84배 (0.875vw, 0.79vw) */
+.ab-copy h2{margin:0 0 1.75vw;font-family:"Noto Sans KR",var(--sans);font-weight:600;font-size:clamp(16px,.875vw,34px);line-height:1.5;letter-spacing:-.03em;color:#4a433b;word-break:keep-all}
+.ab-text p{margin:0;font-family:"Noto Sans KR",var(--sans);font-weight:500;font-size:clamp(14px,.79vw,30px);line-height:1.5;letter-spacing:-.03em;color:#4a433b;word-break:keep-all}
+.ab-text p.en{font-weight:400;letter-spacing:.01em;color:#958c81}
+.ab-text p + p{margin-top:1.5em}
+.ab-text p + p.en{margin-top:1.9em}
+.ab-text b{font-weight:700;color:#4a433b}
+.ab-text p.en b{color:#7a7166}
+.ab-copy .ln{display:block}
+
+.ab-info{margin:2.2vw 0 0;padding:0;font-family:"Noto Sans KR",var(--sans);line-height:1.5;letter-spacing:-.03em}
+.ab-info div{display:grid;grid-template-columns:2.95vw 1fr;align-items:baseline;padding:0}
+.ab-info div + div{margin-top:1.1vw}
+.ab-info dt{font-size:clamp(15px,.875vw,34px);font-weight:600;color:#4a433b}
+.ab-info dd{margin:0;font-size:clamp(14px,.79vw,30px);font-weight:500;color:#4a433b}
 .ab-info dd.tbd{color:#a39684}
-.ab-go{display:flex;gap:10px;flex-wrap:wrap;margin-top:36px}
-.ab-go button{height:48px;padding:0 24px;border-radius:99px;border:1px solid #1f1b17;font-size:14px;transition:background .2s,color .2s}
-.ab-go button:first-child,.ab-go button:hover{background:#1f1b17;color:#fbfaf7}
-@media(max-width:860px){
-  .ab-wrap{grid-template-columns:1fr;padding-top:calc(90px + env(safe-area-inset-top,0px))}
-  .ab-poster{position:static;max-width:420px}
-  .ab-poster img{max-height:none}
+
+/* 좁은 화면(태블릿 세로·휴대폰): 포스터 위, 글 아래. 줄은 끊지 않고 이어서 흐름 */
+@media (max-width:900px), (max-aspect-ratio:1/1){
+  .ab-poster{position:relative;left:auto;transform:none;height:auto;width:min(78vw,52vh);margin:0 auto}
+  .ab-poster img{width:100%;height:auto}
+  .ab-copy{margin:0 auto;max-width:640px;padding:36px 20px 64px}
+  .ab-copy h2{margin-bottom:22px}
+  .ab-text .ln{display:inline}
+  /* 메뉴가 포스터·글 위에 겹치지 않게 흰 바탕 */
+  .topbar[data-page="about"]{top:0;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:12px;background:#fff}
+  .ab-poster{margin-top:62px}
+  .ab-info{margin-top:36px}
+  .ab-info div{grid-template-columns:3.4em 1fr}
+  .ab-info div + div{margin-top:12px}
 }

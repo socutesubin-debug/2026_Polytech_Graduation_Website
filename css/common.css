@@ -31,25 +31,27 @@ a{color:inherit}
 .veil.on{opacity:1}
 .screen.instant,.screen.instant.on{transition:none!important}
 
-.topbar{position:fixed;z-index:50;top:calc(14px + env(safe-area-inset-top,0px));left:0;right:0;display:flex;justify-content:center;pointer-events:none;opacity:0;transform:translateY(-10px);transition:opacity .6s,transform .6s}
+/* 상단 메뉴: 왼쪽 로고, 오른쪽 글자 메뉴 (테두리·배경 없음) */
+.topbar{position:fixed;z-index:50;top:calc(clamp(12px,1vw,32px) + env(safe-area-inset-top,0px));left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,3.4vw,72px) 0 clamp(16px,3.6vw,72px);pointer-events:none;opacity:0;transform:translateY(-10px);transition:opacity .6s,transform .6s}
 .topbar.on{opacity:1;transform:none}
 .topbar.on .pill,.topbar.on .brand{pointer-events:auto}
-.brand{position:absolute;left:clamp(16px,3vw,36px);top:12px;font-size:10px;letter-spacing:.34em;color:var(--ink)}
-.topbar.no-brand .brand{display:none}
+.brand{display:block;padding:0;line-height:0}
+.brand img{display:block;height:clamp(34px,2.75vw,64px);width:auto}
+.topbar.no-brand .brand{visibility:hidden}
 
-.pill{display:flex;align-items:center;gap:clamp(18px,3.6vw,56px);height:46px;padding:0 clamp(24px,3.8vw,56px);border-radius:99px;
-  background:var(--g-bg);border:1px solid var(--g-line);
-  backdrop-filter:var(--g-blur);-webkit-backdrop-filter:var(--g-blur);box-shadow:var(--g-shadow)}
-.pill button{position:relative;padding:6px 1px;font-size:11.5px;letter-spacing:.07em;color:rgba(46,38,29,.74);transition:color .25s}
-.pill button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;border-radius:2px;background:currentColor;transform:scaleX(0);transition:transform .3s ease}
-.pill button:hover{color:var(--ink)}
-.pill button.active{color:var(--ink);font-weight:700}
+/* 메뉴 글자: AvantGarde LT Book 대문자. 유료 서체라 파일은 올리지 않고, 설치된 컴퓨터에서만 쓰임(local). 없으면 비슷한 무료 Josefin Sans Light */
+@font-face{font-family:"BTF Nav";src:local("AvantGarde LT Book"),local("AvantGardeLT-Book"),local("AvantGarde LT Book Regular");font-weight:300 400}
+.pill{display:flex;align-items:center;gap:clamp(18px,1.85vw,44px);margin-left:auto}
+.pill button{position:relative;padding:.3em 0 .12em;font-family:"BTF Nav","Josefin Sans",var(--sans);font-weight:300;font-size:clamp(13px,1.04vw,40px);line-height:1;letter-spacing:0;text-transform:uppercase;color:#4a433b;transition:color .25s,opacity .25s}
+.pill button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:currentColor;transform:scaleX(0);transition:transform .3s ease}
+.pill button:hover{opacity:.7}
+.pill button.active{color:#4a433b;opacity:1}
 .pill button.active::after{transform:scaleX(1)}
-.topbar[data-theme="dark"] .pill{background:rgba(30,24,17,.5);border:1px solid rgba(241,232,216,.3);box-shadow:0 6px 22px rgba(0,0,0,.3)}
-.topbar[data-theme="dark"] .pill button{color:rgba(241,232,216,.72)}
+.topbar[data-theme="dark"] .pill button{color:rgba(241,232,216,.78)}
 .topbar[data-theme="dark"] .pill button:hover,.topbar[data-theme="dark"] .pill button.active{color:#fff}
-.topbar[data-theme="dark"] .brand{color:#f1e8d8}
-.topbar[data-theme="light"] .pill{background:rgba(255,255,255,.32);border:1px solid rgba(46,38,29,.52);box-shadow:0 6px 22px rgba(60,40,20,.08),inset 0 1px 0 rgba(255,255,255,.8)}
+.topbar[data-theme="dark"] .brand img{filter:brightness(0) invert(.93) sepia(.2)}
+@media (max-width:520px){.pill{gap:16px}.pill button{font-size:13px}.brand img{height:32px}}
 
 .cam{position:absolute;inset:0;overflow:hidden}
 .pearl{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:soft-light;opacity:.85;
@@ -72,9 +74,6 @@ a{color:inherit}
 .screen-copy h2{font-family:var(--serif);font-weight:400;font-size:clamp(24px,2.6vw,34px);letter-spacing:-.02em;margin:10px 0 0;color:var(--ink)}
 
 @media(max-width:760px){
-  .brand{display:none}
-  .pill{height:42px;gap:12px;padding:0 16px}
-  .pill button{font-size:10px;letter-spacing:.02em}
   .screen-copy{top:calc(74px + env(safe-area-inset-top,0px))}
 }
 
