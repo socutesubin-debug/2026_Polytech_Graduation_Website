@@ -1,0 +1,85 @@
+/* Designer (#designer): 밝은 미술관. 3D 공간(벽·바닥·받침대·석고상)은 js/designer.js가 #dg-stage에 그림
+   여기서는 그 위에 얹는 HTML: 분야 메뉴, 구역 제목, 이름표(받침대 앞), 짧은 소개 + 포트폴리오(받침대 아래), 좌우 버튼, 3D가 안 될 때의 목록
+   --s = 화면 크기에 따른 글자 배율, --drop = 이름표에서 받침대 바닥까지 거리 (js/designer.js가 매 프레임 넣어 줌) */
+.designer{--s:1;--ink-d:#2b241c;--soft-d:#6f6252;background:#efe8dc;color:var(--ink-d)}
+.dg-stage{position:absolute;inset:0;z-index:0;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.dg-stage canvas{display:block;width:100%;height:100%}
+.designer.is-loading .dg-stage::after{content:"전시장을 준비하고 있어요";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;letter-spacing:.1em;color:var(--soft-d)}
+
+/* 분야 메뉴: 상단 메뉴 바로 아래, 작고 간결하게 */
+.dg-tabs{position:absolute;z-index:5;left:50%;top:calc(72px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;gap:4px;padding:3px;border-radius:99px;
+  background:rgba(255,252,246,.55);border:1px solid rgba(43,36,28,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.dg-tabs button{padding:6px 14px;border-radius:99px;font-size:11px;letter-spacing:.08em;color:rgba(43,36,28,.66);white-space:nowrap;transition:background .25s,color .25s}
+.dg-tabs button:hover{color:var(--ink-d)}
+.dg-tabs button[aria-pressed="true"]{background:var(--ink-d);color:#f6f0e6}
+.designer.is-list .dg-tabs{display:none}
+
+/* 이름표·소개: 위치는 js가 정함. 왼쪽 위 0,0에 두고 transform으로 옮김 */
+.dg-labels{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.dg-cap{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
+.dg-cap.off{opacity:0} /* 화면 밖: 안 보이지만 Tab으로는 갈 수 있음 (가면 그 학생 앞으로 이동) */
+/* 받침대 앞면의 작은 이름표 (돌에 붙인 얇은 판, 장식 없음) */
+.dg-plaque{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:calc(3px * var(--s));
+  padding:calc(8px * var(--s)) calc(14px * var(--s));min-width:calc(104px * var(--s));border-radius:2px;
+  background:rgba(250,246,239,.9);box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 1px 2px rgba(60,44,28,.16);color:var(--ink-d);transition:background .2s}
+.dg-plaque:hover{background:#fffdf8}
+.dg-name{font-size:calc(15px * var(--s));font-weight:700;letter-spacing:.02em;line-height:1.2;white-space:nowrap}
+.dg-field{font-size:calc(10px * var(--s));letter-spacing:.06em;color:var(--soft-d);white-space:nowrap}
+/* 받침대 아래 바닥 쪽: 짧은 소개 + 포트폴리오 */
+.dg-info{position:absolute;left:0;top:calc(var(--drop) + 14px * var(--s));transform:translateX(-50%);width:calc(250px * var(--s));text-align:center;pointer-events:none;transition:opacity .3s}
+.dg-slogan{margin:0;font-size:calc(12.5px * var(--s));line-height:1.6;color:#4a3f33;word-break:keep-all}
+.dg-go{display:inline-block;margin-top:calc(8px * var(--s));padding:calc(5px * var(--s)) calc(12px * var(--s));border-radius:99px;border:1px solid rgba(43,36,28,.32);
+  font-size:calc(11px * var(--s));letter-spacing:.04em;color:var(--ink-d);pointer-events:auto;transition:background .2s,color .2s}
+a.dg-go:hover{background:var(--ink-d);color:#f6f0e6}
+.dg-go.is-empty{border-style:dashed;color:var(--soft-d)}
+.dg-cap:not(.is-at) .dg-info{opacity:.55}
+.dg-cap.is-at .dg-plaque{box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 2px 8px rgba(60,44,28,.2)}
+/* 전체 보기(멀리서): 소개는 숨기고 이름만 작게 */
+.designer.is-far .dg-info{opacity:0;visibility:hidden}
+.designer.is-far .dg-plaque{padding:3px 6px;min-width:0;gap:0;background:rgba(250,246,239,.82)}
+.designer.is-far .dg-name{font-size:11px}
+.designer.is-far .dg-field{display:none}
+/* 모바일: 한 명씩. 옆 사람 글은 숨김 */
+.designer.is-portrait .dg-cap:not(.is-at) .dg-info{opacity:0}
+.designer.is-portrait .dg-info{width:min(300px,82vw)}
+
+/* 벽에 붙은 구역 제목 (UX/UI · WEB, VISUAL DESIGN) */
+.dg-zone{position:absolute;left:0;top:0;display:flex;flex-direction:column;gap:calc(6px * var(--s));transform:translate(-50%,0);text-align:center;white-space:nowrap;transition:opacity .3s}
+.dg-zone.off{opacity:0}
+.dg-zone b{font-size:calc(22px * var(--s));font-weight:300;letter-spacing:.32em;color:rgba(43,36,28,.78)}
+.dg-zone span{font-size:calc(11px * var(--s));letter-spacing:.14em;color:var(--soft-d)}
+.designer.is-far .dg-zone b{font-size:max(12px,calc(22px * var(--s)))}
+.designer.is-far .dg-zone span{font-size:max(10px,calc(11px * var(--s)))}
+
+/* 좌우 버튼 */
+.dg-arrow{position:absolute;z-index:4;top:50%;width:48px;height:48px;margin-top:-24px;border-radius:50%;background:rgba(255,252,246,.8);border:1px solid rgba(43,36,28,.2);
+  font-size:18px;color:var(--ink-d);transition:opacity .2s,background .2s}
+.dg-arrow:hover{background:#fff;border-color:var(--ink-d)}
+.dg-arrow:disabled{opacity:0;pointer-events:none}
+.dg-arrow.prev{left:clamp(12px,2vw,28px)}.dg-arrow.next{right:clamp(12px,2vw,28px)}
+.designer.is-list .dg-arrow{display:none}
+.dg-now{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* 3D가 안 될 때: 같은 데이터로 만든 HTML 목록 */
+.dg-list{position:absolute;inset:0;z-index:6;overflow:auto;padding:calc(88px + env(safe-area-inset-top,0px)) clamp(16px,5vw,64px) 48px;background:#efe8dc}
+.dg-list-msg{margin:0 0 20px;font-size:13px;color:var(--soft-d)}
+.dg-retry{margin-left:8px;padding:5px 12px;border-radius:99px;border:1px solid rgba(43,36,28,.4);font-size:12px}
+.dg-list-group h3{margin:28px 0 14px;font-size:14px;font-weight:400;letter-spacing:.24em}
+.dg-list-group h3 small{font-size:11px;letter-spacing:.1em;color:var(--soft-d)}
+.dg-list ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:24px 18px}
+.dg-list li{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.dg-list img{width:100%;height:auto;max-width:200px}
+.dg-list-name{display:flex;flex-direction:column;gap:2px}
+.dg-list-name b{font-size:15px}.dg-list-name span{font-size:11px;color:var(--soft-d)}
+.dg-list p{margin:0;font-size:12px;line-height:1.55;color:#4a3f33;word-break:keep-all}
+.dg-list a,.dg-list .is-empty{font-size:12px;text-decoration:underline;color:var(--ink-d)}
+.dg-list .is-empty{text-decoration:none;color:var(--soft-d)}
+
+@media(max-width:760px){
+  .dg-tabs{top:calc(66px + env(safe-area-inset-top,0px))}
+  .dg-tabs button{padding:6px 10px;font-size:10px;letter-spacing:.04em}
+  .dg-arrow{top:auto;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin-top:0;width:42px;height:42px}
+}
+@media(prefers-reduced-motion:reduce){.dg-info,.dg-tabs button{transition:none}}
+.dg-list-close{position:sticky;top:0;z-index:1;margin-bottom:8px;padding:8px 16px;border-radius:99px;background:var(--ink-d);color:#f6f0e6;font-size:12px;letter-spacing:.04em}
+.dg-list ul{grid-template-columns:repeat(auto-fill,minmax(min(150px,40vw),1fr))}

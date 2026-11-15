@@ -1,0 +1,62 @@
+/* Project 방 (#project): 떠다니는 카드 (공 → 도넛) → 작품 상세 */
+.project{background:#fbfaf7;color:#1f1b17;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.project.reading{overflow:hidden}
+
+/* ① 떠다니는 카드 */
+.pj-track{position:relative} /* 높이는 js/project.js가 정함: 이 길이만큼 스크롤하는 동안 첫 화면이 붙어 있음 */
+.pj-hero{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;--cw:140px;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none} /* 끌어서 돌리기 (손가락 위아래 = 스크롤) */
+.pj-hero.drag,.pj-hero.drag .pj-card{cursor:grabbing}
+.pj-scene{position:absolute;inset:0;perspective:1400px;overflow:hidden}
+.pj-space{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;will-change:transform} /* 카드가 떠다니는 3D 공간 */
+.pj-cloud{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;will-change:transform}
+.pj-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pj-card{position:absolute;left:0;top:0;width:0;height:0;padding:0;border:0;background:none;transform-style:preserve-3d;cursor:pointer} /* 카드 = 얇은 띠(pj-strip) 여러 개 */
+.pj-strip{position:absolute;left:calc(var(--sw) / -2);top:calc(var(--cw) * -.375);width:calc(var(--sw) + 1.5px);height:calc(var(--cw) * .75);background-color:#9a9186;background-size:var(--cw) 100%;background-repeat:no-repeat;
+  backface-visibility:hidden;will-change:transform}
+.pj-strip::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#1f1b17;opacity:var(--sh,0);pointer-events:none} /* 휜 종이의 그림자 */
+.pj-strip::before{content:"";position:absolute;z-index:1;inset:0;border-radius:inherit;background:#fbfaf7;opacity:var(--fog,0);pointer-events:none} /* 뒤쪽 카드를 흐리게 (배경색 안개) */
+.pj-strip.l{border-radius:calc(var(--cw) * .045) 0 0 calc(var(--cw) * .045)}
+.pj-strip.r{border-radius:0 calc(var(--cw) * .045) calc(var(--cw) * .045) 0}
+.pj-strip{transition:filter .35s ease}
+.pj-card:hover .pj-strip{filter:brightness(1.07)}
+.pj-hero.drag .pj-card:hover .pj-strip{filter:none}
+
+/* 분야 고르기 버튼 (Designer 방에서 씀) */
+.dg-filter{display:flex;gap:8px;flex-wrap:wrap}
+.dg-filter button{height:38px;padding:0 16px;border-radius:99px;border:1px solid rgba(31,27,23,.25);font-size:13px;transition:background .2s,color .2s,border-color .2s}
+.dg-filter button:hover{border-color:#1f1b17}
+.dg-filter button[aria-pressed="true"]{background:#1f1b17;border-color:#1f1b17;color:#fbfaf7}
+
+/* ③ 작품 상세 */
+
+
+/* ③ 작품 상세 (검은 화면): 왼쪽 글은 제자리, 오른쪽 그림만 내려 봄 */
+.pj-detail{position:fixed;z-index:60;inset:0;display:grid;grid-template-columns:minmax(260px,22vw) minmax(0,1fr) clamp(56px,4.5vw,88px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  background:#000;color:#fff;opacity:0;transition:opacity .3s}
+.pj-detail.on{opacity:1}
+.pj-reading .topbar{opacity:0;visibility:hidden;pointer-events:none}
+.pj-d-side{position:sticky;top:0;height:100vh;height:100dvh;display:flex;flex-direction:column;padding:calc(56px + env(safe-area-inset-top,0px)) clamp(20px,2.2vw,36px) calc(28px + env(safe-area-inset-bottom,0px))}
+.pj-d-side h2{margin:0;font-family:var(--sans);font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1.4}
+.pj-d-who{align-self:flex-start;padding:0;font-size:18px;color:#fff;text-align:left;line-height:1.4}
+.pj-d-who:disabled{cursor:default;opacity:1;color:#fff}
+.pj-d-who:not(:disabled):hover,.pj-d-who:not(:disabled):focus-visible{text-decoration:underline;text-underline-offset:4px}
+.pj-d-desc{margin:44px 0 0;font-size:16px;line-height:1.9;color:rgba(255,255,255,.92);word-break:keep-all;white-space:pre-line}
+.pj-d-mail{margin-top:auto;padding-top:24px;font-size:17px;color:#fff;text-decoration:none;word-break:break-all}
+.pj-d-mail:hover{text-decoration:underline;text-underline-offset:4px}
+.pj-d-images{display:flex;flex-direction:column;gap:28px;padding:0 0 28px}
+.pj-shot{position:relative;margin:0;width:100%;background:#1a1a1a}
+.pj-shot img{display:block;width:100%;height:auto}
+.pj-shot-temp{aspect-ratio:3/2;display:grid;place-items:center;background:linear-gradient(160deg,#ece8ef,#d9d3dc)}
+.pj-shot-temp span{font-size:13px;letter-spacing:.14em;color:#8a7d8a}
+.pj-d-close{position:sticky;top:0;align-self:start;justify-self:center;width:56px;height:56px;margin-top:calc(36px + env(safe-area-inset-top,0px));display:grid;place-items:center;color:#fff}
+.pj-d-close svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6}
+.pj-d-close:hover svg{stroke-width:2.4}.pj-d-close:focus-visible{outline:1px solid rgba(255,255,255,.45);outline-offset:-4px;border-radius:50%}
+@media(max-width:760px){
+  .pj-detail{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .pj-d-side{position:static;height:auto;padding:calc(72px + env(safe-area-inset-top,0px)) 20px 28px}
+  .pj-d-desc{margin-top:24px;font-size:15px}
+  .pj-d-mail{margin-top:20px;padding-top:0;font-size:15px}
+  .pj-d-images{gap:12px}
+  .pj-d-close{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:8px;margin:0;background:rgba(0,0,0,.55);border-radius:50%}
+}
+@media(prefers-reduced-motion:reduce){.pj-detail{transition:none}}

@@ -1,0 +1,25 @@
+/* V2 전시관 (#hall-uxui, #hall-visual). 스크롤·이름표·아래 안내줄·실패 화면은 test-room.css의 tr-* 모양을 같이 씀.
+   여기에는 전시관에만 있는 '큰 이름 글자 + 선' (스토리보드 s6 버전 2에서 빌린 연출)만 있음 */
+.hall#hall-uxui{background:#e3dccf}
+.hall#hall-visual{background:#d9dbdb}
+
+.hall-type{position:absolute;left:clamp(16px,4vw,64px);bottom:calc(96px + env(safe-area-inset-bottom,0px));width:min(640px,calc(100% - 32px));
+  color:var(--ink);pointer-events:none;opacity:0;transform:translateY(10px);transition:opacity .45s,transform .6s cubic-bezier(.2,.7,.2,1)}
+.hall-type.right{left:auto;right:clamp(16px,4vw,64px);text-align:right}
+.hall-type.on{opacity:1;transform:none}
+.ht-line{position:absolute;left:0;right:0;bottom:-40px;width:100%;height:140px;overflow:visible}
+.hall-type.right .ht-line{transform:scaleX(-1)}
+.ht-line path{fill:none;stroke-width:3;stroke-linecap:square;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 0s}
+.hall-type.on .ht-line path{stroke-dashoffset:0;transition:stroke-dashoffset 1.3s cubic-bezier(.6,0,.2,1) .1s}
+.ht-no{position:relative;margin:0 0 6px;font-size:11px;letter-spacing:.28em;color:var(--ink-soft)}
+.ht-name{position:relative;margin:0;font-size:clamp(48px,8.5vw,120px);line-height:.95;font-weight:700;letter-spacing:-.02em}
+.ht-slogan{position:relative;margin:14px 0 0;max-width:30em;font-size:clamp(13px,1.2vw,15px);line-height:1.55;color:var(--ink-soft)}
+.hall-type.right .ht-slogan{margin-left:auto}
+
+@media (max-width:760px){
+  .hall-type{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+  .ht-line{height:90px;bottom:-34px}
+}
+@media (prefers-reduced-motion:reduce){
+  .hall-type,.hall-type.on .ht-line path{transition:none}
+}

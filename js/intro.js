@@ -115,7 +115,7 @@ async function shatter() {
 }
 introFrame.addEventListener('click', shatter);
 
-$('#brand').addEventListener('click', playIntro);
+$('#brand').addEventListener('click', () => playOpening());
 $('#ticket').addEventListener('click', tear);
 $('#poster').addEventListener('click', () => { if (!street.moved) enterPoster(); });
 $$('[data-skip]').forEach((b) => b.addEventListener('click', () => { ++seq; busy = false; clearTimeout(introTimer); clearTimeout(frameTimer); go('lobby'); arrive($('#lobby-cam')); }));

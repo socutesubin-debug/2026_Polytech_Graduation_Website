@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WebGL 나비 테스트</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  body.sky{background:#000 url(assets/images/intro/s1-sky.jpg) center/cover no-repeat}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #ui{position:fixed;left:16px;bottom:14px;font:12px/1.6 system-ui,sans-serif;color:rgba(255,255,255,.55)}
+  #ui a{color:inherit;margin-right:12px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.3)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+  <a href="?">금빛 한 마리</a><a href="?tint=blue">푸른빛</a><a href="?trio=1">세 마리</a><a href="?bg=sky">하늘 배경</a><a href="?view=front">정면</a><a href="?view=side">측면</a>
+</div>
+<script src="js/butterfly-gl.js"></script>
+<script>
+const Q = new URLSearchParams(location.search);
+if (Q.get('bg') === 'sky') document.body.classList.add('sky');
+if (Q.get('ui') === '0') document.getElementById('ui').style.display = 'none';
+/* 옵션: ?tint=gold|blue|white  ?trio=1  ?bg=sky  ?view=auto|front|side  ?hz=날갯짓 속도  ?t=초(정지 화면) */
+const B = createButterflyGL(document.getElementById('c'), {
+  tint: Q.get('tint') || 'gold', trio: Q.get('trio') === '1', sky: Q.get('bg') === 'sky', view: Q.get('view') || 'auto',
+  flapHz: parseFloat(Q.get('hz') || '2.6'),
+});
+if (!B) document.body.insertAdjacentHTML('beforeend', '<p style="color:#fff;padding:24px">이 브라우저는 WebGL2를 지원하지 않습니다.</p>');
+else if (Q.has('t')) { B.advance(Math.round(parseFloat(Q.get('t'))*60)); window.__adv = n => B.advance(n); addEventListener('resize', () => { B.resize(); B.draw(); }); }
+else B.start();
+</script>
+</body>
+</html>

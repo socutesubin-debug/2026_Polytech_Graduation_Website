@@ -45,6 +45,10 @@ a{color:inherit}
 .pill button:hover{color:var(--ink)}
 .pill button.active{color:var(--ink);font-weight:700}
 .pill button.active::after{transform:scaleX(1)}
+.topbar[data-theme="dark"] .pill{background:rgba(30,24,17,.5);border:1px solid rgba(241,232,216,.3);box-shadow:0 6px 22px rgba(0,0,0,.3)}
+.topbar[data-theme="dark"] .pill button{color:rgba(241,232,216,.72)}
+.topbar[data-theme="dark"] .pill button:hover,.topbar[data-theme="dark"] .pill button.active{color:#fff}
+.topbar[data-theme="dark"] .brand{color:#f1e8d8}
 .topbar[data-theme="light"] .pill{background:rgba(255,255,255,.32);border:1px solid rgba(46,38,29,.52);box-shadow:0 6px 22px rgba(60,40,20,.08),inset 0 1px 0 rgba(255,255,255,.8)}
 
 .cam{position:absolute;inset:0;overflow:hidden}

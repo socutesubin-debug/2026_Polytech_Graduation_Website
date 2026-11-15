@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beyond the Frame · WebGL 인트로 미리보기</title>
+<link rel="stylesheet" href="css/intro-webgl.css">
+<style>html, body { margin: 0; background: #eef1f2; } body { overscroll-behavior-y: none; }</style>
+<!-- 사이트(index.html)와 같은 버전: three 0.160.0, GSAP 3.12.5 -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+</head>
+<body>
+<main id="intro-webgl" aria-label="인트로: 하늘의 나비가 미술관 외벽 포스터 속으로 들어가요"></main>
+<noscript><p style="padding:24px">자바스크립트가 꺼져 있어 인트로를 보여 줄 수 없어요. <a href="index.html#about">전시 입장하기</a></p></noscript>
+
+<script src="js/butterfly-gl.js"></script><!-- 전에 함께 만든 WebGL 나비 (기존 인트로와 같은 파일) -->
+<script src="js/intro-webgl/config.js"></script>
+<script src="js/intro-webgl/world.js"></script>
+<script src="js/intro-webgl/butterfly.js"></script>
+<script src="js/intro-webgl/intro.js"></script>
+<script>
+/* 미리보기 페이지. 기존 인트로(index.html, intro-proto.html)는 그대로 두었어요.
+   주소 끝 옵션: ?p=0.6 → 그 진행률에서 멈춤   ?debug=1 → 진행률·fps 표시   ?reduced=1 → 움직임 줄이기 미리 보기 */
+(function () {
+  var Q = new URLSearchParams(location.search);
+  if (location.protocol === 'file:') document.write('<script src="assets/images/intro-webgl/main-poster.data.js"><\/script>');
+  // 실제 사이트에 붙일 때는 이 함수만 바꾸면 돼요 (예: screens.js의 화면 전환으로 About 열기)
+  function goToExhibition() { location.href = 'index.html#about'; }
+  window.addEventListener('load', function () {
+    createWebGLIntro(document.getElementById('intro-webgl'), {
+      onEnter: goToExhibition,
+      onSkip: goToExhibition,
+      freezeP: Q.has('p') ? +Q.get('p') : undefined,
+      debug: Q.get('debug') === '1',
+      reduced: Q.get('reduced') === '1'
+    }).then(function (ctrl) { window.__iw = ctrl; }, function () { window.__iwFailed = true; });
+  });
+})();
+</script>
+</body>
+</html>
