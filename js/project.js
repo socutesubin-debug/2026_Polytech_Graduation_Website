@@ -24,6 +24,7 @@ const PROJECT = {
   spin: 7,                        // 공일 때 저절로 도는 속도 (도/초)
   float: 1,                       // 카드가 따로따로 둥둥 움직이는 정도 (0 = 안 움직임)
   ringSpin: 6,                    // 도넛이 저절로 계속 도는 속도 (도/초, 0 = 멈춤)
+  sharp: 3,                       // 선명도: 카드를 몇 배 크게 그린 뒤 줄여서 보여 줄지 (크게 그려 줄이면 선명함. 1 = 예전처럼 작게 그려 늘림 → 흐림)
   strips: 10, stripsMobile: 7,    // 카드 한 장을 몇 개의 띠로 나눠 휘게 할지 (많을수록 매끄럽지만 무거움)
   paper: 1,                       // 종이가 물결치듯 휘는 정도 (0 = 도넛 모양대로만 휨)
   mouseTilt: 12, mouseSpin: 0.08, // 마우스 쪽으로 기우는 각도(도), 마우스를 움직일 때 살짝 도는 힘
@@ -164,7 +165,7 @@ function renderProject(t) {
     - (1 - pjOut(pj.rev)) * 50;                                                // 들어올 때 살짝 감겼다 풀림
   const V2 = pj.ver === 2, N = C.near, mob = W < 760;
   const cw = mob ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), wob = live ? C.float * (1 - 0.85 * a) : 0;
-  if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px'); }
+  if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px'); pj.hero.style.setProperty('--res', PROJECT.sharp); }
   // 도넛일 때의 모양: 버전 1 = 멀리서 작은 도넛, 버전 2 = 가까이에서 크게
   const ring = V2
     ? { R: W * (mob ? N.radiusMobile : N.radius), z: -(mob ? 0.55 : N.camera), tilt: N.tilt, roll: N.roll, persp: mob ? 760 : N.perspective,
@@ -220,7 +221,7 @@ function renderProject(t) {
       const ph2 = x * 2.2 + ts * 0.8 + c.p2;
       const wave = amp * Math.sin(ph2), slope = Math.atan(amp * Math.cos(ph2) * 2.2 * 2 / (cw * sc)) / rad;
       const el = c.strips[j];
-      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad)).toFixed(3)}, ${sc.toFixed(3)})`;
+      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad) / PROJECT.sharp).toFixed(4)}, ${(sc / PROJECT.sharp).toFixed(4)})`;
       el.style.setProperty('--sh', (0.34 * (1 - Math.abs(Math.cos(nrm + be)))).toFixed(3)); // 옆으로 돌아간 띠일수록 어둡게 = 휜 종이 그림자
       if (setFog) el.style.setProperty('--fog', fog);
     }
