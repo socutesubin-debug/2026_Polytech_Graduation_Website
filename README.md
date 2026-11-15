@@ -22,6 +22,24 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer 방 | `#designer` | `⑪ Designer 방` | `css/designer.css` | `js/designer.js` | 맨 위 `DESIGNER` (휠 빠르기) |
 
+## 새 WebGL 인트로 미리보기 (2026-11-15) — `intro-webgl.html`
+
+기존 인트로(`index.html`의 Intro, `intro-proto.html`)는 그대로 두고, **별도 페이지**에 하나의 3D 공간(하늘 · 미술관 외벽 · 포스터 · 반사 연못)으로 만든 새 인트로예요. 카메라만 움직여서 하늘의 나비 → 외벽 포스터 → 포스터 속으로 들어가요.
+
+| 무엇 | 파일 |
+|---|---|
+| 미리보기 페이지 | `intro-webgl.html` (끝에서 `전시 입장하기` → `goToExhibition()` 함수 하나만 바꾸면 실제 사이트로 연결) |
+| **숫자 고치는 곳** (스크롤 길이, 구간, 카메라 경로, 나비 크기·날갯짓, 흡수 지점, 물결 세기) | `js/intro-webgl/config.js` |
+| 공간(하늘·벽·바닥·연못·포스터) | `js/intro-webgl/world.js` |
+| 나비·잔상·흡수 점 | `js/intro-webgl/butterfly.js` |
+| 스크롤·카메라·접근성·정리 | `js/intro-webgl/intro.js` |
+| 모양 (이름은 모두 `iw-`로 시작) | `css/intro-webgl.css` |
+| 포스터 원본 | `assets/images/intro-webgl/main-poster.webp` (프로젝트 파일 `storyboard/key-visual/main-poster.png` 613×926, 비율 그대로) |
+
+- 확인용 주소 끝 옵션: `?p=0.6`(그 진행률에서 멈춤), `?debug=1`(진행률·fps 표시), `?reduced=1`(움직임 줄이기)
+- 검사: `node tests/intro-webgl.cjs` (화면 캡처, 나비가 화면 밖으로 나가는지, 빠른 스크롤 전진·후진, 키보드, 정리)
+- 더블클릭(file://)으로 열면 포스터는 `main-poster.data.js`(글자로 담은 사본)를 써요. 3D 라이브러리는 인터넷(CDN)에서 받아요.
+
 예전 V2 화면(3D 로비 `#lobby3d`, 전시관 `#hall-uxui`·`#hall-visual`, 목록 `#list`)은 메뉴에서 뺐어요. 파일은 남아 있어서 주소로는 볼 수 있어요. 필요 없다고 정해지면 지워도 돼요.
 
 **아직 임시인 것 (자료를 받으면 바꾸는 곳)** — 모두 `js/data.js`의 `STUDENTS`
