@@ -3,7 +3,7 @@
 .is-stage { --iw: 1vw; --ih: 1vh; font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
 .is-stage * { box-sizing: border-box; }
 .is-stage { position: absolute; inset: 0; overflow: hidden; background: #8f97b3; }
-.is-stage .layer { position: absolute; inset: 0; }
+.is-stage .is-layer { position: absolute; inset: 0; }   /* (이름을 .layer로 하면 사이트의 다른 .layer 규칙과 겹쳐서 화면이 틀어짐) */
 .is-s1 { background: #8f97b3 url("../assets/images/intro/s1-sky-dusk.jpg") center / 106% 106% no-repeat; }
 .is-s1 .sky-video { position: absolute; left: -3%; top: -3%; width: 106%; height: 106%; object-fit: cover; display: block; }
 /* scene 2: sky + ground behind, and the poster wall as one flat plane we can turn */

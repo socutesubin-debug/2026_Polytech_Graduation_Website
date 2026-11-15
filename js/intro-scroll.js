@@ -7,7 +7,7 @@
    숫자를 고치고 싶으면 아래 CFG만 고치면 됩니다 */
 function createIntroScroll(root, opts) {
   opts = opts || {};
-  root.classList.add('is-stage'); root.innerHTML = '<div class="is-s1 layer"><video class="sky-video" muted loop playsinline preload="auto" poster="assets/images/intro/s1-sky-dusk.jpg"><source src="assets/video/s1-sky-loop.mp4" type="video/mp4"></video></div><div class="is-s2 layer"><div class="is-cam"><div class="is-wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div class="is-poster"><canvas class="is-water"></canvas><div class="is-rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div class="is-light"><i class="dap a"></i><i class="dap b"></i><i class="shaft"></i></div><div class="is-pfx"><i class="pglow"></i></div></div></div></div><div class="is-fx layer"></div><canvas class="is-gl"></canvas><div class="is-flash"><i></i></div><div class="is-white layer"></div><div class="is-hint">SCROLL<i></i></div>';
+  root.classList.add('is-stage'); root.innerHTML = '<div class="is-s1 is-layer"><video class="sky-video" muted loop playsinline preload="auto" poster="assets/images/intro/s1-sky-dusk.jpg"><source src="assets/video/s1-sky-loop.mp4" type="video/mp4"></video></div><div class="is-s2 is-layer"><div class="is-cam"><div class="is-wall"><div class="tile l"></div><div class="tile r"></div><div class="tile t"></div><div class="tile b"></div><div class="img"></div><div class="is-poster"><canvas class="is-water"></canvas><div class="is-rfx"><i class="rip"></i><i class="rip"></i><i class="rip"></i></div></div><div class="is-light"><i class="dap a"></i><i class="dap b"></i><i class="shaft"></i></div><div class="is-pfx"><i class="pglow"></i></div></div></div></div><div class="is-fx is-layer"></div><canvas class="is-gl"></canvas><div class="is-flash"><i></i></div><div class="is-white is-layer"></div><div class="is-hint">SCROLL<i></i></div>';
   var $ = function (id) { return root.querySelector('.is-' + id); };
   var s1 = $('s1'), s2 = $('s2'), wall = $('wall'), glc = $('gl'), flash = $('flash'),
       pglow = root.querySelector('.is-pfx .pglow'), rips = root.querySelectorAll('.is-rfx .rip'), poster = $('poster'), pfx = $('pfx'), rfx = $('rfx'),
@@ -207,8 +207,15 @@ function createIntroScroll(root, opts) {
       var c1x = clamp2(cam1.x, -.66 * slackX / z1, .66 * slackX / z1), c1y = clamp2(cam1.y, -.3 * slackY / z1, .3 * slackY / z1);   // it cannot look past the edge of the picture
       var r1 = CFG.skyTilt * Math.min(1, (z1 - 1) / .3) * clamp2((wx * .92 - cam1.x) / (.05 * W) + .5 * Math.sin(kFly * Math.PI * 1.4), -1, 1);   // banks towards where the butterfly is heading
       cam1.r += (r1 - cam1.r) * g1;
-      s1.style.transform = 'translate(' + (-c1x * z1) + 'px,' + (-c1y * z1) + 'px) rotate(' + cam1.r + 'deg) scale(' + z1 + ')';
-      x = .5 * W + (wx - c1x) * z1; y = .5 * H + (wy - c1y) * z1;
+      // make sure the picture still covers the whole screen after the pan and the tilt (otherwise a bare wedge shows along an edge): move in just enough
+      var tx1 = -c1x * z1, ty1 = -c1y * z1, co1 = Math.cos(cam1.r * RAD), si1 = Math.sin(cam1.r * RAD), need = 1;
+      for (var ci = 0; ci < 4; ci++) {
+        var dx1 = (ci & 1 ? .5 : -.5) * W - tx1, dy1 = (ci & 2 ? .5 : -.5) * H - ty1;                 // a screen corner, seen from the picture's centre
+        need = Math.max(need, Math.abs(dx1 * co1 + dy1 * si1) / (z1 * W * .525), Math.abs(-dx1 * si1 + dy1 * co1) / (z1 * H * .525));   // .525: the clip is drawn 6% larger than the screen
+      }
+      z1 *= need;
+      s1.style.transform = 'translate(' + tx1 + 'px,' + ty1 + 'px) rotate(' + cam1.r + 'deg) scale(' + z1 + ')';
+      x = .5 * W + wx * z1 + tx1; y = .5 * H + wy * z1 + ty1;
       scale = 1 + .5 * (z1 - CFG.skyRest);
       pitch = lerp(-36, -74, kSide); roll = lerp(6 * Math.sin(t * .9), -90, kSide);   // roll -90 = head to the right
       yaw = lerp(10 * Math.sin(t * .5), 0, kSide);
