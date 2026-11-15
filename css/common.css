@@ -32,18 +32,18 @@ a{color:inherit}
 .screen.instant,.screen.instant.on{transition:none!important}
 
 /* 상단 메뉴: 왼쪽 로고, 오른쪽 글자 메뉴 (테두리·배경 없음) */
-.topbar{position:fixed;z-index:50;top:calc(clamp(14px,2.25vw,44px) + env(safe-area-inset-top,0px));left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+.topbar{position:fixed;z-index:50;top:calc(clamp(12px,1vw,32px) + env(safe-area-inset-top,0px));left:0;right:0;display:flex;align-items:center;justify-content:space-between;
   padding:0 clamp(16px,3.4vw,72px) 0 clamp(16px,3.6vw,72px);pointer-events:none;opacity:0;transform:translateY(-10px);transition:opacity .6s,transform .6s}
 .topbar.on{opacity:1;transform:none}
 .topbar.on .pill,.topbar.on .brand{pointer-events:auto}
 .brand{display:block;padding:0;line-height:0}
-.brand img{display:block;height:clamp(38px,3.3vw,72px);width:auto}
+.brand img{display:block;height:clamp(34px,2.75vw,64px);width:auto}
 .topbar.no-brand .brand{visibility:hidden}
 
 /* 메뉴 글자: AvantGarde LT Book 대문자. 유료 서체라 파일은 올리지 않고, 설치된 컴퓨터에서만 쓰임(local). 없으면 비슷한 무료 Josefin Sans Light */
 @font-face{font-family:"BTF Nav";src:local("AvantGarde LT Book"),local("AvantGardeLT-Book"),local("AvantGarde LT Book Regular");font-weight:300 400}
-.pill{display:flex;align-items:center;gap:clamp(20px,2.2vw,48px);margin-left:auto}
-.pill button{position:relative;padding:.3em 0 .12em;font-family:"BTF Nav","Josefin Sans",var(--sans);font-weight:300;font-size:clamp(14px,1.25vw,48px);line-height:1;letter-spacing:0;text-transform:uppercase;color:#4a433b;transition:color .25s,opacity .25s}
+.pill{display:flex;align-items:center;gap:clamp(18px,1.85vw,44px);margin-left:auto}
+.pill button{position:relative;padding:.3em 0 .12em;font-family:"BTF Nav","Josefin Sans",var(--sans);font-weight:300;font-size:clamp(13px,1.04vw,40px);line-height:1;letter-spacing:0;text-transform:uppercase;color:#4a433b;transition:color .25s,opacity .25s}
 .pill button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:currentColor;transform:scaleX(0);transition:transform .3s ease}
 .pill button:hover{opacity:.7}
 .pill button.active{color:#4a433b;opacity:1}
