@@ -80,23 +80,38 @@ const FRAMES = [
 const GALLERY_SPOTS = [[255, 250, 330, 420], [720, 300, 260, 380], [1052, 330, 260, 360], [1478, 290, 260, 400], [1850, 250, 320, 420]];
 const LOBBY_SPOTS = [[550, 360, 380, 380], [1000, 330, 380, 420], [1446, 360, 380, 380]];
 
-/* About(전시 소개) 화면의 글과 정보 — js/about.js가 읽음
-   text = 전시 서문 문단들, info = [항목, 내용] (내용을 ''로 두면 "확정 전"으로 보임)
-   서문은 "전시 소개서" 문서(2026-11-14 초안)에서 가져옴. 예전 구성(나비·전시관·목록)을 설명하던 두 문단은 뺌 */
+/* About(전시 소개) 화면의 글과 정보 — js/about.js가 읽음 (2026-11-15 시안대로)
+   title = 제목 줄들, text = 문단들(문단 하나 = 줄 목록. 큰 화면에서는 이 줄 그대로, 좁은 화면에서는 이어서 흐름),
+   <b>…</b> = 굵은 글씨, en: true = 영어 문단, info = [항목, 내용] (내용을 ''로 두면 "확정 전"으로 보임) */
 const ABOUT = {
-  poster: ASSETS.poster,
-  title: '프레임을 넘어, 우리를 만나다',
-  sub: '2026 한국폴리텍대학 정수캠퍼스 시각디자인과 졸업전시',
+  poster: 'assets/images/about-poster.webp',
+  title: ['2026 한국폴리텍대학 정수캠퍼스 시각디자인 졸업전시', '프레임을 넘어 우리를 만나다 | Beyond the Frame'],
   text: [
-    '우리는 늘 프레임 속에서 작업해 왔습니다. 모니터 화면, 아트보드, 종이 한 장의 테두리 안에서 생각을 그리고 지우고 다시 그렸습니다. 그래서 더욱 궁금해졌습니다. 그 프레임 바깥에 서 있는 우리는 어떤 사람일까요. 이번 전시는 테두리를 한 걸음 넘어, 작품을 만든 한 사람 한 사람을 만나는 자리입니다.',
-    '이 전시에는 UX/UI·웹과 Visual, 두 분야의 열다섯 디자이너가 참여합니다. 화면 속 경험을 설계한 사람도, 한 장의 이미지에 생각을 담은 사람도 있습니다. 서로 다른 방식으로 작업해 왔지만, 우리는 모두 보는 사람에게 닿는 디자인을 고민해 왔습니다.',
+    { lines: [
+      '우리는 늘 프레임 속에서 작업해 왔습니다. 모니터 화면, 아트보드, 종이 한 장의 테두리 안에서',
+      '생각을 그리고 지우고 다시 그렸습니다. 그래서 더욱 궁금해졌습니다.',
+      '<b>그 프레임 바깥에 서 있는 우리는 어떤 사람일까요?</b>',
+      '이번 전시는 테두리를 한 걸음 넘어, 작품을 만든 한 사람 한 사람을 만나는 자리입니다.',
+    ] },
+    { lines: [
+      '이 전시에는 디지털과 비주얼, 두 분야의 디자이너가 참여합니다.',
+      '화면 속 경험을 설계한 사람도, 한 장의 이미지에 생각을 담은 사람도 있습니다.',
+      '서로 다른 방식으로 작업해 왔지만, 우리는 모두 보는 사람에게 닿는 디자인을 고민해 왔습니다.',
+    ] },
+    { en: true, lines: [
+      'We have always worked within frames. Within the boundaries of monitor screens,',
+      'artboards, and sheets of paper, we have drawn, erased, and redrawn our ideas.',
+      'And somewhere along the way, we began to wonder: <b>Who are we beyond those frames?</b>',
+      'This exhibition is an invitation to step beyond the boundaries and meet the individuals',
+      'behind the work, one by one.',
+      'This exhibition brings together designers from two fields: Digital Design and Visual Design.',
+      'Some create experiences within digital screens, while others express their ideas through a',
+      'single image. Though we have worked in different ways,',
+      'we all share the same purpose: to create designs that connect with people.',
+    ] },
   ],
-  sign: '2026 한국폴리텍대학 정수캠퍼스 시각디자인과 졸업예정자 일동',
   info: [
-    ['주최', '한국폴리텍대학 정수캠퍼스 시각디자인과'],
-    ['기간', ''],
-    ['장소', ''],
-    ['참여 디자이너', '15명 (UX/UI · 웹, Visual)'],
-    ['지도 교수', ''],
+    ['일시', '2026. 11.17-11.18. &nbsp;AM 10:00 - 18:00'],
+    ['장소', '서울특별시 용산구 보광로 73, 제 3공학관 2층'],
   ],
 };

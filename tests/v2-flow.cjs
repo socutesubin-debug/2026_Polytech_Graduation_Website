@@ -29,10 +29,12 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 1-2) About: 왼쪽 포스터, 오른쪽 전시 소개 글과 개요. 정해지지 않은 칸은 "확정 전"
  await p.locator('.pill [data-go="about"]').click();assert.equal(await state(p),'about');assert.equal(new URL(p.url()).hash,'#about');
- assert.match(await p.locator('#ab-poster').getAttribute('src'),/poster\.webp$/);assert.equal(await p.locator('#ab-title').textContent(),'프레임을 넘어, 우리를 만나다');
- assert(await p.locator('#ab-text p').count()>=2);assert(await p.locator('#ab-info .tbd').count()>=1);
- const [pl,cl]=await p.evaluate(()=>[document.querySelector('.ab-poster').getBoundingClientRect().left,document.querySelector('.ab-copy').getBoundingClientRect().left]);assert(pl<cl,'포스터가 왼쪽');
- await p.locator('.ab-go [data-to="project"]').click();assert.equal(await state(p),'project');
+ assert.match(await p.locator('#ab-poster').getAttribute('src'),/about-poster\.webp$/);assert.match(await p.locator('#ab-title').textContent(),/프레임을 넘어 우리를 만나다/);
+ assert.equal(await p.locator('#ab-text p').count(),3,'한국어 두 문단 + 영어 한 문단');assert.equal(await p.locator('#ab-text b').count(),2,'굵은 질문 두 줄');
+ assert.deepEqual(await p.locator('#ab-info dt').allTextContents(),['일시','장소']);
+ const [pl,cl,pt,pr,cr]=await p.evaluate(()=>{const a=document.querySelector('.ab-poster').getBoundingClientRect(),c=document.querySelector('.ab-copy').getBoundingClientRect();return [a.left,c.left,a.top,a.right,c.right]});
+ assert(pl<cl&&pr<cl,'포스터가 왼쪽, 글과 겹치지 않음');assert(Math.abs(pt)<2,'포스터 줄이 화면 맨 위에서 시작');assert(cr<=p.viewportSize().width+1,'글이 화면 안');
+ await p.locator('.pill [data-go="project"]').click();assert.equal(await state(p),'project');
  console.log('about ok');
 
  // 2) Project 방: 글자 없이 작품 썸네일 15장만 랜덤 순서로 떠다님, 스크롤하면 도넛 → 작품 목록

@@ -18,6 +18,7 @@ function go(name) {
   topbar.classList.toggle('on', name !== 'intro' && name !== 'opening');
   topbar.classList.toggle('no-brand', name === 'lobby' || name === 'gallery');
   topbar.dataset.theme = ['list', 'about', 'project', 'designer'].includes(name) ? 'light' : '';
+  topbar.dataset.page = name; // 화면별 메뉴 모양용 (예: 휴대폰 About에서는 메뉴에 흰 바탕)
   if (name === 'list') renderList();
   if (name === 'test-room') enterTestRoom();
   if (HALLS[name]) enterHall(name);
