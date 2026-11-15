@@ -49,7 +49,7 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 - 포트폴리오 주소: `portfolio` 칸. 비어 있으면 표찰에 "포트폴리오 준비 중"이 나와요 (지금 김예일·송예준).
 - 분야 미정 1명(조민영, Designer에서 제외): `field`를 `'uxui'` 또는 `'visual'`로 적으면 분야 버튼에서 걸러져요.
 
-**Designer의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명, 합계 0.4MB)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요. 지금 사진은 480×560이라 큰 화면에서는 살짝 부드러워요. 같은 이름으로 2배 크기(960×1120) 사진을 넣으면 그대로 선명해져요.
+**Designer의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요. 02~15는 960×1120(합계 약 0.75MB), 01(조민영, 예전 석고상)만 480×560이에요. 석고상 바닥이 사진 아래 끝에 닿도록 맞춰 두었어요.
 
 **직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(Intro · About · Project · Designer 흐름), `node tests/designer.cjs`(Designer 미술관), `node tests/browser-smoke.cjs`(목록 · V1), `node tests/hall.cjs`(예전 전시관)예요.
 
@@ -140,13 +140,33 @@ JavaScript 파일들은 모듈(`import`)이 아니라 `index.html`에서 차례�
 
 주소 끝에 `#project`, `#designer` (예전 화면: `#lobby3d`, `#hall-uxui`, `#hall-visual`, `#list`)를 붙이면 오프닝 없이 해당 화면으로 바로 갑니다. (옛 V1 화면: `#intro`, `#lobby`, `#gallery-1` ~ `#gallery-3`)
 
+## 학생 석고상 통일 (2026-11-15)
+
+학생 14명(조민영 제외, 01번은 예전 석고상 그대로)의 석고상을 **같은 재질·조명·카메라**로 다시 만들었어요. 학생마다 색, 배경, 받침대가 제각각이던 그림을 하나의 전시처럼 맞추려는 목적이에요.
+
+1. 학생 석고상 그림 → **Hyper3D Rodin**(Gen-2.5-High, 반사 빼기 켬)으로 3D(.glb) 만들기
+2. `tools/bust-export.py`(Blender): 따뜻한 베이지 석고색 `IVORY (0.74, 0.66, 0.54)`을 3D 색 그림에 입히고, 거칠기·금속 그림을 빼요. `cut`을 주면 받침대 아래 네모 받침을 잘라요.
+3. 아래 '석고상 파일 줄이기'와 같은 방법으로 면 10만 개로 줄이고 압축해요. 이번에는 색 그림도 `--texture-compress webp --texture-size 1024`로 줄였어요.
+4. `tools/bust-render.py`(Blender): 같은 석고색, 같은 조명, 85mm 정면 카메라로 960×1120 투명 사진을 찍어요. 그다음 석고상 바닥을 사진 아래 끝에 맞춰 webp로 저장해요.
+
+학생마다 원래 무늬를 남기는 정도(`tex_mix`)가 달라요. 기본은 1.0이고, 아래 학생만 따로 맞췄어요.
+- 박재연 0.5: 선글라스가 새까맣게 나와서 줄임
+- 박호성·오수한·천승현 0.7 + `cut`: 진한 갈색 머리를 줄이고, 네모 받침을 잘라냄
+
+```
+blender --factory-startup -b -P tools/bust-export.py -- 원본.glb 석고.glb 1.0 [cut]
+blender --factory-startup -b -P tools/bust-render.py -- 원본.glb 사진.png 1.0 [cut]
+```
+
+`--factory-startup`을 꼭 넣어 주세요. 설치된 Blender 추가 기능이 시작할 때 오류를 낼 수 있어요.
+
 ## 석고상 파일 줄이기 (2026-11-13)
 
 석고상 15개는 `assets/models/01.glb`~`15.glb`에 있어요. 원래는 면이 50만~100만 개라 너무 무거워서, **면 10만 개**로 줄였어요 (얼굴 확대 비교로 원본과 가장 비슷한 수). 01·02·04는 원래 가벼워서 그대로 뒀어요.
 
 | | 예전 | 지금 |
 |---|---|---|
-| `.glb` 15개 합계 | 약 53MB | 약 14MB |
+| `.glb` 15개 합계 | 약 53MB | 약 15MB (2026-11-15 새 석고상) |
 | `.model.js` 15개 합계 | 약 28MB | 약 19MB |
 
 - 웹 서버(닷홈, `python -m http.server`)에서는 `.glb`를 바로 받아요. 더블클릭(file://)으로 열 때만 `.model.js`를 읽어요 (`js/models3d.js`의 `readGLB`).
