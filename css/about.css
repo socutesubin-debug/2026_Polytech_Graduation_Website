@@ -7,6 +7,19 @@
 .ab-poster{position:absolute;top:0;left:29.4vw;transform:translateX(-50%);margin:0;height:min(92.5vh,66vw)}
 .ab-poster img{display:block;height:100%;width:auto}
 
+/* 등장: 포스터가 봉에 말려 있다가 위에서 아래로 풀려 내려옴 → 끝에서 살짝 흔들리고 멈춤
+   --u = 펼쳐진 정도(0 → 1). 그림 안 위치: 봉 아래 끝 19.8%, 종이 좌우 2.1% ~ 97.6%, 종이 아래 끝 98.5%
+   빠르기는 아래 abUnroll(1.9초) · abSway(1.6초) 숫자로 고쳐요 */
+@property --u{syntax:"<number>";inherits:true;initial-value:1}
+.ab-poster{--u:1}
+.ab-poster img{clip-path:inset(0 0 calc(80.2% * (1 - var(--u))) 0);transform-origin:50% 0}
+.ab-poster::after{content:"";position:absolute;left:2.1%;right:2.4%;top:calc(19.8% + 78.7% * var(--u));height:1.6%;min-height:8px;transform:translateY(-50%);border-radius:99px;pointer-events:none;
+  background:linear-gradient(180deg,#cdbda6 0%,#f7f0e5 38%,#e6d9c6 62%,#b9a68b 100%);box-shadow:0 6px 10px rgba(60,40,20,.22);opacity:calc((1 - var(--u)) * 10)}
+.ab-poster.ab-unroll{animation:abUnroll 1.9s cubic-bezier(.5,.05,.2,1) .35s both}
+.ab-poster.ab-unroll img{animation:abSway 1.6s ease-in-out 1.95s both}
+@keyframes abUnroll{from{--u:0}to{--u:1}}
+@keyframes abSway{0%{transform:rotate(0)}30%{transform:rotate(.5deg)}60%{transform:rotate(-.3deg)}85%{transform:rotate(.1deg)}100%{transform:rotate(0)}}
+
 .ab-copy{margin-left:50vw;max-width:35vw;padding:max(110px,20.7vh) 0 8vh}
 /* 글자 규칙 (시안 1920 기준, 화면 너비에 비례): 모두 Noto Sans KR, 행간 150%
    제목 = SemiBold 20pt · 한글 설명 = Medium 18pt · 영어 설명 = Regular 18pt · 자간 한글 -3%, 영어 +1%

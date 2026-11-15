@@ -11,4 +11,9 @@ function abBuild() {
     `<p${p.en ? ' class="en" lang="en"' : ''}>${p.lines.map((l) => `<span class="ln">${l}</span>`).join(' ')}</p>`).join('');
   $('#ab-info').innerHTML = A.info.map(([k, v]) => `<div><dt>${k}</dt><dd${v ? '' : ' class="tbd"'}>${v || '확정 전'}</dd></div>`).join('');
 }
-function enterAbout() { abBuild(); }
+// About에 들어올 때마다 포스터가 위에서 아래로 다시 펼쳐짐 (css/about.css의 .ab-unroll)
+function enterAbout() {
+  abBuild();
+  const fig = $('#about .ab-poster');
+  fig.classList.remove('ab-unroll'); void fig.offsetWidth; fig.classList.add('ab-unroll');
+}
