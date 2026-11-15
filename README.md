@@ -12,7 +12,7 @@ CSS와 JavaScript는 **화면(방)별로 파일을 나눠** 두었습니다.
 Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속으로, 표면이 물처럼 일렁임 → 하얗게) → About
    About: 왼쪽 포스터 + 오른쪽 전시 소개 글과 전시 개요
    Project 방: 글자 없이 작품 썸네일만 랜덤 순서로 떠다님(공: 들어오면 가운데에서 퍼져 나오고, 카드는 늘 화면을 똑바로 보고, 끌면 부드럽게 돌고 손을 떼면 미끄러지듯 더 돎) → 스크롤하면 부드럽게 도넛으로 바뀜, 도넛은 계속 돌고 카드는 도넛을 따라 휘어진 종이처럼 보임(카드를 누르면 작품 상세: 검은 화면, 왼쪽 글 · 오른쪽 그림 14장) → 만든 사람 이름 → Designer 방
-   Designer: 어두운 전시실(가운데 화살표 팻말에서 왼쪽 = UX/UI · 웹, 오른쪽 = Visual. 벽 가득 비치는 색 빛(그라데이션)이 다르고 팻말 뒤에서 흐릿하게 섞임. data.js에서 designer: false면 빠짐) + 입체 받침대 앞면에 붙은 금속 설명판(이름·분야·한 줄 소개·"포트폴리오 보기", 누르면 포트폴리오 새 탭)
+   Designer: 밝은 미술관(Three.js). 아이보리 벽 · 밝은 돌 바닥 · 직육면체 받침대 위에 석고상(투명 배경 사진을 판에 붙인 2.5D). 한 공간 안에 왼쪽 UX/UI · WEB 구역(벽에 옅은 블루그레이 빛), 오른쪽 VISUAL DESIGN 구역(옅은 피치·테라코타 빛), 가운데는 아이보리. 위 메뉴 전체 / UX/UI · WEB / VISUAL DESIGN, 좌우 버튼·← → 키·휠·손가락으로 밀기. 받침대 앞 이름표(이름·분야, 누르면 학생 소개) + 아래 짧은 소개·포트폴리오(새 탭). 3D가 안 되면 같은 내용의 목록(주소에 ?dg=list로 미리 볼 수 있음)
 ```
 
 | 화면 | 주소 끝 | HTML (`index.html` 주석) | CSS | JavaScript | 숫자 고치는 곳 |
@@ -20,7 +20,7 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 | Intro (스크롤 인트로) | (없음) | `⑧ Intro` | `css/opening.css`, `css/intro-scroll.css` | `js/opening.js`, `js/intro-scroll.js`, `js/butterfly-gl.js` | `js/intro-scroll.js` 맨 위 `CFG` (나비 크기, 카메라, 물결 세기) · 인트로만 보기: `intro-proto.html` |
 | About | `#about` | `⑫ About` | `css/about.css` | `js/about.js` | `js/data.js` 맨 아래 `ABOUT` (글, 개요 — 빈칸은 "확정 전") |
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
-| Designer 방 | `#designer` | `⑪ Designer 방` | `css/designer.css` | `js/designer.js` | 맨 위 `DESIGNER` (휠 빠르기) |
+| Designer | `#designer` | `⑪ Designer` | `css/designer.css` | `js/designer.js` | 맨 위 `DG` (간격·받침대 크기·화각·벽 색·색 진하기) |
 
 예전 V2 화면(3D 로비 `#lobby3d`, 전시관 `#hall-uxui`·`#hall-visual`, 목록 `#list`)은 메뉴에서 뺐어요. 파일은 남아 있어서 주소로는 볼 수 있어요. 필요 없다고 정해지면 지워도 돼요.
 
@@ -31,9 +31,9 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 - 포트폴리오 주소: `portfolio` 칸. 비어 있으면 표찰에 "포트폴리오 준비 중"이 나와요 (지금 김예일·송예준).
 - 분야 미정 1명(조민영, Designer에서 제외): `field`를 `'uxui'` 또는 `'visual'`로 적으면 분야 버튼에서 걸러져요.
 
-**Designer 방의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명, 합계 0.4MB)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요.
+**Designer의 석고상**은 3D 파일을 미리 찍어 둔 사진(`assets/images/busts/01~15.webp`, 배경 투명, 합계 0.4MB)이에요. 그래서 3D 없이 빠르게 열리고 휴대폰에서도 가벼워요. 지금 사진은 480×560이라 큰 화면에서는 살짝 부드러워요. 같은 이름으로 2배 크기(960×1120) 사진을 넣으면 그대로 선명해져요.
 
-**직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(Intro · About · Project · Designer 흐름), `node tests/browser-smoke.cjs`(목록 · V1), `node tests/hall.cjs`(예전 전시관)예요.
+**직접 확인하는 법**: `index.html`을 더블클릭하거나, 이 폴더에서 터미널에 `python -m http.server 8765`를 치고 브라우저에서 `http://localhost:8765/`를 열어요. 검사는 `node tests/v2-flow.cjs`(Intro · About · Project · Designer 흐름), `node tests/designer.cjs`(Designer 미술관), `node tests/browser-smoke.cjs`(목록 · V1), `node tests/hall.cjs`(예전 전시관)예요.
 
 옛 V1 화면(티켓 인트로, 액자 로비, 그림 전시실)은 지우지 않았어요. 주소 끝에 `#intro`, `#lobby`, `#gallery-1`~`#gallery-3`을 붙이면 볼 수 있어요. 아래 표는 그 V1 화면 설명이에요.
 

@@ -26,6 +26,7 @@ function go(name) {
   if (name === 'project') enterProject();
   if (name === 'designer') enterDesigner();
   if (name !== 'project' && typeof pjClose === 'function') pjClose();
+  if (name !== 'designer' && typeof dgLeave === 'function') dgLeave(); // Designer를 떠나면 3D 그리기를 멈추고 정리
   if (name !== 'opening') opStop();
   updateNav(); setHash();
 }

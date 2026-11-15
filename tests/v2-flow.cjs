@@ -92,40 +92,16 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  // 만든 사람 → Designer 방의 그 석고상이 가운데 + 표찰에 초점
  await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();await p.locator('#pj-d-who').click();
  await p.waitForFunction(()=>page==='designer',null,{timeout:3000});await p.waitForTimeout(300);
- const centered=await p.evaluate(()=>{const li=document.querySelector('.dg-item[data-i="6"]').getBoundingClientRect();return Math.abs(li.left+li.width/2-innerWidth/2);});
+ await p.waitForFunction(()=>dg.gl&&dg.people[dg.at].i===6&&Math.abs(dg.x-dg.tx)<1e-3,null,{timeout:8000});await p.waitForTimeout(200);
+ const centered=await p.evaluate(()=>{const r=document.querySelector('.dg-cap[data-i="6"] .dg-plaque').getBoundingClientRect();return Math.abs(r.left+r.width/2-innerWidth/2);});
  assert(centered<4,`박수빈 석고상이 가운데 (${centered}px)`);
- assert(await p.evaluate(()=>document.activeElement.closest('.dg-item')?.dataset.i==='6'),'박수빈 표찰에 초점');
+ assert(await p.evaluate(()=>document.activeElement.closest('.dg-cap')?.dataset.i==='6'),'박수빈 이름표에 초점');
  console.log('project ok');
 
- // 3) Designer 방: 석고상 15개 가로 한 줄, 표찰 = 포트폴리오 새 탭, 주소 없으면 준비 중
- assert.equal(await p.locator('.dg-item').count(),14);
- const plate=p.locator('.dg-item[data-i="6"] .dg-plate');
- assert.equal(await plate.getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app');assert.equal(await plate.getAttribute('target'),'_blank');
- assert.equal(await p.locator('.dg-item[data-i="0"] a.dg-plate').count(),0);assert.match(await p.locator('.dg-item[data-i="0"] .dg-go').textContent(),/준비 중/);
- assert.equal(await p.locator('.dg-item[data-i="6"] .dg-name').textContent(),'박수빈');
- // 휠(위아래)을 굴리면 옆으로, ← → 키, 버튼
- await p.evaluate(()=>{dg.row.scrollLeft=0;});await p.mouse.move(720,450);
- await p.mouse.wheel(0,600);await p.waitForTimeout(300);const x1=await p.evaluate(()=>dg.row.scrollLeft);assert(x1>300,`휠로 옆으로 움직임 (${x1})`);
- await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await p.waitForTimeout(900);
- assert(await p.evaluate(()=>dg.row.scrollLeft)>x1,'→ 키로 다음 석고상');
- // 어두운 전시실: 가운데 화살표 팻말, 왼쪽 UX/UI(8명), 오른쪽 Visual(6명). 두 벽의 색 빛이 팻말 뒤에서 흐릿하게 섞임
- const order=await p.evaluate(()=>[...dg.row.children].map(li=>li.id==='dg-fork'?'fork':li.dataset.field||'sign'));
- assert.equal(order.indexOf('fork'),9,'갈림길 왼쪽에 UX/UI 표지 + 8명');assert(order.slice(1,9).every(f=>f==='uxui'));assert(order.slice(10,16).every(f=>f==='visual'));assert.equal(order.length,16,'분야 확인 중 표지는 없음');
- assert.equal(await p.locator('.dg-item').count(),14,'조민영은 Designer에서 빠짐');assert.equal(await p.locator('.dg-item[data-i="9"]').count(),0);
- assert.equal(await p.locator('#dg-fork .dg-post .dg-board').count(),2,'팻말에 화살표 판 두 개');assert.equal(await p.locator('#dg-amb-ux .dg-wall, #dg-amb-vi .dg-wall, .dg-seam').count(),3);
- const fx=()=>p.evaluate(()=>parseFloat(dg.root.style.getPropertyValue('--fx'))/innerWidth);
- assert.equal(await p.locator('.dg-head, #dg-count, #dg-filter, #designer h2').count(),0,'위쪽 제목·인원·버튼 글자 없음');
- await p.evaluate(()=>dgGo('fork'));await p.waitForFunction(()=>Math.abs(dg.fx-innerWidth/2)<4,null,{timeout:4000});
- assert(Math.abs(await fx()-0.5)<0.01,'팻말 앞에서는 흐린 경계가 화면 가운데');
- assert.match(await p.evaluate(()=>getComputedStyle($('#dg-amb-ux')).maskImage||getComputedStyle($('#dg-amb-ux')).webkitMaskImage),/linear-gradient/);
- const post=await p.evaluate(()=>{const a=$('#dg-fork .dg-post').getBoundingClientRect(),b=$('.dg-item .dg-stand').getBoundingClientRect();return Math.abs(a.bottom-b.bottom);});assert(post<3,'팻말 기둥이 받침대와 같은 바닥에 섬: '+post);
- await p.locator('#dg-fork [data-side="visual"]').click();await p.waitForFunction(()=>dg.side==='visual',null,{timeout:4000});await p.waitForTimeout(700);
- assert(await fx()<0.3,'Visual 쪽으로 가면 경계(팻말)는 왼쪽으로');assert.notEqual(await p.evaluate(()=>dg.root.style.getPropertyValue('--wx')),'0.0px','벽 빛이 같이 흘러감');
- await p.evaluate(()=>dgGo('uxui'));
- await p.waitForFunction(()=>dg.side==='uxui',null,{timeout:4000});await p.waitForTimeout(700);assert(await fx()>0.7,'UX/UI 쪽으로 가면 경계(팻말)는 오른쪽으로');
- // 설명판에는 포트폴리오 보기만 있고 (대표 작품 보기 버튼·번호·연도 줄은 없음), Project 방의 작품 상세는 따로 열어 봄
- assert.equal(await p.locator('.dg-work, .dg-no').count(),0,'대표 작품 보기 버튼·번호 줄 없음');
- assert.match(await p.locator('.dg-item[data-i="1"] .dg-go').textContent(),/포트폴리오 보기/);
+ // 3) Designer: 밝은 미술관 (자세한 검사는 tests/designer.cjs). 14명, 이름표 = 학생 소개, 포트폴리오는 새 탭
+ assert.equal(await p.locator('.dg-cap').count(),14);assert.equal(await p.locator('.dg-cap[data-i="9"]').count(),0,'조민영은 Designer에서 빠짐');
+ assert.equal(await p.locator('.dg-cap[data-i="6"] a.dg-go').getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app');
+ assert.equal(await p.locator('.dg-fork, .dg-plate, .dg-amb, .dg-seam, .dg-work').count(),0,'옛 팻말·금속 표찰·어두운 벽 없음');
  await p.evaluate(()=>{go('project');pjOpen(1,null);});await p.locator('#pj-detail.on').waitFor();
  assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도');
  // 상세: 검은 화면, 위 메뉴는 숨김, 오른쪽 위 X로 닫으면 메뉴가 다시 보임
@@ -149,12 +125,11 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  p=await open({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  await p.locator('#op-skip').tap();assert.equal(await state(p),'about');
  await p.locator('.pill [data-go="designer"]').tap();assert.equal(await state(p),'designer');
- assert.equal(await p.locator('.dg-row').evaluate(el=>getComputedStyle(el).scrollSnapType),'x mandatory');
- const w=await p.locator('.dg-item').first().evaluate(el=>el.getBoundingClientRect().width);assert(w>280&&w<320,`모바일 석고상 칸 너비 (${w})`);
+ await p.waitForFunction(()=>dg.gl&&dg.root.classList.contains('is-portrait'),null,{timeout:8000});
  console.log('mobile ok');
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: intro buttons + skip + menu, about (poster + text), project reveal + flat cards by depth + drag/glide → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer dark media-wall room (arrow signpost, UX/UI wall left / Visual wall right, blurred seam; wheel/keys/jump/portfolio plaque), reduced motion, mobile; no page errors.');
+ console.log('PASS: intro buttons + skip + menu, about (poster + text), project reveal + flat cards by depth + drag/glide → donut keeps spinning, curved paper cards (strips) (keys) → no list → detail (14 images) → designer, designer bright museum (tests/designer.cjs), reduced motion, mobile; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
