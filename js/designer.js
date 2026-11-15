@@ -14,6 +14,10 @@ const DG = {
   zoneGap: 1.35,       // 두 구역 사이 아이보리 벽 (간격의 몇 배를 더 띄울지)
   bustH: 1.9,          // 석고상 사진 높이
   ped: { w: 1.36, h: 1.12, d: 1.0 },   // 받침대 너비·높이·깊이
+  pedRim: { h: 0.075, out: 0.045 },    // 받침대 위 덮개·아래 받침 두께와 튀어나온 정도
+  light: { beam: 0.11, dust: 0.9, hover: 0.5 }, // 빛줄기 밝기, 먼지 밝기, 마우스를 올렸을 때 더 밝아지는 정도
+  turn: { delay: 0.7, angle: 0.24, speed: 0.42, fade: 2.2 }, // 가운데 학생 3D: 멈춘 뒤 몇 초 후 바뀔지, 도는 각도(라디안), 속도, 바뀌는 빠르기
+  turnShade: 0.85, turnGlow: 0.6, // 3D 석고상 밝기: 빛을 받는 정도 + 스스로 빛나는 정도 (사진과 같은 밝기로 보이게 맞춘 값)
   pedZ: 0.95,          // 벽에서 받침대 가운데까지 거리
   fov: 30,             // 카메라 화각 (작을수록 망원)
   viewDesk: 2.7,       // 데스크톱: 화면 가로에 석고상 몇 칸이 보일지
@@ -114,17 +118,32 @@ float h21(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return
 float vnoise(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
   return mix(mix(h21(i),h21(i+vec2(1,0)),f.x), mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x), f.y); }
 float fbm(vec2 p){ float a=.5, s=0.; for(int i=0;i<4;i++){ s+=a*vnoise(p); p*=2.03; a*=.5; } return s; }`;
-// 벽: 아이보리 + 석고상마다 위에서 비치는 빛 웅덩이 + 구역 색빛(빛이 닿는 곳에 더 진하게) + 창살 빛·나뭇잎 그림자(아주 옅게) + 패널 이음선 + 걸레받이
+// 벽: 아이보리(조금 어둡게) + 석고상마다 천장 조명이 그리는 빛 원뿔(가운데 학생·마우스 올린 학생일수록 밝게) + 구역 색빛
+//     + 창살 빛·나뭇잎 그림자(아주 옅게) + 아래 판넬·띠 몰딩·그림 레일 + 걸레받이 + 구역 제목 아래 아치 통로
 const DG_WALL_FS = `
-uniform vec3 uIvory, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap; uniform float uBx[16]; uniform int uN;
+uniform vec3 uIvory, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap, uFocus, uHovX, uHovA; uniform float uBx[16]; uniform int uN; uniform vec2 uArch;
 varying vec3 vW;${DG_NOISE}
+float cone(float dx, float y){ // 천장 조명이 벽에 그리는 빛: 위는 좁고 아래로 갈수록 넓게 퍼짐
+  float w = 0.2 + 0.34 * max(0., 4.6 - y);
+  return exp(-dx * dx / (w * w) * 1.7) * smoothstep(0.3, 2.4, y) * (1. - 0.8 * smoothstep(3.3, 4.6, y)); // 석고상 머리 높이에서 가장 밝고, 천장 쪽은 은은하게
+}
+float archD(float dx, float y){ // 아치 모양까지의 거리 (안쪽이면 음수)
+  float hw = 0.7, spring = 1.75;
+  return y < spring ? max(abs(dx) - hw, -y) : length(vec2(dx, y - spring)) - hw;
+}
 void main(){
   float x = vW.x, y = vW.y;
-  float pool = 0.;
-  for (int i = 0; i < 16; i++) { if (i >= uN) break; float dx = (x - uBx[i]) / 1.25; pool += exp(-dx*dx) * exp(-pow((y - 2.55) / 1.6, 2.)); }
-  pool = min(pool, 1.);
+  float pool = 0., spot = 0.;
+  for (int i = 0; i < 16; i++) { if (i >= uN) break;
+    float dx = x - uBx[i];
+    pool += exp(-pow(dx / 1.25, 2.)) * exp(-pow((y - 2.55) / 1.6, 2.));
+    float f = exp(-pow((uBx[i] - uFocus) / (uGap * .75), 2.));                     // 가운데 학생일수록 1
+    float hv = uHovA * exp(-pow((uBx[i] - uHovX) / .4, 2.));                        // 마우스를 올린 학생
+    spot += cone(dx, y) * (0.35 + 0.65 * f + 0.55 * hv);
+  }
+  pool = min(pool, 1.); spot = min(spot, 1.4);
   float v = smoothstep(-0.2, 2.4, y) * (1. - 0.35 * smoothstep(3.2, 6.5, y));   // 바닥 쪽은 살짝 어둡고, 위로 갈수록 은은하게
-  vec3 c = uIvory * (0.9 + 0.06 * v + 0.08 * pool);
+  vec3 c = uIvory * (0.85 + 0.05 * v + 0.04 * pool + 0.17 * spot);
   float wu = 1. - smoothstep(uUxEnd + uGap * .35, uUxEnd + uGap * 1.05, x);       // 0~1: UX/UI 구역
   float wv = smoothstep(uViFrom - uGap * 1.05, uViFrom - uGap * .35, x);          // 0~1: Visual 구역
   float spill = (0.38 + 0.62 * pool) * smoothstep(-0.4, 1.6, y) * (1. - 0.5 * smoothstep(3.4, 6., y));
@@ -141,22 +160,57 @@ void main(){
   float seam = 1. - smoothstep(0., .012, abs(fract(x / 5.6 + .5) - .5) * 5.6);
   c *= 1. - 0.035 * seam;
   c *= 0.985 + 0.03 * vnoise(vW.xy * 18.);
+  vec3 wallC = c; // 아치 안쪽 계산용 (몰딩 전 벽색)
+  // 아래 판넬(징두리): 의자 높이 띠 몰딩 + 네모 판넬 (빛이 왼쪽 위에서 와서 왼쪽·위 테두리는 밝고 오른쪽·아래는 그늘)
+  float rail = 0.98, e = 0.011;
+  if (y < rail) {
+    c *= 0.955;
+    float px = fract(x / 1.5) * 1.5, x0 = 0.12, x1 = 1.38, y0 = 0.3, y1 = rail - 0.16;
+    float inX = step(x0 - e, px) * step(px, x1 + e), inY = step(y0 - e, y) * step(y, y1 + e);
+    c *= 1. + 0.06 * inY * (1. - smoothstep(0., e, abs(px - x0))) - 0.07 * inY * (1. - smoothstep(0., e, abs(px - x1)));
+    c *= 1. + 0.06 * inX * (1. - smoothstep(0., e, abs(y - y1))) - 0.07 * inX * (1. - smoothstep(0., e, abs(y - y0)));
+  }
+  float rb = y - rail;
+  c *= 1. + 0.07 * smoothstep(-0.004, 0.004, rb) * (1. - smoothstep(0.034, 0.042, rb));   // 띠 몰딩 윗면 빛
+  c *= 1. - 0.1 * exp(-max(0., -rb) * 70.) * step(rb, 0.);                                // 띠 몰딩 아래 그늘
+  // 그림 레일 (석고상 머리 위 가는 띠)
+  float pr = y - 3.72;
+  c *= 1. + 0.05 * smoothstep(-0.003, 0.003, pr) * (1. - smoothstep(0.022, 0.028, pr));
+  c *= 1. - 0.06 * exp(-max(0., -pr) * 90.) * step(pr, 0.);
   // 걸레받이(바닥과 닿는 아래 띠)와 바닥 경계의 그늘
-  float base = 1. - step(0.13, y);
-  c = mix(c, c * 0.97, base);
-  c *= 1. - 0.08 * (1. - smoothstep(0.13, 0.15, y)) * step(0.125, y) ;
+  float base = 1. - step(0.16, y);
+  c = mix(c, c * 0.93, base);
+  c *= 1. + 0.05 * (1. - smoothstep(0., 0.01, abs(y - 0.16)));
   c *= 1. - 0.08 * exp(-y * 12.);
+  // 아치 통로 (구역 제목 아래): 테두리 몰딩 + 안쪽은 깊이감, 옆 구역 빛이 바닥 쪽에서 살짝 비침
+  for (int a = 0; a < 2; a++) {
+    float ax = a == 0 ? uArch.x : uArch.y, dx = x - ax, d = archD(dx, y);
+    if (d > 0.13 || y < 0.) continue;
+    if (d > 0.) {                                                                       // 테두리 몰딩
+      float t = d / 0.13; c = wallC * (1.03 + 0.04 * (1. - t)) * (1. - 0.12 * smoothstep(0.75, 1., t));
+    } else {
+      // 안쪽: 위(아치 천장)는 그늘, 아래로 갈수록 옆 전시실 빛이 바닥에서 비쳐 밝아짐. 옆 구역 색을 살짝
+      vec3 beyond = a == 0 ? uUx : uVi;
+      vec3 inC = uIvory * (0.7 + 0.2 * smoothstep(2.3, 0.1, y));
+      inC = mix(inC, beyond, 0.22 * smoothstep(2.0, 0.2, y));
+      float side = smoothstep(-0.02, 0.03, abs(dx) - 0.58);                             // 안쪽 옆면(두께, 가장자리 0.12m): 왼쪽은 그늘, 오른쪽은 빛
+      float top = y > 1.75 ? smoothstep(-0.02, 0.03, length(vec2(dx, y - 1.75)) - 0.58) : 0.;
+      float rev = max(side * step(y, 1.75), top);
+      inC = mix(inC, uIvory * mix(0.72, 0.92, smoothstep(-0.3, 0.3, dx)), rev * 0.85);
+      c = inC;
+    }
+  }
   gl_FragColor = vec4(c, 1.);
 }`;
 // 바닥: 밝은 돌 타일 + 벽 쪽 그늘 + 벽 색빛이 바닥에 살짝 비침
 const DG_FLOOR_FS = `
-uniform vec3 uFloor, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap; uniform float uBx[16]; uniform int uN;
+uniform vec3 uFloor, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap, uFocus, uHovX, uHovA; uniform float uBx[16]; uniform int uN;
 varying vec3 vW;${DG_NOISE}
 void main(){
   vec2 p = vW.xz;
   vec2 t = p / vec2(1.8, 1.2); vec2 ti = floor(t), tf = fract(t);
   float seam = 1. - smoothstep(0., .012, min(min(tf.x, 1. - tf.x) * 1.8, min(tf.y, 1. - tf.y) * 1.2));
-  vec3 c = uFloor * (0.97 + 0.05 * h21(ti)) * (0.975 + 0.05 * fbm(p * 2.2));
+  vec3 c = uFloor * 0.93 * (0.97 + 0.05 * h21(ti)) * (0.975 + 0.05 * fbm(p * 2.2));
   c *= 1. - 0.04 * seam;
   float z = vW.z;
   c *= 1. - 0.08 * exp(-z * 8.) - 0.04 * exp(-z * 1.2);                           // 벽 가까이 어둡게 (모서리)
@@ -165,11 +219,40 @@ void main(){
   float b = exp(-z * .9) * uTint * .5;
   c = mix(c, uUx, wu * b * .45); c = mix(c, uVi, wv * b * .45);
   float pool = 0.;                                                                // 받침대 앞 바닥에 비친 은은한 빛
-  for (int i = 0; i < 16; i++) { if (i >= uN) break; float dx = (p.x - uBx[i]) / 1.3; pool += exp(-dx*dx) * exp(-pow((z - 2.2) / 1.6, 2.)); }
-  c *= 1. + 0.05 * min(pool, 1.);
+  for (int i = 0; i < 16; i++) { if (i >= uN) break; float dx = (p.x - uBx[i]) / 1.3;
+    float f = 0.4 + 0.6 * exp(-pow((uBx[i] - uFocus) / (uGap * .75), 2.)) + 0.4 * uHovA * exp(-pow((uBx[i] - uHovX) / .4, 2.));
+    pool += exp(-dx*dx) * exp(-pow((z - 2.2) / 1.5, 2.)) * f; }
+  c *= 1. + 0.1 * min(pool, 1.2);
   c *= 1. - 0.06 * smoothstep(4., 12., z);                                         // 카메라 쪽 바닥은 조금 차분하게
   gl_FragColor = vec4(c, 1.);
 }`;
+
+// 빛줄기: 석고상 뒤에 세운 판. 위는 좁고 아래로 넓어지는 은은한 빛 (더하기 섞기라 벽·석고상을 밝게만 함)
+const DG_BEAM_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`;
+const DG_BEAM_FS = `
+uniform float uA; varying vec2 vUv;
+void main(){
+  float y = vUv.y, hw = mix(0.46, 0.1, y), dx = abs(vUv.x - .5);
+  float a = (1. - smoothstep(hw * 0.35, hw, dx)) * smoothstep(0., 0.4, y) * (1. - smoothstep(0.55, 1., y)) * (0.5 + 0.5 * y);
+  gl_FragColor = vec4(vec3(1., .94, .84) * a * uA, 1.);
+}`;
+// 먼지: 가운데 학생의 빛줄기 안에서만 반짝이며 천천히 떠다님
+const DG_DUST_VS = `
+uniform float uT, uSize; attribute float aSeed; varying float vA;
+void main(){
+  vec3 p = position;
+  p.y = 1.2 + mod(p.y - 1.2 + uT * (0.03 + 0.03 * aSeed), 3.);
+  p.x += sin(uT * (0.2 + 0.3 * aSeed) + aSeed * 40.) * 0.08;
+  p.z += cos(uT * 0.25 + aSeed * 23.) * 0.05;
+  float w = 0.2 + 0.32 * max(0., 4.4 - p.y);                     // 빛 원뿔 안쪽일수록 밝게
+  vA = exp(-p.x * p.x / (w * w) * 2.) * smoothstep(1.2, 1.8, p.y) * (1. - smoothstep(3.8, 4.2, p.y)) * (0.4 + 0.6 * fract(aSeed * 7.3));
+  vec4 mv = modelViewMatrix * vec4(p, 1.);
+  gl_PointSize = uSize * (0.6 + 0.8 * fract(aSeed * 3.1)) / -mv.z;
+  gl_Position = projectionMatrix * mv;
+}`;
+const DG_DUST_FS = `
+uniform float uA; varying float vA;
+void main(){ vec2 d = gl_PointCoord - .5; float a = smoothstep(.5, .1, length(d)) * vA * uA; gl_FragColor = vec4(vec3(1., .95, .86) * a, 1.); }`;
 
 /* 부드러운 그림자 무늬 (사각형 / 타원), 작은 캔버스를 크게 늘려서 흐리게 */
 function dgSoftTex(THREE, kind, blur) {
@@ -190,7 +273,7 @@ function dgSoftTex(THREE, kind, blur) {
   }
   const t = new THREE.CanvasTexture(cv); return t;
 }
-/* 받침대 돌 결 (아주 옅은 얼룩) */
+/* 받침대 돌 결 (아주 옅은 얼룩 + 가는 대리석 결) */
 function dgStoneTex(THREE) {
   const n = 256, cv = document.createElement('canvas'); cv.width = cv.height = n;
   const c = cv.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, n, n);
@@ -198,6 +281,12 @@ function dgStoneTex(THREE) {
     const r = Math.random() * 2.2 + .4, v = 225 + Math.random() * 30 | 0;
     c.fillStyle = `rgba(${v},${v - 2},${v - 5},${Math.random() * .3})`;
     c.beginPath(); c.arc(Math.random() * n, Math.random() * n, r, 0, 7); c.fill();
+  }
+  c.lineCap = 'round';
+  for (let k = 0; k < 3; k++) { // 비스듬히 지나가는 결 (부드럽게 휘어짐)
+    let x = Math.random() * n, y = -10; c.beginPath(); c.moveTo(x, y);
+    while (y < n + 10) { const nx = x + (Math.random() - .3) * 22, ny = y + 26 + Math.random() * 20; c.quadraticCurveTo(x, y, (x + nx) / 2, (y + ny) / 2); x = nx; y = ny; }
+    c.strokeStyle = `rgba(160,148,132,${.05 + Math.random() * .05})`; c.lineWidth = .5 + Math.random() * .6; c.stroke();
   }
   const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
@@ -246,7 +335,9 @@ function dgCreate(THREE) {
   const lin = (h) => { const c = new THREE.Color(h); return new THREE.Vector3(c.r, c.g, c.b); }; // 셰이더 색: 화면에 그대로 나가는 값(sRGB)
   const bx = new Float32Array(16); xs.slice(0, 16).forEach((x, k) => { bx[k] = x; });
   const common = { uUx: { value: lin(DG.colors.ux) }, uVi: { value: lin(DG.colors.visual) }, uTint: { value: DG.tint },
-    uUxEnd: { value: Z.uxui.to }, uViFrom: { value: Z.visual.from }, uGap: { value: DG.gap }, uBx: { value: bx }, uN: { value: Math.min(16, xs.length) } };
+    uUxEnd: { value: Z.uxui.to }, uViFrom: { value: Z.visual.from }, uGap: { value: DG.gap }, uBx: { value: bx }, uN: { value: Math.min(16, xs.length) },
+    uFocus: { value: dg.x }, uHovX: { value: 0 }, uHovA: { value: 0 }, uArch: { value: new THREE.Vector2(Z.uxui.title, Z.visual.title) } };
+  G.common = common; // 매 프레임 uFocus(카메라가 보는 곳)·마우스 올린 학생을 바꿈 (벽·바닥이 같은 값을 나눠 씀)
   // THREE.Color는 '#hex'를 받을 때 선형으로 바꿔 둠 → 셰이더에서 바로 내보낼 sRGB 값으로 되돌림
   for (const k of ['uUx', 'uVi']) common[k].value.set(...new THREE.Color(k === 'uUx' ? DG.colors.ux : DG.colors.visual).convertLinearToSRGB().toArray());
   const srgb = (h) => new THREE.Vector3(...new THREE.Color(h).convertLinearToSRGB().toArray());
@@ -260,13 +351,18 @@ function dgCreate(THREE) {
   const floorGeo = keep(new THREE.PlaneGeometry(len, 300));
   const floor = new THREE.Mesh(floorGeo, floorMat); floor.rotation.x = -Math.PI / 2; floor.position.set(mid, 0, 150); scene.add(floor);
 
-  // 받침대: 직육면체. 빛은 왼쪽 위 앞(창문 쪽)에서 → 석고상 사진의 빛 방향과 맞춤
-  scene.add(new THREE.HemisphereLight(0xfffcf7, 0xdcd5ca, 1.9));
-  const sun = new THREE.DirectionalLight(0xfffaf3, 1.6); sun.position.set(-3, 5, 6); scene.add(sun);
+  // 받침대: 아래 받침 + 몸통 + 위 덮개 (위아래가 조금 튀어나온 대리석 받침). 빛은 왼쪽 위 앞(창문 쪽)에서 → 석고상 사진의 빛 방향과 맞춤
+  scene.add(new THREE.HemisphereLight(0xfffcf7, 0xd6cec2, 1.7));
+  const sun = new THREE.DirectionalLight(0xfff6ea, 1.55); sun.position.set(-3, 5, 6); scene.add(sun);
   const stone = keep(dgStoneTex(THREE));
   const pedMat = keep(new THREE.MeshLambertMaterial({ color: col(DG.colors.stone), map: stone }));
-  const { w: pw, h: ph, d: pd } = DG.ped;
-  const pedGeo = keep(new THREE.BoxGeometry(pw, ph, pd));
+  const { w: pw, h: ph, d: pd } = DG.ped, rim = DG.pedRim;
+  const pedGeo = keep(new THREE.BoxGeometry(pw, ph - rim.h * 2, pd));
+  const capGeo = keep(new THREE.BoxGeometry(pw + rim.out * 2, rim.h, pd + rim.out * 2));
+  const footGeo = keep(new THREE.BoxGeometry(pw + rim.out * 2.6, rim.h, pd + rim.out * 2.6));
+  // 빛줄기·먼지
+  const beamGeo = keep(new THREE.PlaneGeometry(2.1, 3.3)); beamGeo.translate(0, 3.3 / 2, 0);
+  G.beams = [];
   // 그림자 무늬들
   const softRect = keep(dgSoftTex(THREE, 'rect', 0.32)), softTight = keep(dgSoftTex(THREE, 'rect', 0.12)), ell = keep(dgSoftTex(THREE, 'ellipse'));
   const shMat = (tex, o) => keep(new THREE.MeshBasicMaterial({ color: 0x3a2e22, alphaMap: tex, transparent: true, opacity: o, depthWrite: false }));
@@ -277,14 +373,32 @@ function dgCreate(THREE) {
   P.forEach((p, k) => {
     const g = new THREE.Group(); g.position.set(p.x, 0, 0); scene.add(g);
     const ped = new THREE.Mesh(pedGeo, pedMat); ped.position.set(0, ph / 2, DG.pedZ); ped.userData.k = k; g.add(ped);
+    const cap = new THREE.Mesh(capGeo, pedMat); cap.position.set(0, ph - rim.h / 2, DG.pedZ); cap.userData.k = k; g.add(cap);
+    const foot = new THREE.Mesh(footGeo, pedMat); foot.position.set(0, rim.h / 2, DG.pedZ); foot.userData.k = k; g.add(foot);
+    // 빛줄기 (움직임 줄이기에서도 멈춘 빛으로 보여 줌)
+    const bm = keep(new THREE.ShaderMaterial({ vertexShader: DG_BEAM_VS, fragmentShader: DG_BEAM_FS, uniforms: { uA: { value: 0 } },
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const beam = new THREE.Mesh(beamGeo, bm); beam.position.set(0, ph, DG.pedZ - 0.38); beam.renderOrder = 2; g.add(beam); G.beams[k] = bm;
     const fl = (m, w, d, x, z) => { const s = new THREE.Mesh(unit, m); s.rotation.x = -Math.PI / 2; s.scale.set(w, d, 1); s.position.set(x, 0.003, z); s.renderOrder = 1; g.add(s); return s; };
     fl(floorSh, pw * 1.75, pd * 1.6, 0.22, DG.pedZ - 0.08);      // 받침대 아래 넓게 퍼진 그림자 (빛이 왼쪽에서 와서 오른쪽으로 조금 밀림)
     fl(floorAO, pw * 1.1, pd * 1.12, 0.03, DG.pedZ);              // 바닥에 닿는 곳의 진한 그늘
     const ws = new THREE.Mesh(unit, wallSh); ws.scale.set(pw * 1.3, ph * 1.25, 1); ws.position.set(0.5, ph * 0.5, 0.004); ws.renderOrder = 1; g.add(ws); // 벽에 비친 받침대 그림자
     const ts = new THREE.Mesh(unit, topSh); ts.rotation.x = -Math.PI / 2; ts.scale.set(bw * 0.62, pd * 0.62, 1); ts.position.set(0.02, ph + 0.003, DG.pedZ); ts.renderOrder = 1; g.add(ts); // 석고상 발 밑 그늘
-    G.busts[k] = { g, ped, k, loaded: false };
+    G.busts[k] = { g, ped, parts: [ped, cap, foot], k, loaded: false };
   });
   G.bustGeo = bustGeo; G.unit = unit; G.bw = bw;
+  // 먼지 (가운데 학생 빛줄기 안). 움직임 줄이기에서는 만들지 않음
+  if (!reduce) {
+    const n = mobile ? 40 : 70, pos = new Float32Array(n * 3), seed = new Float32Array(n);
+    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - .5) * 1.4; pos[i * 3 + 1] = 1.2 + Math.random() * 3; pos[i * 3 + 2] = DG.pedZ - 0.3 + Math.random() * 0.9; seed[i] = Math.random(); }
+    const dGeo = keep(new THREE.BufferGeometry()); dGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); dGeo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+    const dMat = keep(new THREE.ShaderMaterial({ vertexShader: DG_DUST_VS, fragmentShader: DG_DUST_FS, uniforms: { uT: { value: 0 }, uA: { value: 0 }, uSize: { value: 1 } },
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const dust = new THREE.Points(dGeo, dMat); dust.renderOrder = 4; dust.frustumCulled = false; scene.add(dust);
+    G.dust = { obj: dust, mat: dMat };
+  }
+  G.turn = { k: -1, model: null, mats: [], a: 0, loading: false, since: 0, t0: 0 }; // 가운데 학생 3D로 천천히 돌기
+  G.hov = { k: -1, x: 0, a: 0 };
   dg.dirty = true;
   dgResize();
   dgLoadBusts();
@@ -381,6 +495,7 @@ function dgPlaceLabels() {
     el.style.setProperty('--drop', (yb - y).toFixed(1) + 'px');
     el.classList.toggle('off', off);
     el.classList.toggle('is-at', k === dg.at && dg.zoom < 0.5);
+    el.classList.toggle('is-hover', k === G.hov.k);
   });
   const e = dg.zoom * dg.zoom * (3 - 2 * dg.zoom);
   dg.zoneEls.forEach((el) => {
@@ -407,13 +522,82 @@ function dgLoop() {
     if (Math.abs(dg.tzoom - dg.zoom) < 1e-4) dg.zoom = dg.tzoom;
     const pk = 1 - Math.exp(-dt * 3);
     dg.ptr.sx += (dg.ptr.x - dg.ptr.sx) * pk; dg.ptr.sy += (dg.ptr.y - dg.ptr.sy) * pk;
-    const moved = dg.dirty || ox !== dg.x || oz !== dg.zoom || Math.abs(osx - dg.ptr.sx) > 1e-4 || Math.abs(osy - dg.ptr.sy) > 1e-4;
-    if (!moved) return; // 멈춰 있으면 다시 그리지 않음 (배터리 아낌)
-    dg.dirty = false;
-    dgCamera(); dgPlaceLabels();
+    const H = dg.gl.hov, oh = H.a;
+    H.a += ((H.k >= 0 ? 1 : 0) - H.a) * (reduce ? 1 : 1 - Math.exp(-dt * 8)); if (Math.abs(H.a - (H.k >= 0 ? 1 : 0)) < 1e-3) H.a = H.k >= 0 ? 1 : 0;
+    const turning = dgTurn(dt, t / 1000);
+    const moved = dg.dirty || ox !== dg.x || oz !== dg.zoom || Math.abs(osx - dg.ptr.sx) > 1e-4 || Math.abs(osy - dg.ptr.sy) > 1e-4 || oh !== H.a || turning;
+    // 먼지가 떠다니는 동안은 30fps 정도로만 다시 그림. 그 밖에 멈춰 있으면 다시 그리지 않음 (배터리 아낌)
+    const dusty = dg.gl.dust && dg.zoom < 0.5 && t - (dg.lastDraw || 0) > 32;
+    if (!moved && !dusty) return;
+    dg.dirty = false; dg.lastDraw = t;
+    dgCamera(); dgPlaceLabels(); dgLights(t / 1000);
     dg.gl.r.render(dg.gl.scene, dg.gl.cam);
   };
   dg.raf = requestAnimationFrame(step);
+}
+
+/* 조명: 카메라가 보는 학생(가운데)일수록 빛줄기·벽 빛이 밝고, 마우스를 올린 학생은 더 밝게. 먼지는 가운데 학생 빛줄기 안에 */
+function dgLights(time) {
+  const G = dg.gl, C = G.common, H = G.hov, L = DG.light, e = dg.zoom * dg.zoom * (3 - 2 * dg.zoom);
+  C.uFocus.value = dg.x; C.uHovX.value = H.x; C.uHovA.value = H.a * (1 - e);
+  G.beams.forEach((m, k) => {
+    const f = Math.exp(-(((dg.people[k].x - dg.x) / (DG.gap * 0.75)) ** 2)), hv = H.k === k ? H.a : 0;
+    m.uniforms.uA.value = L.beam * (0.3 + 0.7 * f + L.hover * 1.2 * hv) * (1 - 0.5 * e);
+  });
+  if (G.dust) {
+    const p = dg.people[dg.at], f = Math.exp(-(((p.x - dg.x) / (DG.gap * 0.5)) ** 2));
+    G.dust.obj.position.x = p.x;
+    G.dust.mat.uniforms.uT.value = time;
+    G.dust.mat.uniforms.uA.value = L.dust * f * (1 - e);
+    G.dust.mat.uniforms.uSize.value = 0.014 * G.base.h / (2 * Math.tan(DG.fov * Math.PI / 360)) * G.r.getPixelRatio();
+  }
+}
+
+/* 가운데에 멈춘 학생: 잠시 뒤 사진이 3D 석고상으로 바뀌어 좌우로 천천히 돎. 움직이기 시작하면 다시 사진으로 (움직임 줄이기에서는 안 함)
+   돌아가는 중이면 true (계속 다시 그려야 함) */
+function dgTurn(dt, time) {
+  const G = dg.gl, T = G.turn, C = DG.turn;
+  if (reduce || typeof loadModel !== 'function') return false;
+  const settled = !dg.drag && dg.zoom < 0.02 && Math.abs(dg.tx - dg.x) < 0.01 && Math.abs(dg.x - dg.people[dg.at].x) < 0.05;
+  T.since = settled ? T.since + dt : 0;
+  const want = settled && T.since > C.delay ? dg.at : -1;
+  if (want >= 0 && T.k !== want && T.a < 1e-3 && !T.loading) dgTurnLoad(want);
+  const target = want >= 0 && T.k === want && T.model ? 1 : 0, oa = T.a;
+  T.a += (target - T.a) * (1 - Math.exp(-dt * C.fade)); if (Math.abs(target - T.a) < 2e-3) T.a = target;
+  if (!T.model) return false;
+  T.model.visible = T.a > 0;
+  T.mats.forEach((m) => { m.opacity = T.a; });
+  const b = G.busts[T.k]; if (b.bust) b.bust.material.opacity = 1 - T.a;
+  T.model.rotation.y = C.angle * Math.sin((time - T.t0) * C.speed);
+  if (T.a === 0 && target === 0) { dgTurnDrop(); return oa !== 0; }
+  return true;
+}
+function dgTurnLoad(k) {
+  const G = dg.gl, T = G.turn, url = MODELS[dg.people[k].s.name];
+  dgTurnDrop(); T.k = k;
+  if (!url || (navigator.connection && navigator.connection.saveData)) return; // 3D 파일이 없거나 데이터 절약 모드면 사진 그대로
+  T.loading = true;
+  loadModel(url).then((tpl) => {
+    T.loading = false;
+    if (dg.gl !== G || T.k !== k) return;
+    const { THREE } = G, m = tpl.clone(true);
+    m.traverse((o) => {
+      if (!o.isMesh) return;
+      // 사진은 사이트에서 색을 살짝 아이보리 쪽으로 맞춰서 보여 줌 → 3D도 노란빛을 조금 빼서 같은 색으로
+      const mt = new THREE.MeshLambertMaterial({ map: o.material.map, color: new THREE.Color(DG.turnShade * 0.97, DG.turnShade * 0.97, DG.turnShade * 1.06), transparent: true, opacity: 0,
+        emissive: new THREE.Color(0.97, 0.97, 1.08), emissiveMap: o.material.map, emissiveIntensity: DG.turnGlow }); // 그늘 쪽이 너무 어두워지지 않게 색 그림을 조금 스스로 빛나게
+      o.material = mt; T.mats.push(mt); o.renderOrder = 3;
+    });
+    m.scale.setScalar(DG.bustH * 1100 / 1120); // 사진 안 석고상 높이(1100/1120)와 같게
+    m.position.set(0, DG.ped.h, DG.pedZ); m.visible = false;
+    G.busts[k].g.add(m); T.model = m; T.t0 = performance.now() / 1000; dg.dirty = true;
+  }, (e) => { T.loading = false; console.warn('3D 석고상을 불러오지 못해 사진으로 보여 줘요', e); });
+}
+function dgTurnDrop() {
+  const G = dg.gl, T = G.turn;
+  if (T.model) { T.model.removeFromParent(); T.mats.forEach((m) => m.dispose()); }
+  if (T.k >= 0 && G.busts[T.k] && G.busts[T.k].bust) G.busts[T.k].bust.material.opacity = 1;
+  T.model = null; T.mats = []; T.a = 0; T.k = -1;
 }
 
 /* ---------- 이동 ---------- */
@@ -466,7 +650,8 @@ function enterDesigner() {
 /* 다른 화면으로 가면: 그리기를 멈추고 3D 자원을 모두 정리 (돌아오면 같은 자리에서 다시 만듦) */
 function dgDispose() {
   cancelAnimationFrame(dg.raf); dg.raf = 0;
-  const G = dg.gl; dg.gl = null; if (!G) return;
+  const G = dg.gl; if (!G) return;
+  dgTurnDrop(); dg.gl = null;
   G.list.forEach((o) => o.dispose && o.dispose());
   G.r.dispose(); try { G.r.forceContextLoss(); } catch (e) { }
   G.r.domElement.remove();
@@ -489,7 +674,7 @@ function dgPick(cx, cy) {
   const G = dg.gl; if (!G) return -1;
   const rc = dg.stage.getBoundingClientRect();
   G.ray.setFromCamera({ x: (cx - rc.left) / rc.width * 2 - 1, y: -(cy - rc.top) / rc.height * 2 + 1 }, G.cam);
-  const objs = G.busts.flatMap((b) => (b.bust ? [b.ped, b.bust] : [b.ped]));
+  const objs = G.busts.flatMap((b) => (b.bust ? [...b.parts, b.bust] : b.parts));
   const hit = G.ray.intersectObjects(objs, false)[0];
   return hit ? hit.object.userData.k : -1;
 }
@@ -502,7 +687,9 @@ dg.stage.addEventListener('pointermove', (e) => {
   if (!dg.drag) {
     if (e.pointerType === 'mouse' && dg.gl) {
       dg.ptr.x = (e.clientX / innerWidth - 0.5) * 2; dg.ptr.y = (e.clientY / innerHeight - 0.5) * 2;
-      dg.stage.style.cursor = dgPick(e.clientX, e.clientY) >= 0 ? 'pointer' : '';
+      const k = dgPick(e.clientX, e.clientY);
+      dg.stage.style.cursor = k >= 0 ? 'pointer' : '';
+      dgHover(k);
     }
     return;
   }
@@ -524,7 +711,14 @@ const dgUp = (e) => {
 };
 dg.stage.addEventListener('pointerup', dgUp);
 dg.stage.addEventListener('pointercancel', dgUp);
-dg.stage.addEventListener('pointerleave', () => { dg.ptr.x = dg.ptr.y = 0; });
+dg.stage.addEventListener('pointerleave', () => { dg.ptr.x = dg.ptr.y = 0; dgHover(-1); });
+/* 마우스를 올린 학생: 조명이 밝아지고 명판이 살짝 떠오름 (석고상·받침대 위, 또는 명판 위) */
+function dgHover(k) {
+  const G = dg.gl; if (!G || G.hov.k === k) return;
+  G.hov.k = k; if (k >= 0) G.hov.x = dg.people[k].x; dg.dirty = true;
+}
+dg.labels.addEventListener('pointerover', (e) => { const c = e.target.closest('.dg-cap'); if (c && e.pointerType === 'mouse') dgHover(+c.dataset.k); });
+dg.labels.addEventListener('pointerout', (e) => { const c = e.target.closest('.dg-cap'); if (c && !c.contains(e.relatedTarget)) dgHover(-1); });
 function dgClampX(x) { const a = dg.people[0].x - DG.gap * 0.6, b = dg.people.at(-1).x + DG.gap * 0.6; return clamp(x, a, b); }
 dg.root.addEventListener('wheel', (e) => {
   if (!dg.gl || e.target.closest('.dg-list')) return;

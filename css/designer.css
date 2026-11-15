@@ -18,13 +18,16 @@
 .dg-labels{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 .dg-cap{position:absolute;left:0;top:0;width:0;height:0;will-change:transform}
 .dg-cap.off{opacity:0} /* 화면 밖: 안 보이지만 Tab으로는 갈 수 있음 (가면 그 학생 앞으로 이동) */
-/* 받침대 앞면의 작은 이름표 (돌에 붙인 얇은 판, 장식 없음) */
+/* 받침대 앞면의 황동 명판: 위가 밝고 아래로 어두워지는 금속, 가는 테두리, 글자는 새긴 듯 (아래쪽 밝은 그림자) */
 .dg-plaque{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:calc(3px * var(--s));
-  padding:calc(8px * var(--s)) calc(14px * var(--s));min-width:calc(104px * var(--s));border-radius:2px;
-  background:rgba(250,246,239,.9);box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 1px 2px rgba(60,44,28,.16);color:var(--ink-d);transition:background .2s}
-.dg-plaque:hover{background:#fffdf8}
-.dg-name{font-size:calc(15px * var(--s));font-weight:700;letter-spacing:.02em;line-height:1.2;white-space:nowrap}
-.dg-field{font-size:calc(10px * var(--s));letter-spacing:.06em;color:var(--soft-d);white-space:nowrap}
+  padding:calc(8px * var(--s)) calc(16px * var(--s));min-width:calc(108px * var(--s));border-radius:2px;
+  background:linear-gradient(170deg,#e6d3a6 0%,#cbb17c 42%,#b59864 58%,#cdb582 100%);
+  box-shadow:0 0 0 1px rgba(92,70,36,.45),0 0 0 calc(2px * var(--s)) rgba(240,226,190,.55) inset,0 1px 0 rgba(255,248,226,.8) inset,0 2px 4px rgba(50,36,18,.28);
+  color:#3a2c18;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,filter .35s}
+.dg-plaque:hover,.dg-cap.is-hover .dg-plaque{transform:translate(-50%,calc(-50% - 4px * var(--s)));filter:brightness(1.08);
+  box-shadow:0 0 0 1px rgba(92,70,36,.45),0 0 0 calc(2px * var(--s)) rgba(240,226,190,.6) inset,0 1px 0 rgba(255,248,226,.85) inset,0 8px 14px rgba(50,36,18,.3)}
+.dg-name{font-size:calc(15px * var(--s));font-weight:700;letter-spacing:.06em;line-height:1.2;white-space:nowrap;text-shadow:0 1px 0 rgba(255,244,214,.6)}
+.dg-field{font-size:calc(10px * var(--s));letter-spacing:.08em;color:#5a4628;white-space:nowrap;text-shadow:0 1px 0 rgba(255,244,214,.5)}
 /* 받침대 아래 바닥 쪽: 짧은 소개 + 포트폴리오 */
 .dg-info{position:absolute;left:0;top:calc(var(--drop) + 14px * var(--s));transform:translateX(-50%);width:calc(250px * var(--s));text-align:center;pointer-events:none;transition:opacity .3s}
 .dg-slogan{margin:0;font-size:calc(12.5px * var(--s));line-height:1.6;color:#4a3f33;word-break:keep-all}
@@ -33,10 +36,10 @@
 a.dg-go:hover{background:var(--ink-d);color:#f6f0e6}
 .dg-go.is-empty{border-style:dashed;color:var(--soft-d)}
 .dg-cap:not(.is-at) .dg-info{opacity:.55}
-.dg-cap.is-at .dg-plaque{box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 2px 8px rgba(60,44,28,.2)}
+.dg-cap.is-hover .dg-info{opacity:1}
 /* 전체 보기(멀리서): 소개는 숨기고 이름만 작게 */
 .designer.is-far .dg-info{opacity:0;visibility:hidden}
-.designer.is-far .dg-plaque{padding:3px 6px;min-width:0;gap:0;background:rgba(250,246,239,.82)}
+.designer.is-far .dg-plaque{padding:3px 6px;min-width:0;gap:0;box-shadow:0 0 0 1px rgba(92,70,36,.4),0 1px 2px rgba(50,36,18,.2)}
 .designer.is-far .dg-name{font-size:11px}
 .designer.is-far .dg-field{display:none}
 /* 모바일: 한 명씩. 옆 사람 글은 숨김 */
@@ -46,8 +49,10 @@ a.dg-go:hover{background:var(--ink-d);color:#f6f0e6}
 /* 벽에 붙은 구역 제목 (UX/UI · WEB, VISUAL DESIGN) */
 .dg-zone{position:absolute;left:0;top:0;display:flex;flex-direction:column;gap:calc(6px * var(--s));transform:translate(-50%,0);text-align:center;white-space:nowrap;transition:opacity .3s}
 .dg-zone.off{opacity:0}
-.dg-zone b{font-size:calc(22px * var(--s));font-weight:300;letter-spacing:.32em;color:rgba(43,36,28,.78)}
-.dg-zone span{font-size:calc(11px * var(--s));letter-spacing:.14em;color:var(--soft-d)}
+/* 벽에 새긴 글자: 글자 색은 벽보다 조금 어둡게, 위쪽 가장자리는 그늘·아래쪽은 빛 (파인 홈처럼 보임) */
+.dg-zone b{font-size:calc(22px * var(--s));font-weight:400;letter-spacing:.32em;color:rgba(96,82,64,.72);
+  text-shadow:0 -1px 0 rgba(60,46,30,.35),0 1px 0 rgba(255,252,244,.85)}
+.dg-zone span{font-size:calc(11px * var(--s));letter-spacing:.14em;color:rgba(96,82,64,.8);text-shadow:0 1px 0 rgba(255,252,244,.7)}
 .designer.is-far .dg-zone b{font-size:max(12px,calc(22px * var(--s)))}
 .designer.is-far .dg-zone span{font-size:max(10px,calc(11px * var(--s)))}
 
@@ -80,6 +85,7 @@ a.dg-go:hover{background:var(--ink-d);color:#f6f0e6}
   .dg-tabs button{padding:6px 10px;font-size:10px;letter-spacing:.04em}
   .dg-arrow{top:auto;bottom:calc(18px + env(safe-area-inset-bottom,0px));margin-top:0;width:42px;height:42px}
 }
-@media(prefers-reduced-motion:reduce){.dg-info,.dg-tabs button{transition:none}}
+@media(prefers-reduced-motion:reduce){.dg-info,.dg-tabs button,.dg-plaque{transition:none}
+  .dg-plaque:hover,.dg-cap.is-hover .dg-plaque{transform:translate(-50%,-50%)}}
 .dg-list-close{position:sticky;top:0;z-index:1;margin-bottom:8px;padding:8px 16px;border-radius:99px;background:var(--ink-d);color:#f6f0e6;font-size:12px;letter-spacing:.04em}
 .dg-list ul{grid-template-columns:repeat(auto-fill,minmax(min(150px,40vw),1fr))}
