@@ -1,6 +1,6 @@
 /* About (#about): 왼쪽 천장에 매달린 포스터, 오른쪽 제목·서문·일시·장소 (2026-11-15 시안)
    큰 화면 숫자는 시안(1920×1080)을 화면 너비(vw)에 맞춰 옮긴 값이라, 화면 크기가 달라도 비율이 같게 보여요 */
-.about{background:#fff;color:#433e3a;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.about{background:#fff;color:#4a433b;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .ab-wrap{position:relative;min-height:100%}
 
 /* 포스터: 줄이 화면 맨 위에서 내려옴 (그림 안에 줄·봉·그림자까지 들어 있음) */
@@ -11,19 +11,19 @@
 /* 글자 규칙 (시안 1920 기준, 화면 너비에 비례): 모두 Noto Sans KR, 행간 150%
    제목 = SemiBold 20pt · 한글 설명 = Medium 18pt · 영어 설명 = Regular 18pt · 자간 한글 -3%, 영어 +1%
    20/1920 = 1.0417vw, 18/1920 = 0.9375vw */
-.ab-copy h2{margin:0 0 2.1vw;font-family:"Noto Sans KR",var(--sans);font-weight:600;font-size:clamp(17px,1.0417vw,40px);line-height:1.5;letter-spacing:-.03em;color:#3d3834;word-break:keep-all}
-.ab-text p{margin:0;font-family:"Noto Sans KR",var(--sans);font-weight:500;font-size:clamp(14px,.9375vw,36px);line-height:1.5;letter-spacing:-.03em;color:#3d3834;word-break:keep-all}
+.ab-copy h2{margin:0 0 2.1vw;font-family:"Noto Sans KR",var(--sans);font-weight:600;font-size:clamp(17px,1.0417vw,40px);line-height:1.5;letter-spacing:-.03em;color:#4a433b;word-break:keep-all}
+.ab-text p{margin:0;font-family:"Noto Sans KR",var(--sans);font-weight:500;font-size:clamp(14px,.9375vw,36px);line-height:1.5;letter-spacing:-.03em;color:#4a433b;word-break:keep-all}
 .ab-text p.en{font-weight:400;letter-spacing:.01em}
 .ab-text p + p{margin-top:1.5em}
 .ab-text p + p.en{margin-top:.6em}
-.ab-text b{font-weight:700;color:#3d3834}
+.ab-text b{font-weight:700;color:#4a433b}
 .ab-copy .ln{display:block}
 
 .ab-info{margin:2.6vw 0 0;padding:0;font-family:"Noto Sans KR",var(--sans);line-height:1.5;letter-spacing:-.03em}
 .ab-info div{display:grid;grid-template-columns:3.5vw 1fr;align-items:baseline;padding:0}
 .ab-info div + div{margin-top:1.3vw}
-.ab-info dt{font-size:clamp(16px,1.0417vw,40px);font-weight:600;color:#3d3834}
-.ab-info dd{margin:0;font-size:clamp(14px,.9375vw,36px);font-weight:500;color:#3d3834}
+.ab-info dt{font-size:clamp(16px,1.0417vw,40px);font-weight:600;color:#4a433b}
+.ab-info dd{margin:0;font-size:clamp(14px,.9375vw,36px);font-weight:500;color:#4a433b}
 .ab-info dd.tbd{color:#a39684}
 
 /* 좁은 화면(태블릿 세로·휴대폰): 포스터 위, 글 아래. 줄은 끊지 않고 이어서 흐름 */
