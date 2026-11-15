@@ -38,7 +38,7 @@ function createIntroScroll(root, opts) {
   function hex(a, b, u) { return 'rgb(' + [0, 1, 2].map(function (i) { return Math.round(lerp(a[i], b[i], u)); }).join(',') + ')'; }
 
   // where the poster sits inside the photo (px in the 1672 x 941 image), so its own layer and the effects line up at any screen shape
-  var IMG = { w: 1672, h: 941, x0: 606, x1: 1066, y0: 148, y1: 794 };
+  var IMG = { w: 1672, h: 941, x0: 619, x1: 1052, y0: 148, y1: 794 };   // 2026-11-15: 포스터가 가로로 늘어나 있던 것을 실제 비율(0.662)로 좁힘
   function layout() {
     W = root.clientWidth || innerWidth; H = root.clientHeight || innerHeight;
     root.style.setProperty('--iw', W / 100 + 'px'); root.style.setProperty('--ih', H / 100 + 'px');
