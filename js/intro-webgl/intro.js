@@ -17,6 +17,7 @@ window.createWebGLIntro = function (root, opts) {
   root.innerHTML =
     '<div class="iw-track"><div class="iw-stage">' +
       '<canvas class="iw-canvas" aria-hidden="true"></canvas>' +
+      '<canvas class="iw-bfly" aria-hidden="true"></canvas>' +
       '<div class="iw-light" aria-hidden="true"></div>' +
       '<p class="iw-hint" aria-hidden="true"><span>스크롤하여 나비를 따라가 보세요</span><i></i></p>' +
       '<section class="iw-enter" aria-label="전시 입장" hidden>' +
@@ -69,10 +70,9 @@ window.createWebGLIntro = function (root, opts) {
 
   return Promise.all([
     import('three'),
-    import('three/addons/objects/Reflector.js'),
     loadPoster(CFG.poster.image)
   ]).then(function (mods) {
-    return build(mods[0], mods[1].Reflector, mods[2]);
+    return build(mods[0], mods[1]);
   }).catch(function (err) {
     console.error('[intro-webgl]', err);
     showFallback('3D 인트로를 불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.');
@@ -91,7 +91,7 @@ window.createWebGLIntro = function (root, opts) {
     });
   }
 
-  function build(THREE, Reflector, posterImg) {
+  function build(THREE, posterImg) {
     THREE.ColorManagement.enabled = false;
     var renderer;
     try {
@@ -102,12 +102,35 @@ window.createWebGLIntro = function (root, opts) {
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(CFG.fov.wide, 1, 0.05, 500);
-    var world = IWWorld(THREE, Reflector, CFG, Q);
+    var world = IWWorld(THREE, CFG, Q);
     scene.add(world.group);
     world.setPosterImage(posterImg);
     var bf = IWButterfly(THREE, CFG, Q);
     scene.add(bf.group, bf.absorbPts);
-    if (bf.trailPts) scene.add(bf.trailPts);
+    /* 전에 함께 만든 WebGL 나비(js/butterfly-gl.js)를 그대로 씀: 3D 공간에서 계산한 위치·방향을 그 나비에게 넘겨서 위에 겹쳐 그려요.
+       쓸 수 없는 기기(WebGL2 없음)에서는 가벼운 3D 나비로 대신해요 */
+    var bflyCanvas = $('.iw-bfly'), classic = null, cb = null;
+    if (CFG.butterfly.style === 'classic' && window.createButterflyGL) {
+      try { classic = createButterflyGL(bflyCanvas, { sky: true, dense: 1, flapHz: CFG.butterfly.flapHz }); } catch (e) { classic = null; }
+    }
+    if (classic) { cb = classic.butterflies[0]; bf.hideModel(); }
+    else { bflyCanvas.style.display = 'none'; if (bf.trailPts) scene.add(bf.trailPts); }
+    var cM = new THREE.Matrix4(), cQ = new THREE.Quaternion(), cE = new THREE.Euler(), cV = new THREE.Vector3();
+    var cFix = new THREE.Matrix4().set(-1, 0, 0, 0,  0, 0, 1, 0,  0, 1, 0, 0,  0, 0, 0, 1);   // 옛 나비 축(머리 = y, 날개 올림 = z) → 3D 공간 축(머리 = z, 위 = y)
+    function driveClassic(dt, ab, aT, hzMul) {
+      cV.copy(bPos).project(camera);
+      var px = (cV.x * 0.5 + 0.5) * W, py = (-cV.y * 0.5 + 0.5) * H;
+      var depth = Math.max(0.2, cV.copy(bPos).applyMatrix4(camera.matrixWorldInverse).z * -1);
+      var pxPerM = H / (2 * Math.tan(camera.fov * Math.PI / 360) * depth);
+      var w = classic.toWorld(px, py);
+      cQ.copy(camera.quaternion).invert().multiply(bf.group.quaternion);
+      cM.makeRotationFromQuaternion(cQ).multiply(cFix); cE.setFromRotationMatrix(cM, 'YXZ');
+      cb.pose = { x: w[0], y: w[1], z: 0, yaw: cE.y, pitch: cE.x, roll: cE.z,
+        scale: CFG.butterfly.span / 2 * bf.group.scale.x * pxPerM * classic.unitsPerPx() * (1 - 0.35 * smooth(aT / 0.6)) };
+      cb.hzMul = hzMul; cb.dust = Q.reduced || aT > 0.3 ? 0 : CFG.butterfly.dust;
+      bflyCanvas.style.opacity = String(1 - smooth((aT - 0.05) / 0.5));   // 흡수: 나비는 옅어지고 하프톤 점이 포스터로 모임
+      classic.simulate(dt); classic.draw();
+    }
 
     var T = new THREE.Vector3().fromArray(world.posterUVToWorld(CFG.poster.target[0], CFG.poster.target[1]));
     var Tarr = [T.x, T.y, T.z];
@@ -130,7 +153,7 @@ window.createWebGLIntro = function (root, opts) {
       }
       camKeys = CFG.cameraKeys.call(CFG, D, Tarr);
       pathKeys = CFG.pathKeys(hs, Tarr);
-      world.sizeWater(W, H, pr);
+      if (classic) classic.resize();
       bf.setPointScale(H * pr / (2 * tv));
       needsRender = true;
     }
@@ -170,7 +193,7 @@ window.createWebGLIntro = function (root, opts) {
     var camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), bPos = new THREE.Vector3(), prevB = new THREE.Vector3(), dirK = new THREE.Vector3(), dirB = new THREE.Vector3();
     var mouse = { x: 0, y: 0, sx: 0, sy: 0 };
     var ST = CFG.story;
-    var state = { p: 0, target: 0, appear: Q.reduced || !CFG.autoAppear ? 1 : 0, t: 0, lastRip: -1, ripStart: -1, entered: false, fps: 0, frames: 0, jumps: 0 };
+    var state = { p: 0, target: 0, appear: Q.reduced || !CFG.autoAppear ? 1 : 0, t: 0, ripDist: 0, ripT: 0, ripStart: -1, entered: false, fps: 0, frames: 0, jumps: 0 };
 
     function storyFromScroll(sp) {
       var A = CFG.autoAppear ? CFG.autoAppear.to * smooth(state.appear) : 0;
@@ -209,9 +232,14 @@ window.createWebGLIntro = function (root, opts) {
       bf.setTime(t);
 
       // 큰 스크롤 점프 → 잔상 정리 (화면을 가로지르는 긴 선 방지)
-      var moved = bPos.distanceTo(prevB);
-      if (moved > CFG.trail.jump) { bf.clearTrail(); state.jumps++; }
-      bf.trailUpdate(t, dt, dt > 0 ? moved / dt : 0, ab < 0.25 && !Q.reduced);
+      var moved = bPos.distanceTo(prevB), jumped = moved > CFG.trail.jump;
+      if (jumped) { bf.clearTrail(); if (classic) classic.clearDust(); world.clearRipples(); state.jumps++; state.ripDist = 0; }
+      if (!classic) bf.trailUpdate(t, dt, dt > 0 ? moved / dt : 0, ab < 0.25 && !Q.reduced);
+      // 나비가 지나가는 길을 따라 물결 (움직인 거리마다 하나, 떠 있을 때는 가끔)
+      if (!jumped && !Q.reduced && CFG.ripple.strength > 0 && aT < 0.5 && dt > 0) {
+        state.ripDist += moved;
+        if (state.ripDist > CFG.ripple.spacing || t - state.ripT > CFG.ripple.hoverEvery) { world.addRipple(bPos.x, bPos.y, bPos.z); state.ripDist = 0; state.ripT = t; }
+      }
       prevB.copy(bPos);
 
       /* 카메라 */
@@ -254,6 +282,7 @@ window.createWebGLIntro = function (root, opts) {
       }
 
       world.update(t, camPos);
+      if (classic) { camera.updateMatrixWorld(); driveClassic(dt, ab, aT, (Q.reduced ? 0.65 : 1) * (1 + 0.5 * (1 - hov)) * (1 - 0.3 * fold)); }
     }
 
     /* ── 스크롤 ── */
@@ -272,21 +301,21 @@ window.createWebGLIntro = function (root, opts) {
       scrollP = readScroll();
     }
 
-    /* ── 마우스·터치: 시점 변화 + 수면 위에서만 파문 ── */
+    /* ── 마우스·터치: 시점 변화 + 벽 위에서만 작은 물결 ── */
     var ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), lastRipT = 0, lastRipP = new THREE.Vector3(1e3, 0, 0);
     function pointer(e) {
       var r = canvas.getBoundingClientRect();
       ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       if (e.pointerType === 'mouse') { mouse.x = ndc.x; mouse.y = -ndc.y; }
-      if (CFG.water.ripple <= 0 || Q.reduced || !world.water.visible) return;
+      if (CFG.ripple.pointer <= 0 || CFG.ripple.strength <= 0 || Q.reduced) return;
       var now = state.t;
-      if (now - lastRipT < 0.07) return;
+      if (now - lastRipT < 0.25) return;
       ray.setFromCamera(ndc, camera);
-      var hit = ray.intersectObject(world.water, false)[0];
-      if (!hit) return;                                      // 수면 위가 아니면 파문 없음
-      if (hit.point.distanceTo(lastRipP) < 0.22 && e.type === 'pointermove') return;
+      var hit = ray.intersectObject(world.wall, false)[0];
+      if (!hit || hit.point.z < -0.01) return;               // 벽 앞면 위가 아니면 물결 없음
+      if (hit.point.distanceTo(lastRipP) < 0.5 && e.type === 'pointermove') return;
       lastRipT = now; lastRipP.copy(hit.point);
-      world.addRipple(hit.point.x, hit.point.z, e.type === 'pointerdown' ? 1.3 : 0.8);
+      world.addRipple(hit.point.x, hit.point.y, (1 - CFG.ripple.pointer) * 3.5);   // z를 키우면 약해짐
     }
     // passive: 터치로 페이지를 스크롤하는 것을 절대 막지 않음
     on(stage, 'pointermove', pointer, { passive: true });

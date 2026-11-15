@@ -12,16 +12,32 @@ window.IWButterfly = function (THREE, CFG, Q) {
   var disposables = [];
   function keep(x) { disposables.push(x); return x; }
 
-  /* ── 날개 모양 (위에서 본 오른쪽 날개: x = 바깥, z = 앞) ── */
-  var FORE = [[0.06, 0.12], [0.24, 0.34], [0.46, 0.55], [0.70, 0.72], [0.90, 0.80], [1.00, 0.72], [1.01, 0.52], [0.92, 0.30], [0.76, 0.12], [0.55, 0.01], [0.32, -0.04], [0.12, -0.05]];
-  var HIND = [[0.10, -0.03], [0.34, -0.02], [0.58, -0.08], [0.74, -0.22], [0.78, -0.42], [0.68, -0.62], [0.48, -0.76], [0.28, -0.74], [0.12, -0.58], [0.04, -0.32]];
-  function outline(pts, n) {
-    var c = new THREE.CatmullRomCurve3(pts.map(function (p) { return new THREE.Vector3(p[0], 0, p[1]); }), false, 'centripetal');
-    return c.getSpacedPoints(n - 1);
+  /* ── 날개 모양: 기존 승인 WebGL 나비(js/butterfly-gl.js)와 같은 윤곽 — 레퍼런스에서 딴 (각도°, 반지름) 점
+     위에서 본 오른쪽 날개: x = 바깥, z = 앞(머리 쪽). 각도는 x축에서 앞쪽으로 잰 값 ── */
+  var FORE_PTS = [[-40,.02],[-30,.08],[-22,.19],[-16,.39],[-11,.62],[-1.8,.76],[7.4,.83],[17,.98],[26,1.12],[33,1.13],[36.4,.91],[39,.68],[42,.50],[45,.38],[50,.22],[58,.05],[63,.02]];
+  var HIND_PTS = [[-93,.02],[-86,.08],[-80,.18],[-74,.38],[-69,.60],[-63,.72],[-52,.76],[-41,.75],[-27,.75],[-16,.72],[-5,.62],[10,.35],[20,.12],[28,.02]];
+  function makeTable(pts) {           // 64칸 반지름 표 (기존 나비와 같은 방식으로 두 번 부드럽게)
+    var a0 = pts[0][0], a1 = pts[pts.length - 1][0], t = [];
+    for (var i = 0; i < 64; i++) {
+      var deg = a0 + (a1 - a0) * i / 63, r = 0.02;
+      for (var k = 0; k < pts.length - 1; k++) if (deg >= pts[k][0] && deg <= pts[k + 1][0]) { var f = (deg - pts[k][0]) / (pts[k + 1][0] - pts[k][0]); r = pts[k][1] + (pts[k + 1][1] - pts[k][1]) * f; }
+      t.push(r);
+    }
+    for (var pass = 0; pass < 2; pass++) { var c = t.slice(); for (i = 1; i < 63; i++) t[i] = 0.25 * c[i - 1] + 0.5 * c[i] + 0.25 * c[i + 1]; }
+    return { t: t, a0: a0 * Math.PI / 180, a1: a1 * Math.PI / 180 };
   }
-  var RINGS = 7, SEG = 44;
+  function outline(pts, n, rootZ) {
+    var tab = makeTable(pts), out = [];
+    for (var i = 0; i < n; i++) {
+      var u = i / (n - 1) * 63, j = Math.min(Math.floor(u), 62), r = tab.t[j] + (tab.t[j + 1] - tab.t[j]) * (u - j);
+      var th = tab.a0 + (tab.a1 - tab.a0) * i / (n - 1);
+      out.push(new THREE.Vector3(r * Math.cos(th), 0, rootZ + r * Math.sin(th)));
+    }
+    return out;
+  }
+  var RINGS = 7, SEG = 56;
   function wingGeo(pts, root) {
-    var out = outline(pts, SEG), pos = [], aS = [], aA = [], idx = [];
+    var out = outline(pts, SEG, root[1]), pos = [], aS = [], aA = [], idx = [];
     pos.push(root[0], 0, root[1]); aS.push(0); aA.push(0.5);
     for (var r = 1; r <= RINGS; r++) {
       var s = r / RINGS;
@@ -43,7 +59,7 @@ window.IWButterfly = function (THREE, CFG, Q) {
     g.userData = { out: out, root: root };
     return keep(g);
   }
-  var foreGeo = wingGeo(FORE, [0.0, 0.06]), hindGeo = wingGeo(HIND, [0.0, -0.04]);
+  var foreGeo = wingGeo(FORE_PTS, [0.0, 0.10]), hindGeo = wingGeo(HIND_PTS, [0.0, -0.02]);
 
   /* ── 날개 재질: 아이보리·베이지 + 은은한 진주빛, 가장자리는 하프톤 점 ── */
   var wingU = {
@@ -79,7 +95,7 @@ window.IWButterfly = function (THREE, CFG, Q) {
         '  vec3 col = ivory;',
         '  float vein = smoothstep(.045, .0, abs(fract(vA*(uHind > .5 ? 6. : 8.) + vS*.15) - .5))*smoothstep(.1, .3, vS)*(1. - edge);',
         '  col = mix(col, beige, vein*.5);',
-        '  float spot = uHind > .5 ? smoothstep(.13, .03, length(vL - vec2(.46, -.42))) : smoothstep(.09, .02, length(vL - vec2(.56, .38))) + smoothstep(.12, .03, length((vL - vec2(.82, .58))*vec2(1., 1.6)))*.8;',
+        '  float spot = uHind > .5 ? smoothstep(.14, .03, length(vL - vec2(.42, -.48))) : smoothstep(.08, .02, length(vL - vec2(.55, .42))) + smoothstep(.13, .03, length((vL - vec2(.86, .66))*vec2(1., 1.5)))*.8;',
         '  col = mix(col, grey, clamp(spot, 0., 1.)*.42);',
         '  col = mix(col, beige, smoothstep(.72, 1., vS)*.55);',
         '  vec3 n = normalize(vN); if(!gl_FrontFacing) n = -n;',
@@ -183,7 +199,7 @@ window.IWButterfly = function (THREE, CFG, Q) {
     euler.set(-pitch, yaw, bank); group.quaternion.setFromEuler(euler);
   }
 
-  var phase = 0;
+  var phase = 0, hidden = false;
   function flap(dt, fold, rate) {
     phase += dt * Math.PI * 2 * B.flapHz * rate;
     var c = 0.5 - 0.5 * Math.cos(phase);
@@ -208,7 +224,7 @@ window.IWButterfly = function (THREE, CFG, Q) {
     wingU.uDiss.value = diss > 0 ? diss : 0;
     var bodyFade = 1 - smooth((aT - 0.48) / 0.27);
     bodyMat.opacity = bodyFade; antMat.opacity = bodyFade;
-    body.visible = head.visible = ant.visible = bodyFade > 0.01;
+    body.visible = head.visible = ant.visible = !hidden && bodyFade > 0.01;
     model.visible = aT < 0.999;
     if (aT <= 0) { absorbPts.visible = false; return; }
     absorbPts.visible = true;
@@ -265,6 +281,7 @@ window.IWButterfly = function (THREE, CFG, Q) {
     group: group, absorbPts: absorbPts, trailPts: trailPts, wingU: wingU,
     setPose: setPose, flap: flap, setAbsorb: setAbsorb, trailUpdate: trailUpdate, clearTrail: clearTrail, setPointScale: setPointScale,
     setTime: function (t) { wingU.uTime.value = t; },
+    hideModel: function () { model.children.forEach(function (c) { c.traverse(function (o) { if (o.isMesh || o.isLineSegments) o.visible = false; }); }); hidden = true; },
     dispose: function () { disposables.forEach(function (d) { if (d && d.dispose) d.dispose(); }); }
   };
 };

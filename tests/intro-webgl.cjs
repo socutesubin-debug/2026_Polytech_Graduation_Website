@@ -38,13 +38,14 @@ async function run(name, ctxOpts, extra = '') {
     await page.screenshot({ path: f });
     res.shots.push({ p, f, ndc: info.bflyNDC.map((v) => +v.toFixed(2)), cam: info.cam.map((v) => +v.toFixed(2)), fps: +info.fps.toFixed(1) });
   }
-  // 2) 나비가 화면 안에 있는지 (p 0.09 ~ 0.84), 카메라가 벽 앞에 있는지
+  // 2) 나비가 화면 안에 있는지 (p 0.09 ~ 0.84, 장면 전환 구간 제외), 카메라가 벽 앞에 있는지
   const miss = await page.evaluate(() => {
     const out = [];
     for (let i = 0; i <= 60; i++) {
       const p = 0.09 + (0.845 - 0.09) * i / 60; window.__iw.freeze(p); window.__iw.step(1 / 60);
       const n = window.__iw.info();
-      if (Math.abs(n.bflyNDC[0]) > 0.92 || Math.abs(n.bflyNDC[1]) > 0.92 || n.bflyNDC[2] > 1) out.push([+p.toFixed(3), n.bflyNDC.map((v) => +v.toFixed(2))]);
+      const away = p > 0.235 && p < 0.515; // 장면 1→2 사이: 나비가 일부러 화면 밖(오른쪽으로 나가 왼쪽에서 다시 등장)
+      if (!away && (Math.abs(n.bflyNDC[0]) > 0.92 || Math.abs(n.bflyNDC[1]) > 0.92 || n.bflyNDC[2] > 1)) out.push([+p.toFixed(3), n.bflyNDC.map((v) => +v.toFixed(2))]);
       if (n.cam[2] < 0.3) out.push(['wall', p, n.cam]);
     }
     return out;
@@ -65,11 +66,11 @@ async function run(name, ctxOpts, extra = '') {
   // 4) 키보드: Tab으로 버튼에 갈 수 있는지
   const focus = await page.evaluate(() => { const b = document.querySelector('.iw-enter-btn'); b.focus(); return document.activeElement === b; });
   res.checks.push({ enterButtonFocusable: focus });
-  // 5) 수면 파문: 연못 위 포인터 → 파문 생김 (p=0.6 장면에서 화면 아래쪽)
+  // 5) 벽 위 포인터 → 작은 물결
   await page.evaluate(() => window.__iw.freeze(0.6));
   await page.waitForTimeout(300);
   const vp = page.viewportSize();
-  await page.mouse.move(vp.width * 0.4, vp.height * 0.93); await page.mouse.move(vp.width * 0.6, vp.height * 0.95, { steps: 6 });
+  await page.mouse.move(vp.width * 0.15, vp.height * 0.3); await page.mouse.move(vp.width * 0.3, vp.height * 0.6, { steps: 6 });
   await page.waitForTimeout(500);
   await page.screenshot({ path: path.join(OUT, `${name}-ripple.png`) });
   // 6) 정리(dispose) 뒤 남는 것이 없는지

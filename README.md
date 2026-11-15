@@ -24,14 +24,14 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 
 ## 새 WebGL 인트로 미리보기 (2026-11-15) — `intro-webgl.html`
 
-기존 인트로(`index.html`의 Intro, `intro-proto.html`)는 그대로 두고, **별도 페이지**에 하나의 3D 공간(하늘 · 미술관 외벽 · 포스터 · 반사 연못)으로 만든 새 인트로예요. 카메라만 움직여서 하늘의 나비 → 외벽 포스터 → 포스터 속으로 들어가요.
+기존 인트로(`index.html`의 Intro, `intro-proto.html`)는 그대로 두고, **별도 페이지**에 하나의 3D 공간(하늘 · 미술관 외벽 · 포스터)으로 만든 새 인트로예요. 카메라만 움직여요: 하늘에서 나비 등장 → 나비가 오른쪽으로 나감 → 시선이 벽으로 내려옴 → 나비가 왼쪽에서 들어와 포스터 속으로. 나비는 기존 인트로와 같은 `js/butterfly-gl.js`를 쓰고, 나비가 지나가는 길을 따라 벽과 하늘에 물결이 번져요 (바닥 연못은 뺐어요).
 
 | 무엇 | 파일 |
 |---|---|
 | 미리보기 페이지 | `intro-webgl.html` (끝에서 `전시 입장하기` → `goToExhibition()` 함수 하나만 바꾸면 실제 사이트로 연결) |
 | **숫자 고치는 곳** (스크롤 길이, 구간, 카메라 경로, 나비 크기·날갯짓, 흡수 지점, 물결 세기) | `js/intro-webgl/config.js` |
-| 공간(하늘·벽·바닥·연못·포스터) | `js/intro-webgl/world.js` |
-| 나비·잔상·흡수 점 | `js/intro-webgl/butterfly.js` |
+| 공간(하늘·벽·바닥·포스터·물결) | `js/intro-webgl/world.js` |
+| 나비 자세·흡수 점 (나비 그림은 `js/butterfly-gl.js`) | `js/intro-webgl/butterfly.js` |
 | 스크롤·카메라·접근성·정리 | `js/intro-webgl/intro.js` |
 | 모양 (이름은 모두 `iw-`로 시작) | `css/intro-webgl.css` |
 | 포스터 원본 | `assets/images/intro-webgl/main-poster.webp` (프로젝트 파일 `storyboard/key-visual/main-poster.png` 613×926, 비율 그대로) |

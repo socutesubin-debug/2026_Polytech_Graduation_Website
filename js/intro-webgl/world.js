@@ -1,7 +1,7 @@
-/* WebGL 인트로 — 공간: 하늘, 미술관 외벽(건물), 바닥, 반사 연못, 포스터와 프레임.
-   IWWorld(THREE, Reflector, CFG, Q) -> { group, poster, water, update(state), addRipple(x,z), pickWater(raycaster), dispose() }
+/* WebGL 인트로 — 공간: 하늘, 미술관 외벽(건물), 바닥, 포스터와 프레임 + 나비가 지나간 자리에 번지는 물결.
+   IWWorld(THREE, CFG, Q) -> { group, poster, wall, update(t, camPos), addRipple(x,y,z), clearRipples(), dispose() }
    모든 것이 한 3D 공간 안에 고정된 자리에 있고, 카메라만 움직여요. */
-window.IWWorld = function (THREE, Reflector, CFG, Q) {
+window.IWWorld = function (THREE, CFG, Q) {
   var NOISE = [
     'float hash(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p+45.32); return fract(p.x*p.y); }',
     'float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);',
@@ -20,14 +20,38 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
     uBfly: { value: new THREE.Vector4(0, 0, 10, 0) },          // 나비 위치 xyz + 그림자 세기
     uBSpan: { value: CFG.butterfly.span },
     uLeaf: { value: CFG.leaves },
-    uRect: { value: new THREE.Vector4(-PW / 2, PY - PH / 2, PW / 2, PY + PH / 2) }
+    uRect: { value: new THREE.Vector4(-PW / 2, PY - PH / 2, PW / 2, PY + PH / 2) },
+    uRip: { value: null }, uRipStr: { value: CFG.ripple.strength }
   };
+  /* 물결: 나비가 지나간 자리(x, y, z)와 생긴 시각. 벽·포스터·하늘 셰이더가 함께 읽어요 */
+  var MAXR = CFG.ripple.max, rips = [], ripIdx = 0;
+  for (var ri = 0; ri < MAXR; ri++) rips.push(new THREE.Vector4(0, 0, 0, -100));
+  shared.uRip.value = rips;
+  function addRipple(x, y, z) { rips[ripIdx].set(x, y, z, shared.uTime.value); ripIdx = (ripIdx + 1) % MAXR; }
+  function clearRipples() { rips.forEach(function (r) { r.w = -100; }); }
+  var RIP = [
+    'uniform vec4 uRip[' + MAXR + ']; uniform float uRipStr;',
+    /* 벽 위의 물결: 수면에 떨어진 물방울처럼 고리가 퍼지며 사라짐. 나비가 벽에서 멀면 약함 */
+    'float pathRipple(vec2 q){ float s = 0.;',
+    '  for(int i = 0; i < ' + MAXR + '; i++){ vec4 r = uRip[i]; float age = uTime - r.w; if(age < 0. || age > 3.6) continue;',
+    '    float d = length(q - r.xy); float k = d - age*.36;',
+    '    s += cos(k*30.)*exp(-age*1.15)*exp(-k*k/.022)*smoothstep(0., .12, age)*exp(-max(r.z, 0.)*.32); }',
+    '  return s*uRipStr; }'
+  ].join('\n');
 
   /* ── 하늘: 옅은 푸른색, 부드러운 구름 ── */
   var skyMat = keep(new THREE.ShaderMaterial({
-    uniforms: { uTime: shared.uTime, uSun: shared.uSun },
+    uniforms: { uTime: shared.uTime, uSun: shared.uSun, uRip: shared.uRip, uRipStr: shared.uRipStr },
     vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position = p.xyww; }',
     fragmentShader: NOISE + '\nuniform float uTime; uniform vec3 uSun; varying vec3 vDir;\n' +
+      'uniform vec4 uRip[' + MAXR + ']; uniform float uRipStr;\n' +
+      /* 하늘의 물결: 나비가 지나간 자리를 중심으로 공기가 수면처럼 번짐 */
+      'float skyRipple(vec3 d){ float s = 0.;\n' +
+      '  for(int i = 0; i < ' + MAXR + '; i++){ vec4 r = uRip[i]; float age = uTime - r.w; if(age < 0. || age > 3.6) continue;\n' +
+      '    vec3 v = r.xyz - cameraPosition; float L = length(v); vec3 n = v/L; if(dot(d, n) < 0.) continue;\n' +
+      '    float k = length(cross(d, n))*L - age*.36;\n' +
+      '    s += cos(k*30.)*exp(-age*1.15)*exp(-k*k/.022)*smoothstep(0., .12, age); }\n' +
+      '  return s*uRipStr; }\n' +
       'void main(){ vec3 d = normalize(vDir); float h = clamp(d.y, 0., 1.);\n' +
       ' vec3 hor = vec3(.925,.945,.955), zen = vec3(.60,.74,.87);\n' +
       ' vec3 col = mix(hor, zen, pow(smoothstep(0., 1., h), .65));\n' +
@@ -35,6 +59,7 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
       ' float c = fbm(cp*1.2) * .7 + fbm(cp*3.1)*.3; c = smoothstep(.5, .82, c)*smoothstep(.03, .3, d.y);\n' +
       ' col = mix(col, vec3(.975,.98,.985), c*.6);\n' +
       ' float s = max(dot(d, uSun), 0.); col += vec3(1.,.97,.9)*(pow(s, 6.)*.10 + pow(s, 300.)*.5);\n' +
+      ' col += skyRipple(d)*.045;\n' +
       ' gl_FragColor = vec4(col, 1.); }',
     side: THREE.BackSide, depthWrite: false
   }));
@@ -63,7 +88,7 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
   var stoneMat = keep(new THREE.ShaderMaterial({
     uniforms: shared,
     vertexShader: stoneVS,
-    fragmentShader: NOISE + '\n' + leafFn + '\nvarying vec3 vW; varying vec3 vN;\n' +
+    fragmentShader: NOISE + '\n' + leafFn + '\n' + RIP + '\nvarying vec3 vW; varying vec3 vN;\n' +
       'void main(){ vec3 n = normalize(vN);\n' +
       ' vec2 q = abs(n.z) > .5 ? vW.xy : (abs(n.x) > .5 ? vec2(-vW.z, vW.y) : vW.xz);\n' +
       /* 노란 기가 적은 아이보리 석재 */
@@ -83,7 +108,8 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
       ' if(n.z > .5){ vec2 o = vec2(.045, -.065); vec2 c = (uRect.xy + uRect.zw)*.5 + o; vec2 hs = (uRect.zw - uRect.xy)*.5 + .03;\n' +
       '   vec2 dd = abs(vW.xy - c) - hs; float sd = length(max(dd, 0.)) + min(max(dd.x, dd.y), 0.);\n' +
       '   col *= 1. - .22*smoothstep(.09, -.02, sd)*(1. - sh*.6);\n' +
-      '   col *= 1. - bflyShadow(vW); }\n' +
+      '   col *= 1. - bflyShadow(vW);\n' +
+      '   float rp = pathRipple(vW.xy); col *= 1. + rp*.10; col += max(rp, 0.)*.03; }\n' +
       ' gl_FragColor = vec4(col, 1.); }'
   }));
 
@@ -118,72 +144,6 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
   ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, 35 - 0.001);
   group.add(ground);
 
-  /* ── 반사 연못 ── */
-  var W = CFG.water, wx0 = W.x[0], wx1 = W.x[1], wz0 = W.z[0], wz1 = W.z[1];
-  var coping = 0.16, copH = 0.07;
-  [[(wx0 + wx1) / 2, wz0 - coping / 2, wx1 - wx0 + coping * 2, coping],
-   [(wx0 + wx1) / 2, wz1 + coping / 2, wx1 - wx0 + coping * 2, coping],
-   [wx0 - coping / 2, (wz0 + wz1) / 2, coping, wz1 - wz0],
-   [wx1 + coping / 2, (wz0 + wz1) / 2, coping, wz1 - wz0]].forEach(function (c) {
-    var m = new THREE.Mesh(keep(new THREE.BoxGeometry(c[2], copH, c[3])), stoneMat);
-    m.position.set(c[0], copH / 2, c[1]); group.add(m);
-  });
-
-  var MAXR = W.maxRipples;
-  var rips = []; for (var i = 0; i < MAXR; i++) rips.push(new THREE.Vector4(0, 0, -100, 0));
-  var waterShader = {
-    name: 'IWWater',
-    uniforms: {
-      color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null },
-      uTime: { value: 0 }, uRip: { value: rips }, uWave: { value: W.wave }, uRipStr: { value: W.ripple }, uSun: { value: sun }
-    },
-    vertexShader: 'uniform mat4 textureMatrix; varying vec4 vUv; varying vec3 vW;\n' +
-      'void main(){ vUv = textureMatrix*vec4(position, 1.); vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
-    fragmentShader: NOISE + '\nuniform vec3 color; uniform sampler2D tDiffuse; uniform float uTime, uWave, uRipStr; uniform vec3 uSun;\n' +
-      'uniform vec4 uRip[' + MAXR + ']; varying vec4 vUv; varying vec3 vW;\n' +
-      'vec2 waves(vec2 p){ vec2 g = vec2(0.);\n' +
-      ' g += vec2(cos(p.x*2.3 + p.y*.7 + uTime*.8), sin(p.y*2.9 - p.x*.4 - uTime*.65))*.5;\n' +
-      ' g += vec2(cos(p.x*5.1 - p.y*3.3 + uTime*1.3), sin(p.y*4.7 + p.x*2.1 + uTime*1.1))*.25;\n' +
-      ' float e = .05; vec2 q = p*1.6 + uTime*.06; float n0 = vnoise(q);\n' +
-      ' g += vec2(vnoise(q + vec2(e, 0.)) - n0, vnoise(q + vec2(0., e)) - n0)/e*.08;\n' +
-      ' return g*.0035*uWave; }\n' +
-      'void main(){ vec2 p = vW.xz; vec2 g = waves(p);\n' +
-      ' for(int i = 0; i < ' + MAXR + '; i++){ vec4 r = uRip[i]; float age = uTime - r.z; if(age < 0. || age > 4.5) continue;\n' +
-      '   vec2 dv = p - r.xy; float d = length(dv) + 1e-4; float k = d - age*.42;\n' +
-      '   float env = r.w*exp(-age*1.0)*exp(-k*k/.035)*smoothstep(0., .25, age);\n' +
-      '   g += dv/d*cos(k*26.)*env*.011*uRipStr; }\n' +
-      ' vec4 uv = vUv; uv.xy += g*12.*uv.w;\n' +
-      ' vec3 refl = texture2DProj(tDiffuse, uv).rgb;\n' +
-      ' vec3 V = normalize(cameraPosition - vW);\n' +
-      ' float fres = .55 + .4*pow(1. - clamp(V.y, 0., 1.), 2.5);\n' +
-      ' vec3 deep = vec3(.60,.665,.66);\n' +
-      ' vec3 col = mix(deep, refl*vec3(.95,.97,.975), fres);\n' +
-      ' float glint = pow(clamp(1. - length(g)*0., 0., 1.), 1.) * smoothstep(.006, .02, length(g))*.06;\n' +
-      ' col += glint;\n' +
-      ' gl_FragColor = vec4(col, 1.); }'
-  };
-  var mobile = Q.mobile;
-  var resK = mobile ? W.resolution.mobile : W.resolution.desktop;
-  var water = new Reflector(keep(new THREE.PlaneGeometry(wx1 - wx0, wz1 - wz0)), {
-    shader: waterShader, clipBias: 0.003, color: 0xffffff,
-    textureWidth: 512, textureHeight: 512, multisample: mobile ? 0 : 4
-  });
-  water.rotation.x = -Math.PI / 2;
-  water.position.set((wx0 + wx1) / 2, 0.035, (wz0 + wz1) / 2);
-  group.add(water);
-  var waterU = water.material.uniforms;
-  waterU.uRip.value = rips;
-  keep(water.material); keep(water.getRenderTarget());
-  function sizeWater(w, h, pr) {
-    water.getRenderTarget().setSize(Math.max(128, Math.round(w * pr * resK)), Math.max(128, Math.round(h * pr * resK)));
-  }
-  var ripIdx = 0;
-  function addRipple(x, z, amp) {
-    var r = rips[ripIdx]; r.set(x, z, shared.uTime.value, amp == null ? 1 : amp);
-    ripIdx = (ripIdx + 1) % MAXR;
-  }
-  function clearRipples() { rips.forEach(function (r) { r.z = -100; }); }
-
   /* ── 포스터 (원본 이미지 그대로, 효과는 재질에서만) ── */
   var posterTex = new THREE.Texture();
   posterTex.colorSpace = THREE.NoColorSpace;
@@ -196,18 +156,18 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
     uT: { value: new THREE.Vector2(P.target[0], P.target[1]) },
     uPat: { value: new THREE.Vector4().fromArray(P.pattern) },
     uAspect: { value: P.aspect },
-    uGlow: { value: 0 }, uPatAmt: { value: 0 }, uRipAge: { value: -1 }, uRipStr: { value: P.rippleStrength },
+    uGlow: { value: 0 }, uPatAmt: { value: 0 }, uRipAge: { value: -1 }, uInStr: { value: P.rippleStrength }, uRip: shared.uRip, uRipStr: shared.uRipStr,
     uLight: { value: 0 }, uReady: { value: 0 }
   };
   var posterMat = keep(new THREE.ShaderMaterial({
     uniforms: posterU,
     vertexShader: 'varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
-    fragmentShader: NOISE + '\n' + leafFn + '\nuniform sampler2D uMap; uniform vec2 uT; uniform vec4 uPat; uniform float uAspect, uGlow, uPatAmt, uRipAge, uRipStr, uLight, uReady;\n' +
+    fragmentShader: NOISE + '\n' + leafFn + '\n' + RIP + '\nuniform sampler2D uMap; uniform vec2 uT; uniform vec4 uPat; uniform float uAspect, uGlow, uPatAmt, uRipAge, uInStr, uLight, uReady;\n' +
       'varying vec2 vUv; varying vec3 vW;\n' +
       'void main(){ vec2 uv = vUv; vec2 dd = (vUv - uT)*vec2(uAspect, 1.); float d = length(dd);\n' +
       /* 들어가는 순간 한 번만 퍼지는 작은 파동. 평소(uRipAge < 0)에는 글자를 전혀 건드리지 않음 */
-      ' if(uRipAge >= 0. && uRipStr > 0.){ float r = uRipAge*.30; float env = exp(-uRipAge*2.4)*smoothstep(0., .08, uRipAge);\n' +
-      '   float w = exp(-pow((d - r)/.04, 2.)); uv -= dd/(d + 1e-4)/vec2(uAspect, 1.)*sin((d - r)*80.)*w*env*.0045*uRipStr; }\n' +
+      ' if(uRipAge >= 0. && uInStr > 0.){ float r = uRipAge*.30; float env = exp(-uRipAge*2.4)*smoothstep(0., .08, uRipAge);\n' +
+      '   float w = exp(-pow((d - r)/.04, 2.)); uv -= dd/(d + 1e-4)/vec2(uAspect, 1.)*sin((d - r)*80.)*w*env*.0045*uInStr; }\n' +
       ' vec3 col = mix(vec3(.86,.8,.72), texture2D(uMap, uv).rgb, uReady);\n' +
       /* 포스터 나비 무늬를 은은하게 강조 (세피아 부분일수록 더) */
       ' vec2 pb = (vUv - uPat.xy)/uPat.zw; float pm = smoothstep(1., .45, length(pb));\n' +
@@ -217,9 +177,10 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
       /* 흡수 지점의 작은 빛 */
       ' col += vec3(1.,.975,.92)*uGlow*(exp(-d*d/.0010)*.62 + exp(-d*d/.010)*.14);\n' +
       /* 파동이 지나가는 자리의 아주 옅은 빛 */
-      ' if(uRipAge >= 0.){ float r = uRipAge*.30; col += vec3(1.,.97,.9)*exp(-pow((d - r)/.03, 2.))*exp(-uRipAge*2.2)*.12*uRipStr; }\n' +
+      ' if(uRipAge >= 0.){ float r = uRipAge*.30; col += vec3(1.,.97,.9)*exp(-pow((d - r)/.03, 2.))*exp(-uRipAge*2.2)*.12*uInStr; }\n' +
       /* 마지막: 포스터 가운데에서 퍼지는 아이보리빛 */
       ' float L = uLight; col = mix(col, vec3(.99,.975,.945), clamp(L*1.6 - d*(1.8 - L*1.6), 0., 1.));\n' +
+      ' col *= 1. + pathRipple(vW.xy)*.06;\n' +
       ' col *= 1. - bflyShadow(vW)*.45;\n' +
       ' gl_FragColor = vec4(col, 1.); }'
   }));
@@ -251,11 +212,10 @@ window.IWWorld = function (THREE, Reflector, CFG, Q) {
   }
 
   return {
-    group: group, poster: poster, water: water, shared: shared, posterU: posterU, waterU: waterU,
+    group: group, poster: poster, wall: bld, shared: shared, posterU: posterU,
     posterSize: [PW, PH], posterUVToWorld: posterUVToWorld, setPosterImage: setPosterImage,
-    sizeWater: sizeWater, addRipple: addRipple, clearRipples: clearRipples,
-    waterBounds: [wx0, wx1, wz0, wz1],
-    update: function (t, camPos) { shared.uTime.value = t; waterU.uTime.value = t; sky.position.copy(camPos); },
+    addRipple: addRipple, clearRipples: clearRipples,
+    update: function (t, camPos) { shared.uTime.value = t; sky.position.copy(camPos); },
     dispose: function () { disposables.forEach(function (d) { if (d && d.dispose) d.dispose(); }); }
   };
 };
