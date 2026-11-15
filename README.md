@@ -133,6 +133,7 @@ beyond-the-frame/
 | 이미지·3D 파일 경로 | `js/data.js` 맨 위 `ASSETS` |
 | 인트로 방식 | `js/screens.js`의 `INTRO_MODE` — `'combo'`(티켓→포스터→액자, 현재), `'ticket'`, `'frame'` |
 | 색·글꼴 | `css/common.css` 맨 위 `:root` 변수 |
+| 상단 메뉴 (왼쪽 로고, 오른쪽 글자 메뉴) | 로고 그림 `assets/images/logo.webp`, 모양 `css/common.css`의 `.topbar` · `.brand` · `.pill` |
 | 화면별 모양·동작 | 위 **화면(방) ↔ 파일** 표의 해당 파일 |
 
 JavaScript 파일들은 모듈(`import`)이 아니라 `index.html`에서 차례로 불러오는 일반 스크립트입니다. 앞 파일에서 만든 변수·함수를 뒤 파일에서 그대로 쓰므로 `<script>` 순서를 바꾸지 마세요.
