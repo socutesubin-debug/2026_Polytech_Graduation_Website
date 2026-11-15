@@ -26,10 +26,11 @@
    20/1920 = 1.0417vw, 18/1920 = 0.9375vw → 2026-11-15 요청으로 0.84배 (0.875vw, 0.79vw) */
 .ab-copy h2{margin:0 0 1.75vw;font-family:"Noto Sans KR",var(--sans);font-weight:600;font-size:clamp(16px,.875vw,34px);line-height:1.5;letter-spacing:-.03em;color:#4a433b;word-break:keep-all}
 .ab-text p{margin:0;font-family:"Noto Sans KR",var(--sans);font-weight:500;font-size:clamp(14px,.79vw,30px);line-height:1.5;letter-spacing:-.03em;color:#4a433b;word-break:keep-all}
-.ab-text p.en{font-weight:400;letter-spacing:.01em}
+.ab-text p.en{font-weight:400;letter-spacing:.01em;color:#958c81}
 .ab-text p + p{margin-top:1.5em}
-.ab-text p + p.en{margin-top:.6em}
+.ab-text p + p.en{margin-top:1.9em}
 .ab-text b{font-weight:700;color:#4a433b}
+.ab-text p.en b{color:#7a7166}
 .ab-copy .ln{display:block}
 
 .ab-info{margin:2.2vw 0 0;padding:0;font-family:"Noto Sans KR",var(--sans);line-height:1.5;letter-spacing:-.03em}
