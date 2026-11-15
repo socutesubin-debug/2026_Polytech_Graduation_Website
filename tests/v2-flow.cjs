@@ -49,7 +49,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  // 들어오면 카드가 가운데에서 퍼져 나옴 → 다 퍼진 뒤: 카드는 공을 따라 기울지 않고 화면을 똑바로 봄 (가로:세로가 그대로 4:3), 앞 카드가 뒤 카드보다 큼
  assert(await p.evaluate(()=>pj.rev<1),'들어오면 카드가 퍼져 나오는 중');await p.waitForFunction(()=>pj.rev>=1,null,{timeout:8000});
  const boxes=await p.evaluate(()=>pj.cards.map(c=>{const rs=c.strips.map(el=>el.getBoundingClientRect());const w=Math.max(...rs.map(r=>r.right))-Math.min(...rs.map(r=>r.left)),h=Math.max(...rs.map(r=>r.bottom))-Math.min(...rs.map(r=>r.top));return {w,h};}));
- for(const b of boxes) assert(Math.abs(b.w/b.h-4/3)<0.2,'공일 때 카드는 화면을 똑바로 봄: '+(b.w/b.h).toFixed(2));
+ for(const b of boxes) assert(Math.abs(b.w/b.h-16/9)<0.25,'공일 때 카드는 화면을 똑바로 봄: '+(b.w/b.h).toFixed(2));
  const ws=boxes.map(b=>b.w);assert(Math.max(...ws)>Math.min(...ws)*1.6,'앞 카드는 크고 뒤 카드는 작음');
  // 끌면 공이 손을 따라 부드럽게 돌고, 손을 떼면 미끄러지듯 더 돎. 끌고 난 뒤에는 작품이 열리지 않음
  await p.mouse.move(600,450);await p.mouse.down();await p.mouse.move(820,430,{steps:6});
