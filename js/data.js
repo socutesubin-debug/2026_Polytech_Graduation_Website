@@ -52,7 +52,9 @@ const WORKS = {
   '민하도': { src: 'assets/images/works/02.webp', title: 'flowny' },
   '김준서': { src: 'assets/images/works/03.webp', title: 'SoundCloud Promotion Web' },
   '김우선': { src: 'assets/images/works/04.webp', title: '오늘의집 UI/UX 리디자인' },
-  '김수연': { src: 'assets/images/works/05.webp', title: '우리 언제 만나?' },
+  '김수연': { src: 'assets/images/works/05.webp', title: '우리 언제 만나?',
+    desc: '모두의 시간을 하나로 연결하는 일정 조율 앱\n\n01. 작품 설명\n여러 사람과 약속을 잡을 때 발생하는 번거로운 일정 조율 과정을 간소화하기 위해 기획한 UI/UX 앱입니다. 공유 링크를 통해 각자의 가능한 날짜와 시간을 선택하면 공통으로 가능한 시간을 직관적으로 확인할 수 있으며, 누구나 쉽고 빠르게 약속을 정할 수 있도록 디자인하였습니다.\n\n02. 디자인 콘셉트\n블루와 화이트를 중심으로 밝고 친근한 분위기를 표현하였으며, 심플한 아이콘과 직관적인 레이아웃을 통해 사용자의 편의성을 높였습니다. 캘린더와 시간 선택 기능을 시각적으로 명확하게 구성하여 복잡한 일정 조율 과정도 쉽고 간편하게 이용할 수 있도록 설계하였습니다.\n\n03. 차별점\n개인의 일정 기록과 관리에 집중하는 기존 캘린더 앱과 달리, 여러 사람의 가능한 시간을 비교하고 공통 일정을 도출하는 데 중점을 두었습니다. 별도의 앱 설치 없이 공유 링크로 일정 조율에 참여할 수 있으며, 참여자별 가능 시간과 공통 시간을 시각화하여 불필요한 소통 과정을 줄이고 효율적으로 약속을 확정할 수 있도록 기획하였습니다.',
+    images: ['assets/images/works/05/01.webp', 'assets/images/works/05/02.webp', 'assets/images/works/05/03.webp'] },
   '박재연': { src: 'assets/images/works/06.webp', title: '동방구' },
   '박호성': [                                                                              // 작품 2개 (ALIGNEX 그림은 2장 받음: 로고·사람 사진 → 썸네일은 사람 사진)
     { src: 'assets/images/works/08.webp', title: 'ALIGNEX' },
@@ -74,19 +76,19 @@ const WORKS = {
 };
 
 const STUDENTS = [
-  { name: '김예일', field: 'uxui', slogan: '구조와 흐름을 꿰뚫어 불편을 편리로 바꾸는 경험 디자이너', desc: '', email: '', portfolio: '' },
+  { name: '김예일', field: 'uxui', slogan: '구조와 흐름을 꿰뚫어 불편을 편리로 바꾸는 경험 디자이너', desc: '', email: '', portfolio: 'https://03yeil-kim.github.io/' },
   { name: '민하도', field: 'visual', slogan: '아이디어를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://hadomin91-design.github.io/hadomin_design/' },
-  { name: '김준서', field: 'visual', slogan: '상상한 것을 실현으로 바꾸는 디자이너', desc: '', email: '', portfolio: 'https://superijun.github.io/portfolio/' },
-  { name: '김우선', field: 'uxui', slogan: '경험을 디자인하고, 감각을 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://kok62360.github.io/1004/' },
+  { name: '김준서', field: 'visual', slogan: '상상한 것을 실현으로 바꾸는 디자이너', desc: '', email: '', portfolio: 'https://superjjun.github.io/portfolio/fashion/' },
+  { name: '김우선', field: 'uxui', slogan: '경험을 디자인하고, 감각을 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://kok62360.github.io/1_1028/' },
   { name: '김수연', field: 'visual', slogan: '상대의 이야기에 귀 기울이고, 원하는 방향을 함께 찾아가는 디자이너', desc: '', email: '', portfolio: 'https://kimssuyeon.github.io/battery-portfolio/' },
   { name: '박재연', field: 'uxui', slogan: '재미있게 끝까지 질리지 않는 디자이너', desc: '', email: '', portfolio: 'https://2501110072-dotcom.github.io/l01_interaction_2b/2501110072_ing_1' },
-  { name: '박수빈', field: 'uxui', slogan: '떠오른 가능성을, 손에 닿는 경험으로.', desc: '', email: '', portfolio: 'https://vinportfolio-desk-flow.vercel.app' },
+  { name: '박수빈', field: 'uxui', slogan: '떠오른 가능성을, 손에 닿는 경험으로.', desc: '', email: '', portfolio: 'https://vin-portfolio-swart.vercel.app/' },
   { name: '박호성', field: 'uxui', slogan: '감에 의존하지 않고, 데이터를 바탕으로 개선하는 디자이너', desc: '', email: '', portfolio: 'https://hoseong-graduation-portfolio.qkrghtjd4820.chatgpt.site/' },
   { name: '오수한', field: 'uxui', slogan: '익숙함의 결을 따라, 변화를 섬세하게 빚는 디자이너', desc: '', email: '', portfolio: 'https://suhan998.github.io/Web-Portfolio/' },
   { name: '조민영', field: '', designer: false, slogan: '경험을 내일로 잇는 디자이너', desc: '', email: '', portfolio: 'https://ddmom.github.io/my_portfolio/' },
   { name: '조예빈', field: 'visual', slogan: '익숙한 것에서 낯선 매력을 발견하는 디자이너', desc: '', email: '', portfolio: 'https://yobinnie.github.io/exhibition_2026/' },
   { name: '손예진', field: 'uxui', slogan: '익숙한 것을 낯설게 듣고, 음악처럼 오래 남는 경험을 만드는 디자이너', desc: '', email: '', portfolio: 'https://pueon01-max.github.io/play-2/' },
-  { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: '' },
+  { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: 'https://yejun40.github.io/wepportfolio/' },
   { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', email: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },
   { name: '하태랑', field: 'visual', slogan: '현실과 꿈의 모호한 경계를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://lalalatototo10-alt.github.io/graduation/' },
 ].map((s, i) => ({ ...s, works: [].concat(WORKS[s.name] || []), no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));

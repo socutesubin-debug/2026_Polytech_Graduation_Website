@@ -19,6 +19,25 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--night);color:var
 button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+/* 나비 커서 (js/cursor.js): Intro를 지나면 마우스 커서 대신 Intro의 금빛 나비가 마우스를 따라다님 (움직이면 빛가루가 날림)
+   body.bf-gl = 나비가 실제로 켜졌을 때만 붙음 → 그때만 원래 커서를 숨김 (마우스 없는 기기·움직임 줄이기·WebGL2 안 됨 = 원래 커서) */
+body.bf-gl,body.bf-gl *{cursor:none!important}
+.bf-cursor-gl{position:fixed;inset:0;z-index:9999;width:100%;height:100%;pointer-events:none;opacity:0}
+/* 배경음 버튼 (js/sound.js): 화면 왼쪽 아래의 둥근 유리 버튼 (휴대폰은 아래 가운데: 왼쪽 아래에는 Designer의 ← 버튼이 있음). 켜져 있으면 막대가 소리에 맞춰 움직이고(--h = 막대 키 0~1), 끄면 작게 줄어 멈춤 */
+.snd{position:fixed;z-index:70;left:clamp(16px,2.4vw,34px);bottom:calc(22px + env(safe-area-inset-bottom,0px));width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(160deg,rgba(255,255,255,.3),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.55);
+  backdrop-filter:blur(14px) saturate(1.25);-webkit-backdrop-filter:blur(14px) saturate(1.25);
+  box-shadow:0 8px 24px rgba(40,30,20,.16),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -1px 0 rgba(255,255,255,.12);
+  transform:scale(.86);opacity:.85;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s,background .25s,color .3s}
+.snd.is-on{transform:scale(1);opacity:1}
+.snd:hover{background:linear-gradient(160deg,rgba(255,255,255,.46),rgba(255,255,255,.16))}
+.snd[data-theme="light"]{color:#2b241c;border-color:rgba(255,255,255,.8);background:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,.2))}
+.snd-bars{display:flex;align-items:center;gap:2.5px;height:17px}
+.snd-bars i{width:2px;height:17px;border-radius:2px;background:currentColor;transform:scaleY(var(--h,.18));transition:transform .09s linear}
+.snd:not(.is-on) .snd-bars i{transition:transform .5s ease}
+@media(max-width:760px){.snd{left:50%;margin-left:-18px;width:36px;height:36px;bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  .opening .is-hint{bottom:84px}}
+@media(prefers-reduced-motion:reduce){.snd,.snd-bars i{transition:none}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}

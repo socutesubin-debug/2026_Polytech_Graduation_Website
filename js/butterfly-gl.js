@@ -254,7 +254,7 @@ function target(w, h) {
   return { fb, tex, w, h };
 }
 function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, OPT.maxDpr || 2); /* maxDpr: 선명도 상한 (나비 커서는 낮게) */
   const w = Math.max(8, Math.round((canvas.clientWidth || innerWidth)*DPR)), h = Math.max(8, Math.round((canvas.clientHeight || innerHeight)*DPR));
   if (w === W && h === H) return;
   W = canvas.width = w; H = canvas.height = h;

@@ -12,7 +12,7 @@ function createIntroVideo(root, opts) {
     end: 19.6,        // 스크롤을 끝까지 내렸을 때의 영상 시각(초) — 영상 길이 20초
     glide: 4 };       // 스크롤을 따라오는 빠르기 (작을수록 부드럽게)
   root.classList.add('iv-stage');
-  root.innerHTML = '<video class="iv-video" muted playsinline preload="auto" poster="' + CFG.poster + '"><source src="' + CFG.src + '" type="video/mp4"></video><div class="is-hint">SCROLL<i></i></div>';
+  root.innerHTML = '<video class="iv-video" muted playsinline preload="auto" poster="' + CFG.poster + '"><source src="' + CFG.src + '" type="video/mp4"></video><div class="is-hint">길잡이 나비를 따라 스크롤 해주세요<i></i></div>';
   var v = root.querySelector('video'), hint = root.querySelector('.is-hint'), scroller = opts.scroller || null;
   var target = 0, cur = 0, running = false, raf = 0, ended = false, last = 0, looping = false;
   function read() {

@@ -15,12 +15,19 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  // 1) Intro: s1 → s2 → s3 다음 [Project] [Designer] 버튼. 메뉴는 숨어 있고 건너뛰기는 항상 보임
  let p=await open();
  assert.equal(await state(p),'opening');assert.equal(await p.locator('#topbar.on').count(),0);
- await p.locator('#op-skip').waitFor({state:'visible'});
+ assert.equal(await p.locator('#op-skip').count(),0,'건너뛰기 버튼 없음');
+ await p.locator('#op-stage .is-hint').waitFor({state:'visible'});assert.equal((await p.locator('#op-stage .is-hint').textContent()).trim(),'길잡이 나비를 따라 스크롤 해주세요');
+ assert.equal(await p.evaluate(()=>document.body.classList.contains('bf-cursor')),false,'Intro에서는 원래 커서');
  // 스크롤 인트로: 끝까지 내리면 하얗게 밝아진 뒤 About으로 넘어감
  assert.equal(await p.locator('#op-stage .is-gl').count(),1);
  await p.locator('#opening').evaluate(el=>el.scrollTo(0,el.scrollHeight));
  await p.waitForFunction(()=>page==='about',null,{timeout:8000});
  assert.equal(new URL(p.url()).hash,'#about');assert.equal(await p.locator('#topbar.on').count(),1);
+ assert.equal(await p.evaluate(()=>document.body.classList.contains('bf-cursor')),true,'Intro 다음부터 나비 커서');
+ // 나비 커서(js/cursor.js): Intro와 같은 나비를 그리는 캔버스가 켜지고 원래 커서는 숨김. 마우스를 움직이면 나비가 보임
+ assert.equal(await p.evaluate(()=>document.body.classList.contains('bf-gl')&&getComputedStyle(document.body).cursor),'none');
+ await p.mouse.move(400,400);await p.mouse.move(520,430,{steps:5});await p.waitForFunction(()=>+document.querySelector('.bf-cursor-gl').style.opacity>0.9,null,{timeout:4000});
+ assert.equal(await p.locator('.bf-cursor-gl').evaluate(el=>getComputedStyle(el).pointerEvents),'none','나비 캔버스는 누르기를 막지 않음');
  assert.deepEqual(await p.locator('.pill button').allTextContents(),['Intro','About','Project','Designer']);
  // 메뉴 Intro → 오프닝 다시, 건너뛰기(Esc) → Project 방
  await p.locator('.pill [data-go="opening"]').click();assert.equal(await state(p),'opening');
@@ -52,9 +59,10 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  for(const b of boxes) assert(Math.abs(b.w/b.h-16/9)<0.25,'공일 때 카드는 화면을 똑바로 봄: '+(b.w/b.h).toFixed(2));
  const ws=boxes.map(b=>b.w);assert(Math.max(...ws)>Math.min(...ws)*1.6,'앞 카드는 크고 뒤 카드는 작음');
  // 끌면 공이 손을 따라 부드럽게 돌고, 손을 떼면 미끄러지듯 더 돎. 끌고 난 뒤에는 작품이 열리지 않음
- await p.mouse.move(600,450);await p.mouse.down();await p.mouse.move(820,430,{steps:6});
- assert(await p.evaluate(()=>pj.dy>15&&pj.hero.classList.contains('drag')),'끌면 돎');assert(await p.evaluate(()=>pj.dys<pj.dy),'부드럽게 늦게 따라옴');
- const d0=await p.evaluate(()=>pj.dy);await p.mouse.up();await p.waitForTimeout(300);
+ // (놓기 직전 0.09초 안의 움직임으로 미끄러짐을 정하므로, 끄는 동안의 상태는 '놓는 순간'에 페이지 안에서 적어 두고 움직임 → 놓기를 바로 이어서 함)
+ await p.evaluate(()=>{window.__st=null;addEventListener('pointerup',()=>{window.__st={turn:pj.dy>15&&pj.hero.classList.contains('drag'),soft:pj.dys<pj.dy,d0:pj.dy};},{capture:true,once:true});});
+ await p.mouse.move(600,450);await p.mouse.down();await p.mouse.move(820,430,{steps:6});await p.mouse.up();
+ const st=await p.evaluate(()=>window.__st);assert(st.turn,'끌면 돎');assert(st.soft,'부드럽게 늦게 따라옴');const d0=st.d0;await p.waitForTimeout(300);
  assert(await p.evaluate(d0=>pj.dy>d0+1&&!pj.hero.classList.contains('drag'),d0),'손을 떼면 미끄러지듯 더 돎');
  assert.equal(await p.locator('#pj-detail').isHidden(),true,'끌고 난 뒤에는 작품이 열리지 않음');
  await p.mouse.move(5,450);await p.waitForFunction(()=>Math.abs(pj.dvy)<1,null,{timeout:8000});
@@ -72,31 +80,35 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.equal(await p.evaluate(()=>'sv' in pj),false);
 
 
+ // 그림·설명을 넣은 작품만 상세가 열림 (지금은 김수연 우리 언제 만나?, 박수빈 다이소 뷰티). 없는 작품은 눌러도 열리지 않음
+ assert.deepEqual(await p.evaluate(()=>PJ_ITEMS.map((it,i)=>pjHasDetail(it)?i:-1).filter(i=>i>=0)),[4,7],'상세가 있는 작품');
+ assert.equal(await p.locator('.pj-card.no-detail').count(),await p.evaluate(()=>PJ_ITEMS.length-2));
+ const jn=await p.evaluate(()=>pj.cards.findIndex(c=>c.s===0));await p.evaluate(j=>pj.cards[j].el.click(),jn);await p.waitForTimeout(400);
+ assert.equal(await p.locator('#pj-detail').isHidden(),true,'자료 없는 작품: 상세 안 열림');
  // 카드를 누르면 그 작품 상세, Enter 키 = 맨 앞 카드
- const j=await p.evaluate(()=>pj.frontIdx);const who3=await p.evaluate(j=>PJ_ITEMS[pj.cards[j].s].s.name,j);
- await p.evaluate(j=>pj.cards[j].el.click(),j);await p.locator('#pj-detail.on').waitFor();assert.equal(await p.locator('#pj-d-who').textContent(),who3);
+ const j=await p.evaluate(()=>pj.cards.findIndex(c=>c.s===7));
+ await p.evaluate(j=>pj.cards[j].el.click(),j);await p.locator('#pj-detail.on').waitFor();assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);
  await p.keyboard.press('Escape');await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
- await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();
- assert(await p.evaluate(()=>pj.at===pj.cards[pj.frontIdx].s),'Enter = 맨 앞 카드');
+ await p.evaluate(j=>pjScrollToU(pjCardAt(j),true),j);await p.waitForFunction(j=>pj.frontIdx===j,j,{timeout:8000});await p.locator('#project').focus();await p.keyboard.press('Enter');await p.locator('#pj-detail.on').waitFor();
+ assert(await p.evaluate(()=>pj.at===7),'Enter = 맨 앞 카드');
  await p.keyboard.press('Escape');await p.waitForTimeout(400);
  // 끝까지 내려도 작품 목록은 없음
  assert.equal(await p.locator('#pj-list, #pj-grid, .pj-item').count(),0,'작품 목록 없음');
  await p.evaluate(()=>{pj.root.scrollTop=1e7;});await p.waitForTimeout(100);
  assert(await p.evaluate(()=>Math.abs(pj.root.scrollTop/pj.root.clientHeight-pjEndAt())<0.02),'스크롤 끝');
- // 작품 상세: 그림 14칸, ← → 이전/다음, Esc 닫기
- await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();
- assert.equal(await p.locator('.pj-shot').count(),14);
+ // 작품 상세: 넣은 그림만(임시 칸 없음), ← → 이전/다음(자료 없는 작품은 건너뜀), Esc 닫기
+ assert.equal(await p.evaluate(()=>pjOpen(6)),false,'박수빈 프린트카페(자료 없음)는 열리지 않음');
+ await p.evaluate(()=>pjOpen(7));await p.locator('#pj-detail.on').waitFor();
  assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
- // 박수빈은 작품 2개: → 하면 같은 사람의 다이소 뷰티(그림 3장, 설명), 한 번 더 → 하면 다음 사람
- await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
- assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);assert.equal(await p.locator('#pj-d-images img').count(),3);
+ assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);assert.equal(await p.locator('#pj-d-images img').count(),3);assert.equal(await p.locator('.pj-shot').count(),3);
  assert.match(await p.locator('#pj-d-desc').textContent(),/가상의 뷰티 브랜드/);
- await p.keyboard.press('ArrowRight');assert.equal(await p.locator('#pj-d-who').textContent(),'박호성');
- await p.keyboard.press('ArrowLeft');await p.keyboard.press('ArrowLeft');await p.keyboard.press('Escape');await p.waitForTimeout(400);
+ await p.keyboard.press('ArrowRight');assert.match(await p.locator('#pj-d-title').textContent(),/우리 언제 만나/,'→: 자료 없는 작품은 건너뛰고 다음 자료 있는 작품으로');
+ assert.equal(await p.locator('#pj-d-who').textContent(),'김수연');assert.equal(await p.locator('#pj-d-images img').count(),3);
+ await p.keyboard.press('ArrowLeft');assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);await p.keyboard.press('Escape');await p.waitForTimeout(400);
  assert.equal(await p.locator('#pj-detail').isHidden(),true);
  assert(await p.evaluate(()=>document.activeElement===pj.root),'닫으면 Project 방에 초점');
  // 만든 사람 → Designer 방의 그 석고상이 가운데 + 표찰에 초점
- await p.evaluate(()=>pjOpen(6));await p.locator('#pj-detail.on').waitFor();await p.locator('#pj-d-who').click();
+ await p.evaluate(()=>pjOpen(7));await p.locator('#pj-detail.on').waitFor();await p.locator('#pj-d-who').click();
  await p.waitForFunction(()=>page==='designer',null,{timeout:3000});await p.waitForTimeout(300);
  await p.waitForFunction(()=>dg.gl&&dg.people[dg.at].i===6&&Math.abs(dg.x-dg.tx)<1e-3,null,{timeout:8000});await p.waitForTimeout(200);
  const centered=await p.evaluate(()=>{const r=document.querySelector('.dg-cap[data-i="6"] .dg-plaque').getBoundingClientRect();return Math.abs(r.left+r.width/2-innerWidth/2);});
@@ -106,10 +118,10 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 3) Designer: 밝은 미술관 (자세한 검사는 tests/designer.cjs). 14명, 이름표 = 학생 소개, 포트폴리오는 새 탭
  assert.equal(await p.locator('.dg-cap').count(),14);assert.equal(await p.locator('.dg-cap[data-i="9"]').count(),0,'조민영은 Designer에서 빠짐');
- assert.equal(await p.locator('.dg-cap[data-i="6"] a.dg-go').getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app');
+ assert.equal(await p.locator('.dg-cap[data-i="6"] a.dg-plaque').getAttribute('href'),'https://vin-portfolio-swart.vercel.app/'); // 이름표 = 포트폴리오 링크
  assert.equal(await p.locator('.dg-fork, .dg-plate, .dg-amb, .dg-seam, .dg-work').count(),0,'옛 팻말·금속 표찰·어두운 벽 없음');
- await p.evaluate(()=>{go('project');pjOpen(1,null);});await p.locator('#pj-detail.on').waitFor();
- assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'민하도');
+ await p.evaluate(()=>{go('project');pjOpen(7,null);});await p.locator('#pj-detail.on').waitFor();
+ assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
  // 상세: 검은 화면, 위 메뉴는 숨김, 오른쪽 위 X로 닫으면 메뉴가 다시 보임
  assert.equal(await p.locator('.topbar').isVisible(),false,'상세에서는 위 메뉴 숨김');assert.equal(await p.locator('#pj-d-mail').isHidden(),true,'메일이 없으면 안 보임');
  await p.locator('#pj-d-close').click();await p.waitForTimeout(400);assert.equal(await p.locator('#pj-detail').isHidden(),true);
@@ -119,7 +131,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 4) 움직임 줄이기: Intro는 버튼이 바로 보이고, 카드는 떠다니지 않음
  p=await open({reducedMotion:'reduce'});
- await p.locator('#op-skip').click();await p.locator('.pill [data-go="project"]').click();
+ await p.locator('#opening').focus();await p.keyboard.press('Escape');await p.locator('.pill [data-go="project"]').click();
  await p.waitForFunction(()=>page==='project',null,{timeout:3000});
  assert.equal(await p.locator('#project.still').count(),1);
  const s0=await p.locator('.pj-strip').first().evaluate(el=>el.style.transform);await p.waitForTimeout(300);
@@ -129,7 +141,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 5) 모바일: 메뉴 3개, Designer는 손가락으로 옆으로 넘김(한 명씩 딱 멈춤)
  p=await open({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
- await p.locator('#op-skip').tap();assert.equal(await state(p),'about');
+ await p.locator('#opening').evaluate(el=>el.scrollTo(0,el.scrollHeight));await p.waitForFunction(()=>page==='about',null,{timeout:8000});
  await p.locator('.pill [data-go="designer"]').tap();assert.equal(await state(p),'designer');
  await p.waitForFunction(()=>dg.gl&&dg.root.classList.contains('is-portrait'),null,{timeout:8000});
  console.log('mobile ok');

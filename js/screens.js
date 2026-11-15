@@ -16,6 +16,7 @@ function go(name) {
   for (const el of [$('#intro'), introFrame]) if (el !== screens.intro) el.classList.remove('on');
   page = name;
   topbar.classList.toggle('on', name !== 'intro' && name !== 'opening');
+  document.body.classList.toggle('bf-cursor', name !== 'intro' && name !== 'opening'); // Intro를 지나면 마우스 커서 = 나비 (js/cursor.js)
   topbar.classList.toggle('no-brand', name === 'lobby' || name === 'gallery');
   topbar.dataset.theme = ['list', 'about', 'project', 'designer'].includes(name) ? 'light' : '';
   topbar.dataset.page = name; // 화면별 메뉴 모양용 (예: 휴대폰 About에서는 메뉴에 흰 바탕)
