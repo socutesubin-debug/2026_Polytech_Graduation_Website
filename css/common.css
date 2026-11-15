@@ -40,9 +40,10 @@ a{color:inherit}
 .brand img{display:block;height:clamp(38px,3.3vw,72px);width:auto}
 .topbar.no-brand .brand{visibility:hidden}
 
-/* 메뉴 글자: 가늘고 동그란 대문자 (Josefin Sans Light) */
+/* 메뉴 글자: AvantGarde LT Book 대문자. 유료 서체라 파일은 올리지 않고, 설치된 컴퓨터에서만 쓰임(local). 없으면 비슷한 무료 Josefin Sans Light */
+@font-face{font-family:"BTF Nav";src:local("AvantGarde LT Book"),local("AvantGardeLT-Book"),local("AvantGarde LT Book Regular");font-weight:300 400}
 .pill{display:flex;align-items:center;gap:clamp(20px,2.2vw,48px);margin-left:auto}
-.pill button{position:relative;padding:.3em 0 .12em;font-family:"Josefin Sans",var(--sans);font-weight:300;font-size:clamp(14px,1.2vw,28px);line-height:1;letter-spacing:0;text-transform:uppercase;color:#3d3834;transition:color .25s,opacity .25s}
+.pill button{position:relative;padding:.3em 0 .12em;font-family:"BTF Nav","Josefin Sans",var(--sans);font-weight:300;font-size:clamp(14px,1.2vw,28px);line-height:1;letter-spacing:0;text-transform:uppercase;color:#3d3834;transition:color .25s,opacity .25s}
 .pill button::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:currentColor;transform:scaleX(0);transition:transform .3s ease}
 .pill button:hover{opacity:.7}
 .pill button.active{color:#3d3834;opacity:1}
