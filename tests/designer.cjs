@@ -1,4 +1,5 @@
-// Designer(밝은 미술관) 검사: 학생 14명·구역 순서, 분야 메뉴 이동, 좌우 버튼·키·휠·끌기, 이름표가 석고상에 붙어 있는지(움직이는 중에도),
+// Designer(밝은 미술관) 검사: 가운데 안내판에서 시작(왼쪽 UX/UI 8명, 오른쪽 Visual 6명), 안내판 화살표·분야 메뉴 이동,
+// 좌우 버튼·키·휠·끌기(안내판도 멈추는 자리), 이름표가 석고상에 붙어 있는지(움직이는 중에도),
 // 석고상 누르기 = 학생 상세 → 닫으면 이름표로 초점 복귀, 포트폴리오 새 탭, 전체 보기, 화면을 떠나면 3D 정리, 3D가 안 되면 목록, 움직임 줄이기, 모바일
 // 실행: 8765 포트로 서버를 켠 뒤  node tests/designer.cjs   (인터넷이 막힌 곳은 CDN_DIR 설정, README 참고)
 const {chromium}=require('playwright');
@@ -16,7 +17,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
      v.set(dg.people[k].x,0,DG.pedZ+DG.ped.d/2).project(G.cam);const x=(v.x+1)/2*innerWidth;worst=Math.max(worst,Math.abs(r.left+r.width/2-x));});res(worst);})));
  const centerOf=(p,i)=>p.evaluate(i=>{const r=document.querySelector(`.dg-cap[data-i="${i}"] .dg-plaque`).getBoundingClientRect();return r.left+r.width/2-innerWidth/2;},i);
 
- // 1) 데스크톱: 처음엔 UX/UI 첫 학생 앞. 14명, UX/UI 8명 → Visual 6명, 조민영 없음
+ // 1) 데스크톱: 처음엔 가운데 안내판 앞. 14명, UX/UI 8명은 왼쪽(x<0) · Visual 6명은 오른쪽(x>0), 조민영 없음
  let p=await open();await ready(p);
  // 마우스 깊이감: 아주 조금만 (화면 끝에 마우스를 둬도 카메라는 수 cm만 움직임). 정렬 검사 동안은 끔
  await p.mouse.move(1430,890);await p.waitForTimeout(1500);
@@ -28,15 +29,22 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.deepEqual(people.slice(0,8).map(q=>q[1]),Array(8).fill('uxui'));assert.deepEqual(people.slice(8).map(q=>q[1]),Array(6).fill('visual'));
  assert.deepEqual(people.filter(q=>q[1]==='uxui').map(q=>q[0]).sort(),['김예일','김우선','박수빈','박재연','박호성','손예진','오수한','천승현'].sort());
  assert.deepEqual(people.filter(q=>q[1]==='visual').map(q=>q[0]).sort(),['김수연','김준서','민하도','송예준','조예빈','하태랑'].sort());
+ assert(await p.evaluate(()=>dg.people.every(q=>q.s.field==='uxui'?q.x<0:q.x>0)),'UX/UI는 왼쪽, Visual은 오른쪽');
  assert.deepEqual(await p.locator('#dg-tabs button').allTextContents(),['전체','UX/UI · WEB','VISUAL DESIGN']);
- assert.equal(await p.locator('#dg-tabs [aria-pressed="true"]').textContent(),'UX/UI · WEB');
- assert(Math.abs(await centerOf(p,0))<3,'첫 학생이 가운데');
+ assert(await p.evaluate(()=>dg.hubOn&&Math.abs(dg.x)<1e-3),'처음엔 가운데 안내판 앞');
+ assert.equal(await p.locator('#dg-tabs [aria-pressed="true"]').count(),0,'안내판 앞에서는 분야 메뉴가 눌려 있지 않음');
+ assert.match(await p.locator('#dg-now').textContent(),/안내판/);
+ assert.equal(await p.locator('.dg-sign-hit:not(.off)').count(),2,'안내판 화살표 두 개');
  assert(await drift(p)<1.5,'멈춰 있을 때 이름표가 받침대 가운데');
+ // 안내판 화살표를 누르면 그 구역 첫 학생(가운데에서 가장 가까운 학생) 앞으로, 다시 가운데로
+ await p.locator('.dg-sign-hit[data-zone="uxui"]').click();await ready(p);
+ assert.deepEqual(await p.evaluate(()=>[dg.people[dg.at].s.field,dg.hubOn,dg.people[dg.at].x===-DG.hub]),['uxui',false,true]);
+ await p.evaluate(()=>dgGoStop(dg.hubSi,true));await ready(p);
  // 이름표에는 이름·분야, 아래에는 짧은 소개 + 포트폴리오(새 탭) 또는 준비 중
  assert.equal(await p.locator('.dg-cap[data-i="6"] .dg-name').textContent(),'박수빈');
  const pf=p.locator('.dg-cap[data-i="6"] a.dg-go');assert.equal(await pf.getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app');assert.equal(await pf.getAttribute('target'),'_blank');
  assert.equal(await p.locator('.dg-cap[data-i="0"] a.dg-go').count(),0);assert.match(await p.locator('.dg-cap[data-i="0"] .dg-go').textContent(),/준비 중/);
- assert.equal(await p.locator('.dg-fork, .dg-plate, .dg-amb, .dg-work, #designer img').count(),0,'팻말·금속 표찰·대표작 이미지 없음');
+ assert.equal(await p.locator('.dg-fork, .dg-plate, .dg-amb, .dg-work, #designer img').count(),0,'예전 장식·대표작 이미지 없음');
  console.log('desktop layout ok');
 
  // 2) VISUAL DESIGN 메뉴 → Visual 첫 학생(민하도)으로 부드럽게 이동. 이동 중에도 이름표가 석고상을 따라감
@@ -50,14 +58,17 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.locator('#dg-tabs [data-zone="uxui"]').click();await ready(p);assert.equal(await p.evaluate(()=>dg.people[dg.at].s.field),'uxui');
  console.log('zone tabs ok');
 
- // 3) 좌우 버튼, ← → 키, 휠(멈추면 가장 가까운 학생에게 정렬), 마우스로 끌기
- await p.locator('#dg-next').click();await ready(p);assert.equal(await p.evaluate(()=>dg.at),1);
- await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await ready(p);assert.equal(await p.evaluate(()=>dg.at),2);
- await p.keyboard.press('ArrowLeft');await ready(p);assert.equal(await p.evaluate(()=>dg.at),1);
+ // 3) 좌우 버튼, ← → 키, 휠(멈추면 가장 가까운 자리에 정렬), 마우스로 끌기. UX/UI 첫 학생 ↔ 안내판 ↔ Visual 첫 학생
+ const stop=()=>p.evaluate(()=>({si:dg.si,hub:dg.hubOn,name:dg.hubOn?'':dg.people[dg.at].s.name}));
+ assert.equal((await stop()).name,'김예일','UX/UI 메뉴 → 가운데에서 가장 가까운 UX/UI 학생');
+ await p.locator('#dg-next').click();await ready(p);assert((await stop()).hub,'김예일 → 오른쪽 = 안내판');
+ await p.locator('#designer').focus();await p.keyboard.press('ArrowRight');await ready(p);assert.equal((await stop()).name,'민하도','안내판 → 오른쪽 = Visual 첫 학생');
+ await p.keyboard.press('ArrowLeft');await ready(p);assert((await stop()).hub,'← = 다시 안내판');
  await p.mouse.move(720,400);await p.mouse.wheel(0,700);await p.waitForTimeout(400);await ready(p);
- const w=await p.evaluate(()=>({at:dg.at,snap:Math.abs(dg.x-dg.people[dg.at].x)}));assert(w.at>1&&w.snap<1e-3,'휠로 이동 후 학생에게 정렬 '+JSON.stringify(w));
- const at0=w.at;await p.mouse.move(900,350);await p.mouse.down();await p.mouse.move(600,350,{steps:8});await p.mouse.up();await ready(p);
- assert.equal(await p.evaluate(()=>dg.at),at0+1,'왼쪽으로 끌면 다음 학생');
+ const w=await p.evaluate(()=>({si:dg.si,hubSi:dg.hubSi,snap:Math.abs(dg.x-dg.stops[dg.si].x)}));assert(w.si>w.hubSi&&w.snap<1e-3,'휠로 이동 후 학생에게 정렬 '+JSON.stringify(w));
+ // 끌고 잠깐 멈춘 뒤 놓기 (던지지 않음) → 한 칸
+ const si0=w.si;await p.mouse.move(900,350);await p.mouse.down();await p.mouse.move(600,350,{steps:8});await p.waitForTimeout(150);await p.mouse.up();await ready(p);
+ assert.equal(await p.evaluate(()=>dg.si),si0+1,'왼쪽으로 끌면 다음 학생');
  assert(Math.abs(await centerOf(p,await p.evaluate(()=>dg.people[dg.at].i)))<3,'끌기 후 가운데 정렬');
  console.log('nav ok');
 
@@ -107,16 +118,18 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  console.log('reduced motion ok');
  await p.context().close();
 
- // 9) 모바일: 한 명씩 크게. 옆 사람 소개는 숨김, 손가락으로 밀면 다음 학생, 전체 = 목록 → 이름 누르면 그 학생 앞으로
+ // 9) 모바일: 안내판에서 시작, 한 명씩 크게. 옆 사람 소개는 숨김, 손가락으로 밀면 다음 자리, 전체 = 목록 → 이름 누르면 그 학생 앞으로
  p=await open({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await ready(p);
  assert.equal(await p.locator('#designer.is-portrait').count(),1);
- const vis=await p.evaluate(()=>dg.caps.filter(el=>{const r=el.querySelector('.dg-plaque').getBoundingClientRect();return r.right>0&&r.left<innerWidth;}).length);assert.equal(vis,1,'모바일에서는 한 명만');
+ assert(await p.evaluate(()=>dg.hubOn),'모바일도 안내판에서 시작');
+ const visible=()=>p.evaluate(()=>dg.caps.filter(el=>{const r=el.querySelector('.dg-plaque').getBoundingClientRect();return r.right>0&&r.left<innerWidth;}).length);
  const big=await p.evaluate(()=>{const G=dg.gl,a=new G.THREE.Vector3(0,DG.ped.h,DG.pedZ).project(G.cam),b=new G.THREE.Vector3(0,DG.ped.h+DG.bustH,DG.pedZ).project(G.cam);return (a.y-b.y)/-2*innerHeight;});
  assert(big>250,`모바일 석고상 높이 ${big.toFixed(0)}px`);
  const swipe=async(x0,x1)=>p.evaluate(([x0,x1])=>{const el=document.querySelector('#dg-stage'),ev=(t,x)=>el.dispatchEvent(new PointerEvent(t,{pointerId:7,pointerType:'touch',clientX:x,clientY:400,bubbles:true,isPrimary:true}));
    ev('pointerdown',x0);for(let k=1;k<=6;k++)ev('pointermove',x0+(x1-x0)*k/6);ev('pointerup',x1);},[x0,x1]);
- await swipe(300,120);await ready(p);assert.equal(await p.evaluate(()=>dg.at),1,'왼쪽으로 밀면 다음 학생');
- await swipe(100,300);await ready(p);assert.equal(await p.evaluate(()=>dg.at),0,'오른쪽으로 밀면 이전 학생');
+ await swipe(300,120);await ready(p);assert.equal(await p.evaluate(()=>dg.hubOn?'':dg.people[dg.at].s.name),'민하도','왼쪽으로 밀면 오른쪽 구역 첫 학생');
+ assert.equal(await visible(),1,'모바일에서는 한 명만');
+ await swipe(100,300);await ready(p);assert(await p.evaluate(()=>dg.hubOn),'오른쪽으로 밀면 다시 안내판');
  await p.locator('#dg-tabs [data-zone="all"]').tap();await p.locator('#dg-list').waitFor();assert.equal(await p.locator('.dg-list li').count(),14);
  await p.locator('.dg-list-name[data-i="6"]').tap();await ready(p);
  assert.equal(await p.locator('#dg-list').isHidden(),true);assert.equal(await p.evaluate(()=>dg.people[dg.at].i),6);
@@ -124,6 +137,6 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  await p.context().close();
 
  assert.deepEqual(errors,[]);
- console.log('PASS: designer bright museum — 14 students in two zones, zone tabs glide, buttons/keys/wheel/drag snap, labels stay on busts while moving, bust → detail → focus back, overview, dispose on leave, fallback list, reduced motion, mobile swipe + list; no page errors.');
+ console.log('PASS: designer bright museum — starts at the centre signpost (UX/UI left, Visual right), sign arrows, 14 students in two zones, zone tabs glide, buttons/keys/wheel/drag snap, labels stay on busts while moving, bust → detail → focus back, overview, dispose on leave, fallback list, reduced motion, mobile swipe + list; no page errors.');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

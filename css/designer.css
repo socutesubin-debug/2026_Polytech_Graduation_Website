@@ -49,6 +49,15 @@ a.dg-go:hover{background:var(--ink-d);color:#f6f0e6}
 /* 벽에 붙은 구역 제목 (UX/UI · WEB, VISUAL DESIGN) */
 .dg-zone{position:absolute;left:0;top:0;display:flex;flex-direction:column;gap:calc(6px * var(--s));transform:translate(-50%,0);text-align:center;white-space:nowrap;transition:opacity .3s}
 .dg-zone.off{opacity:0}
+/* 가운데 안내판: 판은 3D. 여기서는 판 위에 겹친 투명 버튼(크기·자리는 js가 매 프레임) + 아치 위 새김 글자 */
+.dg-sign-hit{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:none;border-radius:2px}
+.dg-sign-hit.off{visibility:hidden}
+.dg-sign-hit:focus-visible{outline:2px solid var(--ink-d);outline-offset:3px}
+.dg-lintel{position:absolute;left:0;top:0;translate:-50% -100%;display:flex;flex-direction:column;align-items:center;gap:calc(4px * var(--s));white-space:nowrap;transition:opacity .3s}
+.dg-lintel.off{opacity:0}
+.dg-lintel b{font-size:calc(15px * var(--s));font-weight:400;letter-spacing:.42em;color:rgba(96,82,64,.72);text-shadow:0 -1px 0 rgba(60,46,30,.35),0 1px 0 rgba(255,252,244,.85)}
+.dg-lintel span{font-size:calc(10px * var(--s));letter-spacing:.2em;color:rgba(96,82,64,.8);text-shadow:0 1px 0 rgba(255,252,244,.7)}
+
 /* 벽에 새긴 글자: 글자 색은 벽보다 조금 어둡게, 위쪽 가장자리는 그늘·아래쪽은 빛 (파인 홈처럼 보임) */
 .dg-zone b{font-size:calc(22px * var(--s));font-weight:400;letter-spacing:.32em;color:rgba(96,82,64,.72);
   text-shadow:0 -1px 0 rgba(60,46,30,.35),0 1px 0 rgba(255,252,244,.85)}

@@ -11,7 +11,10 @@
    숫자를 바꾸고 싶으면 아래 DG만 고치면 됩니다 (단위: 1 = 대략 1m) */
 const DG = {
   gap: 2.8,            // 석고상 사이 간격
-  zoneGap: 1.35,       // 두 구역 사이 아이보리 벽 (간격의 몇 배를 더 띄울지)
+  hub: 3.2,            // 가운데 안내판에서 양쪽 첫 학생까지 거리 (처음 화면 양 끝에 첫 학생이 살짝 보이게)
+  endGap: 0.95,        // 마지막 학생에서 양 끝 옆벽까지 (간격의 몇 배)
+  // 가운데 안내판: 기둥 높이, 판 너비·높이·두께, 왼쪽 판(위)·오른쪽 판(아래) 높이 / 입구 아치 반폭·둥근 부분 시작 높이
+  sign: { post: 1.78, armW: 1.12, armH: 0.2, armD: 0.03, yL: 1.6, yR: 1.34, arch: 0.92, spring: 1.8 },
   bustH: 1.9,          // 석고상 사진 높이
   ped: { w: 1.36, h: 1.12, d: 1.0 },   // 받침대 너비·높이·깊이
   pedRim: { h: 0.075, out: 0.045 },    // 받침대 위 덮개·아래 받침 두께와 튀어나온 정도
@@ -43,20 +46,25 @@ const dg = {
 };
 const DG_ZONE_TITLE = { uxui: 'UX/UI · WEB', visual: 'VISUAL DESIGN' };
 
-/* 학생 줄 세우기 (데이터 한 곳에서): UX/UI 먼저, 그다음 Visual. 같은 분야 안에서는 data.js 순서 */
+/* 학생 줄 세우기 (데이터 한 곳에서): 가운데(x = 0)에 입구 아치와 안내판. UX/UI는 왼쪽으로, Visual은 오른쪽으로
+   같은 분야 안에서는 data.js 순서대로 가운데에서 바깥으로. dg.people 순서 = UX/UI → Visual (상세 화면의 ← → 순서)
+   dg.stops = 멈추는 자리를 왼쪽부터: UX/UI 바깥쪽 … UX/UI 첫 학생, 안내판(k = -1), Visual 첫 학생 … */
 function dgPeople() {
   const all = STUDENTS.map((s, i) => ({ s, i })).filter(({ s }) => s.designer !== false && (s.field === 'uxui' || s.field === 'visual'));
   const ux = all.filter((p) => p.s.field === 'uxui'), vi = all.filter((p) => p.s.field === 'visual');
-  const G = DG.gap; let x = 0;
-  ux.forEach((p) => { p.x = x; x += G; });
-  const uxEnd = x - G, viTitle = uxEnd + G * (0.5 + DG.zoneGap / 2) + 0.3;
-  x = uxEnd + G * (1 + DG.zoneGap);
-  vi.forEach((p) => { p.x = x; x += G; });
+  const G = DG.gap, H = DG.hub;
+  ux.forEach((p, n) => { p.x = -H - n * G; });
+  vi.forEach((p, n) => { p.x = H + n * G; });
+  const uxFar = ux.length ? ux.at(-1).x : -H, viFar = vi.length ? vi.at(-1).x : H;
   dg.zones = {
-    uxui: { title: -G * 0.9, from: 0, to: uxEnd, n: ux.length },
-    visual: { title: viTitle, from: vi.length ? vi[0].x : x, to: x - G, n: vi.length },
+    uxui: { title: (uxFar - H) / 2, from: uxFar, to: -H, n: ux.length },
+    visual: { title: (H + viFar) / 2, from: H, to: viFar, n: vi.length },
   };
-  return [...ux, ...vi];
+  const people = [...ux, ...vi];
+  dg.stops = [...people.map((p, k) => ({ x: p.x, k })), { x: 0, k: -1 }].sort((a, b) => a.x - b.x);
+  dg.hubSi = dg.stops.findIndex((s) => s.k === -1);
+  dg.ends = [Math.min(uxFar, -H) - G * DG.endGap, Math.max(viFar, H) + G * DG.endGap]; // 양 끝 옆벽 자리
+  return people;
 }
 function dgOrder() { return dg.people.map((p) => p.i); } // 상세 화면의 ← → 순서
 
@@ -65,7 +73,7 @@ function dgBuild() {
   if (dg.built) return; dg.built = true;
   dg.people = dgPeople();
   const cap = ({ s, i }, k) => `<div class="dg-cap" data-i="${i}" data-k="${k}" data-field="${s.field}">
-      <button type="button" class="dg-plaque" aria-label="${s.name}, ${FIELD_LABEL[s.field]}. 학생 소개 열기"><b class="dg-name">${s.name}</b><span class="dg-field">${FIELD_LABEL[s.field]}</span></button>
+      <button type="button" class="dg-plaque" aria-label="${s.name}, ${DG_ZONE_TITLE[s.field]}. 학생 소개 열기"><b class="dg-name">${s.name}</b><span class="dg-field">${DG_ZONE_TITLE[s.field]}</span></button>
       <div class="dg-info">
         <p class="dg-slogan">${s.slogan || ''}</p>
         ${s.portfolio
@@ -74,17 +82,30 @@ function dgBuild() {
       </div>
     </div>`;
   const title = (z) => `<div class="dg-zone" data-zone="${z}" aria-hidden="true"><b>${DG_ZONE_TITLE[z]}</b><span>${dg.zones[z].n}명의 디자이너</span></div>`;
-  dg.labels.innerHTML = title('uxui') + title('visual') + dg.people.map(cap).join('');
+  // 가운데 안내판: 판은 3D 황동 판(dgCreate). 여기서는 판 위에 겹치는 투명 버튼(누르기·키보드)과 아치 위 새김 글자
+  const Z = dg.zones;
+  const sign = `<div class="dg-lintel" aria-hidden="true"><b>BEYOND THE FRAME</b><span>${dg.people.length}명의 디자이너</span></div>
+    <button type="button" class="dg-sign-hit" data-zone="uxui" aria-label="안내판: 왼쪽 UX/UI · WEB 구역 ${Z.uxui.n}명. 첫 학생 앞으로 가기"></button>
+    <button type="button" class="dg-sign-hit" data-zone="visual" aria-label="안내판: 오른쪽 VISUAL DESIGN 구역 ${Z.visual.n}명. 첫 학생 앞으로 가기"></button>`;
+  dg.labels.innerHTML = title('uxui') + title('visual') + sign + dg.people.map(cap).join('');
   dg.caps = $$('.dg-cap', dg.labels); dg.zoneEls = $$('.dg-zone', dg.labels);
+  dg.signHits = $$('.dg-sign-hit', dg.labels); dg.lintel = $('.dg-lintel', dg.labels);
+  dg.signHits.forEach((b, n) => {
+    b.addEventListener('pointerenter', () => { dg.signHov = n; dg.dirty = true; });
+    b.addEventListener('pointerleave', () => { dg.signHov = -1; dg.dirty = true; });
+  });
   dg.labels.addEventListener('click', (e) => {
+    const a = e.target.closest('.dg-sign-hit'); if (a) { dgZone(a.dataset.zone); return; }
     const b = e.target.closest('.dg-plaque'); if (!b) return;
     const k = +b.parentElement.dataset.k; dgGoTo(k); openDetail(dg.people[k].i);
   });
-  // Tab으로 이름표에 오면 그 학생 앞으로 이동
+  // Tab으로 이름표에 오면 그 학생 앞으로, 안내판에 오면 가운데로 이동
   dg.labels.addEventListener('focusin', (e) => {
-    const c = e.target.closest('.dg-cap'); if (c && +c.dataset.k !== dg.at || dg.zoom > 0.5) dgGoTo(+c.dataset.k);
+    const c = e.target.closest('.dg-cap');
+    if (c) { if (+c.dataset.k !== dg.at || dg.hubOn || dg.zoom > 0.5) dgGoTo(+c.dataset.k); return; }
+    if (e.target.closest('.dg-sign-hit') && (!dg.hubOn || dg.zoom > 0.5)) dgGoStop(dg.hubSi);
   });
-  dg.x = dg.people.length ? dg.people[0].x : 0; dg.tx = dg.x;
+  dg.x = 0; dg.tx = 0; dgMark(dg.hubSi, true); // 처음에는 가운데 안내판 앞
 }
 
 /* HTML 목록 (같은 데이터): 3D가 안 될 때 대신 보여 주고, 휴대폰에서 '전체'를 누르면 위에 겹쳐 보여 줌(overlay) */
@@ -94,7 +115,7 @@ function dgShowList(msg, overlay) {
   const group = (f) => `<section class="dg-list-group" data-field="${f}"><h3>${DG_ZONE_TITLE[f]} <small>${dg.zones[f].n}명</small></h3><ul>`
     + dg.people.filter((p) => p.s.field === f).map(({ s, i }) => `<li>
       <img src="${bustThumb(s)}" alt="" width="240" height="280" loading="lazy" decoding="async">
-      <button type="button" class="dg-list-name" data-i="${i}" aria-label="${s.name} 학생 소개 열기"><b>${s.name}</b><span>${FIELD_LABEL[s.field]}</span></button>
+      <button type="button" class="dg-list-name" data-i="${i}" aria-label="${s.name} 학생 소개 열기"><b>${s.name}</b><span>${DG_ZONE_TITLE[s.field]}</span></button>
       <p>${s.slogan || ''}</p>
       ${s.portfolio ? `<a href="${s.portfolio}" target="_blank" rel="noopener">포트폴리오 ↗</a>` : '<span class="is-empty">포트폴리오 준비 중</span>'}
     </li>`).join('') + '</ul></section>';
@@ -102,7 +123,7 @@ function dgShowList(msg, overlay) {
   dg.list.hidden = false;
   if (overlay) { dg.list.scrollTop = 0; $('.dg-list-close', dg.list).focus({ preventScroll: true }); }
 }
-function dgHideList() { dg.list.hidden = true; dg.overlay = false; dgSetAt(dg.at, false); }
+function dgHideList() { dg.list.hidden = true; dg.overlay = false; dgMark(dg.si, false); }
 dg.list.addEventListener('click', (e) => {
   const n = e.target.closest('.dg-list-name');
   if (n && dg.overlay) { const k = dg.people.findIndex((p) => p.i === +n.dataset.i); dgHideList(); dgGoTo(k, true); $('.dg-plaque', dg.caps[k]).focus({ preventScroll: true }); return; }
@@ -121,14 +142,13 @@ float fbm(vec2 p){ float a=.5, s=0.; for(int i=0;i<4;i++){ s+=a*vnoise(p); p*=2.
 // 벽: 아이보리(조금 어둡게) + 석고상마다 천장 조명이 그리는 빛 원뿔(가운데 학생·마우스 올린 학생일수록 밝게) + 구역 색빛
 //     + 창살 빛·나뭇잎 그림자(아주 옅게) + 아래 판넬·띠 몰딩·그림 레일 + 걸레받이 + 구역 제목 아래 아치 통로
 const DG_WALL_FS = `
-uniform vec3 uIvory, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap, uFocus, uHovX, uHovA; uniform float uBx[16]; uniform int uN; uniform vec2 uArch;
+uniform vec3 uIvory, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap, uFocus, uHovX, uHovA; uniform float uBx[16]; uniform int uN; uniform vec3 uArch; // 가운데 입구: x, 반폭, 둥근 부분 시작 높이
 varying vec3 vW;${DG_NOISE}
 float cone(float dx, float y){ // 천장 조명이 벽에 그리는 빛: 위는 좁고 아래로 갈수록 넓게 퍼짐
   float w = 0.2 + 0.34 * max(0., 4.6 - y);
   return exp(-dx * dx / (w * w) * 1.7) * smoothstep(0.3, 2.4, y) * (1. - 0.8 * smoothstep(3.3, 4.6, y)); // 석고상 머리 높이에서 가장 밝고, 천장 쪽은 은은하게
 }
-float archD(float dx, float y){ // 아치 모양까지의 거리 (안쪽이면 음수)
-  float hw = 0.7, spring = 1.75;
+float archD(float dx, float y, float hw, float spring){ // 아치 모양까지의 거리 (안쪽이면 음수)
   return y < spring ? max(abs(dx) - hw, -y) : length(vec2(dx, y - spring)) - hw;
 }
 void main(){
@@ -157,7 +177,7 @@ void main(){
   float leaves = smoothstep(.42, .7, fbm(vec2(x * 1.4, y * 1.7) + 3.1));
   c *= 1. + 0.045 * bars * sunMask * (1. - 0.7 * leaves);
   // 벽 패널 이음선, 아주 고운 돌 결
-  float seam = 1. - smoothstep(0., .012, abs(fract(x / 5.6 + .5) - .5) * 5.6);
+  float seam = 1. - smoothstep(0., .012, abs(fract(x / 5.6) - .5) * 5.6);          // 이음선이 가운데 입구(x = 0)를 지나지 않게 반 칸 옮김
   c *= 1. - 0.035 * seam;
   c *= 0.985 + 0.03 * vnoise(vW.xy * 18.);
   vec3 wallC = c; // 아치 안쪽 계산용 (몰딩 전 벽색)
@@ -182,20 +202,19 @@ void main(){
   c = mix(c, c * 0.93, base);
   c *= 1. + 0.05 * (1. - smoothstep(0., 0.01, abs(y - 0.16)));
   c *= 1. - 0.08 * exp(-y * 12.);
-  // 아치 통로 (구역 제목 아래): 테두리 몰딩 + 안쪽은 깊이감, 옆 구역 빛이 바닥 쪽에서 살짝 비침
-  for (int a = 0; a < 2; a++) {
-    float ax = a == 0 ? uArch.x : uArch.y, dx = x - ax, d = archD(dx, y);
-    if (d > 0.13 || y < 0.) continue;
-    if (d > 0.) {                                                                       // 테두리 몰딩
-      float t = d / 0.13; c = wallC * (1.03 + 0.04 * (1. - t)) * (1. - 0.12 * smoothstep(0.75, 1., t));
+  // 가운데 입구 아치 (안내판 뒤): 테두리 몰딩 + 안쪽은 깊이감. 안쪽 바닥 쪽은 왼쪽은 UX/UI 빛, 오른쪽은 Visual 빛이 살짝 비침
+  float hw = uArch.y, spring = uArch.z, dx = x - uArch.x, d = archD(dx, y, hw, spring), fw = 0.16;
+  if (d < fw && y >= 0.) {
+    if (d > 0.) {                                                                       // 테두리 몰딩 (안쪽 가는 홈 + 바깥 그늘)
+      float t = d / fw; c = wallC * (1.04 + 0.04 * (1. - t)) * (1. - 0.12 * smoothstep(0.75, 1., t)) * (1. - 0.06 * (1. - smoothstep(0., .012, abs(d - fw * .35))));
     } else {
-      // 안쪽: 위(아치 천장)는 그늘, 아래로 갈수록 옆 전시실 빛이 바닥에서 비쳐 밝아짐. 옆 구역 색을 살짝
-      vec3 beyond = a == 0 ? uUx : uVi;
-      vec3 inC = uIvory * (0.7 + 0.2 * smoothstep(2.3, 0.1, y));
-      inC = mix(inC, beyond, 0.22 * smoothstep(2.0, 0.2, y));
-      float side = smoothstep(-0.02, 0.03, abs(dx) - 0.58);                             // 안쪽 옆면(두께, 가장자리 0.12m): 왼쪽은 그늘, 오른쪽은 빛
-      float top = y > 1.75 ? smoothstep(-0.02, 0.03, length(vec2(dx, y - 1.75)) - 0.58) : 0.;
-      float rev = max(side * step(y, 1.75), top);
+      // 안쪽은 너무 하얗지 않게: 위(아치 천장 그늘)에서 아래로 조금씩 밝아지고, 바닥 쪽에 옆 전시실 색빛
+      vec3 inC = uIvory * (0.64 + 0.13 * smoothstep(spring + 0.5, 0.2, y)) * (0.97 + 0.03 * vnoise(vW.xy * 9.));
+      vec3 beyond = mix(uUx, uVi, smoothstep(-hw * .6, hw * .6, dx));
+      inC = mix(inC, beyond * 0.85, 0.2 * smoothstep(1.8, 0.1, y));
+      float r = 0.12, side = smoothstep(-0.02, 0.03, abs(dx) - (hw - r));                // 안쪽 옆면(두께): 왼쪽은 그늘, 오른쪽은 빛
+      float top = y > spring ? smoothstep(-0.02, 0.03, length(vec2(dx, y - spring)) - (hw - r)) : 0.;
+      float rev = max(side * step(y, spring), top);
       inC = mix(inC, uIvory * mix(0.72, 0.92, smoothstep(-0.3, 0.3, dx)), rev * 0.85);
       c = inC;
     }
@@ -208,7 +227,7 @@ uniform vec3 uFloor, uUx, uVi; uniform float uTint, uUxEnd, uViFrom, uGap, uFocu
 varying vec3 vW;${DG_NOISE}
 void main(){
   vec2 p = vW.xz;
-  vec2 t = p / vec2(1.8, 1.2); vec2 ti = floor(t), tf = fract(t);
+  vec2 t = (p + vec2(0.9, 0.)) / vec2(1.8, 1.2); vec2 ti = floor(t), tf = fract(t); // 타일 이음매가 가운데(x = 0) 바로 아래를 지나지 않게
   float seam = 1. - smoothstep(0., .012, min(min(tf.x, 1. - tf.x) * 1.8, min(tf.y, 1. - tf.y) * 1.2));
   vec3 c = uFloor * 0.93 * (0.97 + 0.05 * h21(ti)) * (0.975 + 0.05 * fbm(p * 2.2));
   c *= 1. - 0.04 * seam;
@@ -273,6 +292,41 @@ function dgSoftTex(THREE, kind, blur) {
   }
   const t = new THREE.CanvasTexture(cv); return t;
 }
+/* 안내판 화살표 판 앞면 그림: 황동(위가 밝고 가운데가 조금 어두운 금속) + 가는 결 + 안쪽 테두리 + 새긴 글자(구역 이름·인원)
+   그림 좌표 = 판 모양 좌표(m)를 그대로 늘린 것 (dir -1: 왼쪽이 화살표 끝, 1: 오른쪽이 끝) */
+function dgArmTex(THREE, zone, dir, w, h, t) {
+  const W = 1024, H = Math.round(W * h / w), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const draw = () => {
+    const c = cv.getContext('2d'), px = W / w, tip = t * px;
+    const gr = c.createLinearGradient(0, 0, 0, H);
+    gr.addColorStop(0, '#f0e0b6'); gr.addColorStop(0.4, '#d3b984'); gr.addColorStop(0.62, '#bc9f6a'); gr.addColorStop(1, '#d6be8c');
+    c.fillStyle = gr; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 160; i++) { c.fillStyle = `rgba(${Math.random() < .5 ? '255,248,226' : '120,92,48'},${Math.random() * .06})`; c.fillRect(0, Math.random() * H, W, 1); } // 가로 결
+    // 안쪽 테두리 (판 모양을 따라 조금 안쪽에 가는 홈)
+    const m = 12, L = dir < 0 ? tip : 0, R = dir < 0 ? W : W - tip;
+    c.beginPath();
+    if (dir < 0) { c.moveTo(m * 1.6, H / 2); c.lineTo(L + m * .4, m); c.lineTo(W - m, m); c.lineTo(W - m, H - m); c.lineTo(L + m * .4, H - m); }
+    else { c.moveTo(m, m); c.lineTo(R - m * .4, m); c.lineTo(W - m * 1.6, H / 2); c.lineTo(R - m * .4, H - m); c.lineTo(m, H - m); }
+    c.closePath(); c.lineWidth = 2.5; c.strokeStyle = 'rgba(110,84,44,.55)'; c.stroke();
+    c.translate(0, 2); c.strokeStyle = 'rgba(255,246,220,.5)'; c.lineWidth = 1.5; c.stroke(); c.setTransform(1, 0, 0, 1, 0, 0);
+    // 새긴 글자: 어두운 글자 + 아래쪽 밝은 선 (파인 홈처럼)
+    const name = DG_ZONE_TITLE[zone], fam = '"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+    const text = (s, x, align, size, weight, sp) => {
+      c.font = `${weight} ${size}px ${fam}`; c.textAlign = align; c.textBaseline = 'middle'; if ('letterSpacing' in c) c.letterSpacing = sp + 'px';
+      c.fillStyle = 'rgba(255,246,220,.7)'; c.fillText(s, x, H / 2 + 3);
+      c.fillStyle = '#3b2c17'; c.fillText(s, x, H / 2);
+    };
+    // 구역 이름만 판 가운데에 (인원은 아치 위 글자와 화면 읽기 안내에 있음. 판 안쪽 끝은 기둥에 가려서 비워 둠)
+    const big = Math.round(H * 0.42), mid = dir < 0 ? (L + W - 60) / 2 : (60 + R) / 2;
+    text(name, mid, 'center', big, 700, 10);
+    tex.needsUpdate = true; if (dg.gl) dg.dirty = true;
+  };
+  draw();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw); // 글꼴이 늦게 오면 다시 그림
+  return tex;
+}
+
 /* 받침대 돌 결 (아주 옅은 얼룩 + 가는 대리석 결) */
 function dgStoneTex(THREE) {
   const n = 256, cv = document.createElement('canvas'); cv.width = cv.height = n;
@@ -333,10 +387,10 @@ function dgCreate(THREE) {
   const left = Math.min(...xs, 0) - 40, right = Math.max(...xs, 0) + 40, len = right - left, mid = (left + right) / 2;
   const col = (h) => new THREE.Color(h);
   const lin = (h) => { const c = new THREE.Color(h); return new THREE.Vector3(c.r, c.g, c.b); }; // 셰이더 색: 화면에 그대로 나가는 값(sRGB)
-  const bx = new Float32Array(16); xs.slice(0, 16).forEach((x, k) => { bx[k] = x; });
+  const bx = new Float32Array(16); xs.slice(0, 15).forEach((x, k) => { bx[k] = x; }); bx[Math.min(15, xs.length)] = 0; // 마지막 칸 = 가운데 안내판 조명
   const common = { uUx: { value: lin(DG.colors.ux) }, uVi: { value: lin(DG.colors.visual) }, uTint: { value: DG.tint },
-    uUxEnd: { value: Z.uxui.to }, uViFrom: { value: Z.visual.from }, uGap: { value: DG.gap }, uBx: { value: bx }, uN: { value: Math.min(16, xs.length) },
-    uFocus: { value: dg.x }, uHovX: { value: 0 }, uHovA: { value: 0 }, uArch: { value: new THREE.Vector2(Z.uxui.title, Z.visual.title) } };
+    uUxEnd: { value: Z.uxui.to }, uViFrom: { value: Z.visual.from }, uGap: { value: DG.gap }, uBx: { value: bx }, uN: { value: Math.min(16, xs.length + 1) },
+    uFocus: { value: dg.x }, uHovX: { value: 0 }, uHovA: { value: 0 }, uArch: { value: new THREE.Vector3(0, DG.sign.arch, DG.sign.spring) } };
   G.common = common; // 매 프레임 uFocus(카메라가 보는 곳)·마우스 올린 학생을 바꿈 (벽·바닥이 같은 값을 나눠 씀)
   // THREE.Color는 '#hex'를 받을 때 선형으로 바꿔 둠 → 셰이더에서 바로 내보낼 sRGB 값으로 되돌림
   for (const k of ['uUx', 'uVi']) common[k].value.set(...new THREE.Color(k === 'uUx' ? DG.colors.ux : DG.colors.visual).convertLinearToSRGB().toArray());
@@ -387,6 +441,49 @@ function dgCreate(THREE) {
     G.busts[k] = { g, ped, parts: [ped, cap, foot], k, loaded: false };
   });
   G.bustGeo = bustGeo; G.unit = unit; G.bw = bw;
+  // 가운데 안내판: 둥근 대리석 받침 + 황동 기둥(꼭대기 장식) + 기둥에서 왼쪽·오른쪽으로 뻗은 황동 화살표 판 (두께가 있고 장면 조명을 받음)
+  // 판 위에는 투명 HTML 버튼(.dg-sign-hit)을 겹쳐서 누르기·키보드를 받음. 뒤에 입구 아치, 위에서 조명
+  {
+    const g = new THREE.Group(); scene.add(g); const S = DG.sign, z0 = DG.pedZ;
+    const brass = keep(new THREE.MeshLambertMaterial({ color: col('#c4a76e') }));
+    const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(keep(geo), mat); m.position.set(x, y, z); g.add(m); return m; };
+    add(new THREE.CylinderGeometry(0.3, 0.33, 0.07, 40), pedMat, 0, 0.035, z0);               // 받침 아래 단
+    add(new THREE.CylinderGeometry(0.17, 0.2, 0.06, 32), pedMat, 0, 0.1, z0);                // 받침 위 단
+    add(new THREE.CylinderGeometry(0.042, 0.05, S.post, 24), brass, 0, 0.13 + S.post / 2, z0); // 기둥
+    add(new THREE.CylinderGeometry(0.06, 0.06, 0.03, 24), brass, 0, 0.13 + S.post, z0);       // 꼭대기 테
+    add(new THREE.SphereGeometry(0.055, 24, 16), brass, 0, 0.19 + S.post, z0);                // 꼭대기 공
+    // 화살표 판: 앞면에 새긴 글자 그림, 옆면은 민 황동
+    const { armW: w, armH: h, armD: d } = S, t = 0.13, zf = z0 + 0.05;
+    G.signArms = [];
+    [{ dir: -1, zone: 'uxui', y: S.yL }, { dir: 1, zone: 'visual', y: S.yR }].forEach((a) => {
+      const sh = new THREE.Shape(), L = -w / 2, R = w / 2;
+      if (a.dir < 0) { sh.moveTo(L, 0); sh.lineTo(L + t, h / 2); sh.lineTo(R, h / 2); sh.lineTo(R, -h / 2); sh.lineTo(L + t, -h / 2); }
+      else { sh.moveTo(L, h / 2); sh.lineTo(R - t, h / 2); sh.lineTo(R, 0); sh.lineTo(R - t, -h / 2); sh.lineTo(L, -h / 2); }
+      sh.closePath();
+      const geo = keep(new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2 }));
+      const tex = keep(dgArmTex(THREE, a.zone, a.dir, w, h, t)); tex.repeat.set(1 / w, 1 / h); tex.offset.set(0.5, 0.5);
+      const face = keep(new THREE.MeshLambertMaterial({ map: tex })), side = keep(new THREE.MeshLambertMaterial({ color: col('#a98c57') }));
+      const m = new THREE.Mesh(geo, [face, side]);
+      const cx = a.dir * (w / 2 - 0.05); m.position.set(cx, a.y, zf - d); g.add(m);
+      G.signArms.push({ mesh: m, face, x0: cx - w / 2, x1: cx + w / 2, y0: a.y - h / 2, y1: a.y + h / 2, z: zf + 0.004 });
+    });
+    const fl = (m, w2, d2, x, z) => { const s = new THREE.Mesh(unit, m); s.rotation.x = -Math.PI / 2; s.scale.set(w2, d2, 1); s.position.set(x, 0.003, z); s.renderOrder = 1; g.add(s); };
+    fl(floorSh, 1.0, 0.75, 0.12, z0 - 0.04); fl(floorAO, 0.75, 0.55, 0.02, z0);
+    const ws = new THREE.Mesh(unit, wallSh); ws.scale.set(w * 2.1, 0.5, 1); ws.position.set(0.35, (S.yL + S.yR) / 2, 0.004); ws.renderOrder = 1; g.add(ws); // 판이 벽(아치 안)에 드리운 흐린 그림자
+    const bm = keep(new THREE.ShaderMaterial({ vertexShader: DG_BEAM_VS, fragmentShader: DG_BEAM_FS, uniforms: { uA: { value: 0 } },
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const beam = new THREE.Mesh(beamGeo, bm); beam.scale.set(1.25, 1.15, 1); beam.position.set(0, 0, DG.pedZ - 0.3); beam.renderOrder = 2; g.add(beam);
+    G.signBeam = bm;
+  }
+  // 양 끝 옆벽: 전시가 여기서 끝남. 빛이 왼쪽에서 와서 왼쪽 끝 벽(오른쪽을 봄)은 그늘, 오른쪽 끝 벽은 밝게
+  dg.ends.forEach((x, n) => {
+    const iv = col(DG.colors.ivory).multiplyScalar(n === 0 ? 0.74 : 0.9);
+    const m = keep(new THREE.MeshBasicMaterial({ color: iv }));
+    const side = new THREE.Mesh(keep(new THREE.PlaneGeometry(400, 30)), m);
+    side.rotation.y = n === 0 ? Math.PI / 2 : -Math.PI / 2; side.position.set(x, 15, 200); scene.add(side);
+    const sk = new THREE.Mesh(keep(new THREE.PlaneGeometry(400, 0.16)), keep(new THREE.MeshBasicMaterial({ color: iv.clone().multiplyScalar(0.92) })));
+    sk.rotation.y = side.rotation.y; sk.position.set(x + (n === 0 ? 0.002 : -0.002), 0.08, 200); scene.add(sk); // 옆벽 걸레받이
+  });
   // 먼지 (가운데 학생 빛줄기 안). 움직임 줄이기에서는 만들지 않음
   if (!reduce) {
     const n = mobile ? 40 : 70, pos = new Float32Array(n * 3), seed = new Float32Array(n);
@@ -458,7 +555,7 @@ function dgResize() {
   const ys = (top + (h - below)) / 2; // 석고상+받침대의 가운데가 올 화면 높이
   G.base = { d, camY: clamp(contentH / 2 - (h / 2 - ys) * upp, 0.7, 2.4), upp, w, h, portrait };
   // '전체' 보기: 전시장 전체가 들어오게 뒤로 물러남 (너무 작아지지 않게 상한)
-  const first = dg.people[0].x, last = dg.people.at(-1).x, all = last - first + DG.gap * 1.6;
+  const [first, last] = dg.ends, all = last - first + DG.gap * 0.3; // 양 끝 옆벽까지 다 들어오게
   const dAll = all / (2 * tan * G.cam.aspect);
   G.far = { d: Math.min(dAll, d * (portrait ? 3.2 : 7)), cx: (first + last) / 2 };
   // 전체 보기에서는 카메라를 낮추고 화면을 위로 밀어서, 석고상 줄은 화면 아래쪽에, 위쪽은 색빛이 번진 벽이 채움
@@ -494,15 +591,25 @@ function dgPlaceLabels() {
     el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
     el.style.setProperty('--drop', (yb - y).toFixed(1) + 'px');
     el.classList.toggle('off', off);
-    el.classList.toggle('is-at', k === dg.at && dg.zoom < 0.5);
+    el.classList.toggle('is-at', k === dg.at && !dg.hubOn && dg.zoom < 0.5);
     el.classList.toggle('is-hover', k === G.hov.k);
   });
+  // 안내판 3D 화살표 판 위에 투명 버튼을 겹침 (판 앞면의 네 귀퉁이를 화면으로 옮겨서 크기·자리를 맞춤)
+  G.signArms.forEach((a, n) => {
+    const [x0, y1] = proj(a.x0, a.y1, a.z), [x1, y0] = proj(a.x1, a.y0, a.z), el = dg.signHits[n];
+    el.style.transform = `translate3d(${x0.toFixed(1)}px,${y1.toFixed(1)}px,0)`;
+    el.style.width = (x1 - x0).toFixed(1) + 'px'; el.style.height = (y0 - y1).toFixed(1) + 'px';
+    el.classList.toggle('off', x1 < 0 || x0 > w || dg.zoom > 0.5);
+  });
+  // 아치 위 새김 글자
+  { const [x, y] = proj(0, DG.sign.spring + DG.sign.arch + 0.3, 0); dg.lintel.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
+    dg.lintel.classList.toggle('off', x < -w * 0.3 || x > w * 1.3 || dg.zoom > 0.5); }
+  // 구역 제목: 학생 앞에서는 안내판이 대신하므로 숨기고, 전체 보기에서만 구역 한가운데 위쪽 벽에
   const e = dg.zoom * dg.zoom * (3 - 2 * dg.zoom);
   dg.zoneEls.forEach((el) => {
-    // 학생 앞에서는 구역 첫머리 벽에, 전체 보기에서는 구역 한가운데 위쪽 벽에
-    const z = dg.zones[el.dataset.zone], [x, y] = proj(z.title + ((z.from + z.to) / 2 - z.title) * e, DG.ped.h + DG.bustH * (0.92 + 0.9 * e), 0);
+    const z = dg.zones[el.dataset.zone], [x, y] = proj(z.title, DG.ped.h + DG.bustH * 1.82, 0);
     el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
-    const hw = el.offsetWidth / 2; el.classList.toggle('off', x - hw < 4 || x + hw > w - 4); // 화면 끝에 잘리면 숨김
+    el.classList.toggle('off', e < 0.5);
   });
 }
 
@@ -544,9 +651,12 @@ function dgLights(time) {
     const f = Math.exp(-(((dg.people[k].x - dg.x) / (DG.gap * 0.75)) ** 2)), hv = H.k === k ? H.a : 0;
     m.uniforms.uA.value = L.beam * (0.3 + 0.7 * f + L.hover * 1.2 * hv) * (1 - 0.5 * e);
   });
+  G.signBeam.uniforms.uA.value = L.beam * (0.3 + 0.7 * Math.exp(-((dg.x / (DG.gap * 0.75)) ** 2))) * (1 - 0.5 * e);
+  G.signArms.forEach((a, n) => { a.face.emissive.setScalar(dg.signHov === n ? 0.12 : 0); }); // 마우스를 올린 판은 살짝 밝게
   if (G.dust) {
-    const p = dg.people[dg.at], f = Math.exp(-(((p.x - dg.x) / (DG.gap * 0.5)) ** 2));
-    G.dust.obj.position.x = p.x;
+    const s = dg.stops[dg.si], f = s.k < 0 ? 0 : Math.exp(-(((s.x - dg.x) / (DG.gap * 0.5)) ** 2)); // 지금 멈춘 학생의 빛줄기 (안내판 앞에서는 끔)
+    const sx = s.x;
+    G.dust.obj.position.x = sx;
     G.dust.mat.uniforms.uT.value = time;
     G.dust.mat.uniforms.uA.value = L.dust * f * (1 - e);
     G.dust.mat.uniforms.uSize.value = 0.014 * G.base.h / (2 * Math.tan(DG.fov * Math.PI / 360)) * G.r.getPixelRatio();
@@ -558,7 +668,7 @@ function dgLights(time) {
 function dgTurn(dt, time) {
   const G = dg.gl, T = G.turn, C = DG.turn;
   if (reduce || typeof loadModel !== 'function') return false;
-  const settled = !dg.drag && dg.zoom < 0.02 && Math.abs(dg.tx - dg.x) < 0.01 && Math.abs(dg.x - dg.people[dg.at].x) < 0.05;
+  const settled = !dg.drag && !dg.hubOn && dg.zoom < 0.02 && Math.abs(dg.tx - dg.x) < 0.01 && Math.abs(dg.x - dg.people[dg.at].x) < 0.05;
   T.since = settled ? T.since + dt : 0;
   const want = settled && T.since > C.delay ? dg.at : -1;
   if (want >= 0 && T.k !== want && T.a < 1e-3 && !T.loading) dgTurnLoad(want);
@@ -600,26 +710,34 @@ function dgTurnDrop() {
   T.model = null; T.mats = []; T.a = 0; T.k = -1;
 }
 
-/* ---------- 이동 ---------- */
-function dgNearest(x) {
+/* ---------- 이동: 멈추는 자리(dg.stops) 기준. si = stops 번호, k = 학생 번호(안내판은 k = -1) ---------- */
+function dgNearestStop(x) {
   let best = 0, bd = Infinity;
-  dg.people.forEach((p, k) => { const d = Math.abs(p.x - x); if (d < bd) { bd = d; best = k; } });
+  dg.stops.forEach((s, i) => { const d = Math.abs(s.x - x); if (d < bd) { bd = d; best = i; } });
   return best;
 }
-function dgSetAt(k, announce) {
-  dg.at = clamp(k, 0, dg.people.length - 1);
-  const p = dg.people[dg.at];
-  $('#dg-prev').disabled = dg.at === 0 && dg.zoom < 0.5; $('#dg-next').disabled = dg.at === dg.people.length - 1 && dg.zoom < 0.5;
-  dgTabs(dg.tzoom > 0.5 ? 'all' : p.s.field);
-  if (announce) $('#dg-now').textContent = `${p.s.name}, ${FIELD_LABEL[p.s.field]} (${dg.at + 1} / ${dg.people.length})`;
+/* 위치는 그대로 두고 '지금 자리'만 정함: 좌우 버튼, 위 메뉴 표시, 화면 읽기 프로그램 안내 */
+function dgMark(si, announce) {
+  dg.si = clamp(si, 0, dg.stops.length - 1);
+  const s = dg.stops[dg.si], near = dg.zoom < 0.5;
+  dg.hubOn = s.k < 0; if (!dg.hubOn) dg.at = s.k;
+  $('#dg-prev').disabled = dg.si === 0 && near; $('#dg-next').disabled = dg.si === dg.stops.length - 1 && near;
+  dgTabs(dg.tzoom > 0.5 ? 'all' : dg.hubOn ? '' : dg.people[dg.at].s.field); // 안내판 앞에서는 아무 메뉴도 눌리지 않음
+  if (!announce) return;
+  const p = dg.people[dg.at], Z = dg.zones;
+  $('#dg-now').textContent = dg.hubOn
+    ? `가운데 안내판. 왼쪽 ${DG_ZONE_TITLE.uxui} ${Z.uxui.n}명, 오른쪽 ${DG_ZONE_TITLE.visual} ${Z.visual.n}명`
+    : `${p.s.name}, ${DG_ZONE_TITLE[p.s.field]} (${dg.at + 1} / ${dg.people.length})`;
 }
+function dgSetAt(k, announce) { dgMark(dg.stops.findIndex((s) => s.k === clamp(k, 0, dg.people.length - 1)), announce); }
 function dgTabs(z) { $$('#dg-tabs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.zone === z))); dg.zone = z; }
-function dgGoTo(k, instant) {
-  k = clamp(k, 0, dg.people.length - 1);
-  dg.tzoom = 0; dg.tx = dg.people[k].x; if (instant || reduce) { dg.x = dg.tx; dg.zoom = 0; }
-  dgSetAt(k, true); dg.dirty = true;
+function dgGoStop(si, instant) {
+  si = clamp(si, 0, dg.stops.length - 1);
+  dg.tzoom = 0; dg.tx = dg.stops[si].x; if (instant || reduce) { dg.x = dg.tx; dg.zoom = 0; }
+  dgMark(si, true); dg.dirty = true;
 }
-function dgStep(d) { dgGoTo((dg.zoom > 0.5 ? dgNearest(dg.x) : dg.at) + d); }
+function dgGoTo(k, instant) { dgGoStop(dg.stops.findIndex((s) => s.k === clamp(k, 0, dg.people.length - 1)), instant); }
+function dgStep(d) { dgGoStop((dg.zoom > 0.5 ? dgNearestStop(dg.x) : dg.si) + d); }
 function dgZone(z) {
   if (z === 'all') {
     if (!dg.gl) return;
@@ -645,7 +763,7 @@ function dgFocus(i) {
 function enterDesigner() {
   dgBuild();
   if (dg.mode !== 'list') dgStart();
-  dgSetAt(dg.at, false);
+  dgMark(dg.si, false);
 }
 /* 다른 화면으로 가면: 그리기를 멈추고 3D 자원을 모두 정리 (돌아오면 같은 자리에서 다시 만듦) */
 function dgDispose() {
@@ -664,8 +782,8 @@ function designerKey(e) {
   if (dg.overlay) { if (e.key === 'Escape') { dgHideList(); return true; } return false; }
   if (e.key === 'ArrowRight' || e.key === 'PageDown') { dgStep(1); return true; }
   if (e.key === 'ArrowLeft' || e.key === 'PageUp') { dgStep(-1); return true; }
-  if (e.key === 'Home') { dgGoTo(0); return true; }
-  if (e.key === 'End') { dgGoTo(dg.people.length - 1); return true; }
+  if (e.key === 'Home') { dgGoStop(0); return true; }                    // 맨 왼쪽 끝 학생
+  if (e.key === 'End') { dgGoStop(dg.stops.length - 1); return true; }  // 맨 오른쪽 끝 학생
   return false;
 }
 
@@ -701,13 +819,14 @@ dg.stage.addEventListener('pointermove', (e) => {
 const dgUp = (e) => {
   const D = dg.drag; if (!D) return; dg.drag = null;
   if (!D.moved) { const k = dgPick(e.clientX, e.clientY); if (k >= 0) { dgGoTo(k); $('.dg-plaque', dg.caps[k]).focus({ preventScroll: true }); openDetail(dg.people[k].i); } return; }
-  // 손을 놓으면: 밀던 방향으로 조금 더 가서 가장 가까운 학생에게 멈춤 (전체 보기에서는 그 자리에 멈춤)
+  // 손을 놓으면: 밀던 방향으로 조금 더 가서 가장 가까운 자리(학생 또는 안내판)에 멈춤 (전체 보기에서는 그 자리에 멈춤)
+  if (performance.now() - D.t > 90) D.v = 0; // 끌다가 손을 멈춘 뒤 놓으면 던지지 않음 (그 자리에서 가장 가까운 곳으로)
   const upp = dg.gl.base.upp, fling = clamp(-D.v * 260 * upp, -DG.gap * 1.2, DG.gap * 1.2);
   if (dg.zoom > 0.5) { dg.tx = dgClampX(dg.x + fling); return; }
-  let k = dgNearest(dg.x + fling);
-  if (dg.gl.base.portrait) k = clamp(k, dg.at - 1, dg.at + 1); // 휴대폰: 한 번 밀면 한 명씩
-  if (k === dg.at && Math.abs(e.clientX - D.x0) > 40) k += e.clientX < D.x0 ? 1 : -1; // 짧게 밀어도 한 명은 넘어감
-  dgGoTo(k);
+  let si = dgNearestStop(dg.x + fling);
+  if (dg.gl.base.portrait) si = clamp(si, dg.si - 1, dg.si + 1); // 휴대폰: 한 번 밀면 한 칸씩
+  if (si === dg.si && Math.abs(e.clientX - D.x0) > 40) si += e.clientX < D.x0 ? 1 : -1; // 짧게 밀어도 한 칸은 넘어감
+  dgGoStop(si);
 };
 dg.stage.addEventListener('pointerup', dgUp);
 dg.stage.addEventListener('pointercancel', dgUp);
@@ -719,15 +838,15 @@ function dgHover(k) {
 }
 dg.labels.addEventListener('pointerover', (e) => { const c = e.target.closest('.dg-cap'); if (c && e.pointerType === 'mouse') dgHover(+c.dataset.k); });
 dg.labels.addEventListener('pointerout', (e) => { const c = e.target.closest('.dg-cap'); if (c && !c.contains(e.relatedTarget)) dgHover(-1); });
-function dgClampX(x) { const a = dg.people[0].x - DG.gap * 0.6, b = dg.people.at(-1).x + DG.gap * 0.6; return clamp(x, a, b); }
+function dgClampX(x) { const a = dg.stops[0].x - DG.gap * 0.6, b = dg.stops.at(-1).x + DG.gap * 0.6; return clamp(x, a, b); }
 dg.root.addEventListener('wheel', (e) => {
   if (!dg.gl || e.target.closest('.dg-list')) return;
   e.preventDefault();
   const d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * (e.deltaMode === 1 ? 32 : 1);
   dg.tx = dgClampX(dg.tx + d * dg.gl.base.upp * DG.wheel); dg.dirty = true;
   if (dg.zoom > 0.5) return;
-  dgSetAt(dgNearest(dg.tx), false);
-  clearTimeout(dg.wheelT); dg.wheelT = setTimeout(() => dgGoTo(dgNearest(dg.tx)), 160); // 휠을 멈추면 가장 가까운 학생에게 정렬
+  dgMark(dgNearestStop(dg.tx), false);
+  clearTimeout(dg.wheelT); dg.wheelT = setTimeout(() => dgGoStop(dgNearestStop(dg.tx)), 160); // 휠을 멈추면 가장 가까운 자리(학생 또는 안내판)에 정렬
 }, { passive: false });
 $('#dg-prev').addEventListener('click', () => dgStep(-1));
 $('#dg-next').addEventListener('click', () => dgStep(1));
