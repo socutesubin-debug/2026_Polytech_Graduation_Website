@@ -43,17 +43,23 @@ const ROOM_ASSETS = [
 
 /* Project 방 작품 썸네일 (2026-11-15 받음) — 그림은 assets/images/works/학생번호.webp (16:9, 1600×900)
    title = 썸네일에 적힌 작품 이름. 이 표만 고치면 학생과 작품의 짝이 바뀌어요.
+   작품이 둘 이상이면 [ {…}, {…} ] 처럼 목록으로 적어요 → Project 방에 카드가 그만큼 나옴 (예: 박수빈)
+   desc = 상세 화면 왼쪽 설명 (빈 줄 = 문단 나눔), images = 상세 화면 오른쪽 그림들 (위에서부터 차례로)
    ★ 확인됨: 그림에 이름이 있거나 포트폴리오로 확인한 5명. ☆ 임시: 분야만 보고 붙인 짝 — 맞는 짝을 받으면 고치기 */
 const WORKS = {
   '민하도': { src: 'assets/images/works/02.webp', title: 'flowny' },                       // ★ 그림에 이름
   '박재연': { src: 'assets/images/works/06.webp', title: '동방구' },                       // ★ PARK JAEYEON
-  '박수빈': { src: 'assets/images/works/07.webp', title: '프린트카페 (PRINT CAFE)' },      // ★
+  '박수빈': [                                                                              // ★ 작품 2개
+    { src: 'assets/images/works/07.webp', title: '프린트카페 (PRINT CAFE)' },
+    { src: 'assets/images/works/07-2.webp', title: '다이소 뷰티 (Daiso Beauty) BX',
+      desc: '‘다이소 뷰티’는 가성비 뷰티템을 발견하는 장소로 주목받는 다이소에서 출발한 가상의 뷰티 브랜드입니다. 합리적인 가격과 친근함을 바탕으로, 새로운 제품을 발견하고 취향을 시도하는 즐거움에 주목했습니다.\n\n사랑스럽고 생기 있는 시각 언어를 통해 소장하고 싶은 브랜드 이미지를 제안하고, 패키지부터 매장과 온라인까지 이어지는 뷰티 경험을 디자인했습니다.',
+      images: ['assets/images/works/07-2/01.webp', 'assets/images/works/07-2/02.webp', 'assets/images/works/07-2/03.webp'] },
+  ],
   '조예빈': { src: 'assets/images/works/11.webp', title: "SQU'ARE LINE" },                // ★ Cho Ye Bin
   '천승현': { src: 'assets/images/works/14.webp', title: 'FLUIDITY' },                     // ★ fluidity-portfolio
   '김예일': { src: 'assets/images/works/01.webp', title: '우리 언제 만나?' },              // ☆
   '김준서': { src: 'assets/images/works/03.webp', title: 'ALIGNEX' },                      // ☆
   '김우선': { src: 'assets/images/works/04.webp', title: '컬처패스' },                     // ☆
-  '김수연': { src: 'assets/images/works/05.webp', title: '다이소 뷰티 (Daiso Beauty)' },   // ☆
   '박호성': { src: 'assets/images/works/08.webp', title: '오늘의집 UI/UX 리디자인' },      // ☆
   '오수한': { src: 'assets/images/works/09.webp', title: 'Luckin Coffee Campaign' },       // ☆
   '조민영': { src: 'assets/images/works/10.webp', title: 'GTA Online Promotion Website' }, // ☆
@@ -78,7 +84,7 @@ const STUDENTS = [
   { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: '' },
   { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', email: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },
   { name: '하태랑', field: 'visual', slogan: '현실과 꿈의 모호한 경계를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://lalalatototo10-alt.github.io/graduation/' },
-].map((s, i) => ({ ...s, work: WORKS[s.name] || null, no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
+].map((s, i) => ({ ...s, works: [].concat(WORKS[s.name] || []), no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
 /* V2 공통 칸 (2026-11-11 추가)
    field: 'uxui' = UX/UI·웹 전시관, 'visual' = Visual 전시관, '' = 아직 확인 안 됨
    work: 특별전 대표 작품 { src, title, desc, credit } — 자료를 받으면 채움. 지금은 null
