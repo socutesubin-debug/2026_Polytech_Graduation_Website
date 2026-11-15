@@ -44,9 +44,10 @@ const PROJECT = {
     radius: 0.62, radiusMobile: 1.2,  // 도넛 반지름
     card: 0.19, cardMobile: 0.4,      // 도넛일 때 카드 너비
     camera: 0.6,                      // 도넛 안쪽으로 다가가는 정도 (클수록 가까움)
-    perspective: 1000,                // 원근 (작을수록 가까운 카드가 더 크게 휘어 보임)
+    perspective: 1000,                // 원근 (작을수록 가까운 카드가 더 크게 휘어 보임) — 화면 너비 1440 기준, 넓으면 비례해서 커짐
     tilt: -12, roll: -5,              // 위에서 내려다보는 각도, 비스듬히 기울인 각도
-    lift: 0.14,                       // 도넛을 위로 올리는 정도 (화면 높이 비율)
+    lift: 0.14,                       // 도넛을 위로 올리는 정도 (화면 높이 비율) — 아래 center가 켜져 있으면 시작값일 뿐
+    center: 0.5,                      // 맨 앞 카드가 오도록 맞추는 화면 높이 위치 (0.5 = 가운데, null = 끔). 카드 위치를 직접 재서 맞춤
   },
 };
 const pj = {
@@ -54,6 +55,7 @@ const pj = {
   live: $('#pj-live'), view: $('#pj-detail'),
   cards: [], built: false, angle: 0, vel: 0, lastT: 0, mx: 0, my: 0, tmx: 0, tmy: 0, at: -1, back: null,
   u: 0, us: 0, a: 0, k: 0, ringBase: 0, front: -1, auto: 0, frontIdx: 0,
+  ly: 0, lys: 0, lyN: 0, // 맨 앞 카드를 화면 가운데로 올리는 양 (재서 맞춤)
   dy: 0, dys: 0, dp: 0, dps: 0, dvy: 0, dvp: 0, down: null, dragged: false, hover: -1, revT: null, rev: 0, // 끌어서 돌리기, 마우스 올린 카드, 퍼져 나오기
   ver: /[?&]v=1\b/.test(location.search) ? 1 : PROJECT.version,
 };
@@ -157,7 +159,8 @@ function renderProject(t) {
     }
     pj.dp = clamp(pj.dp, -60, 60);
     const s = pjEase(C.smoothing, dt); pj.dys += (pj.dy - pj.dys) * s; pj.dps += (pj.dp - pj.dps) * s;
-    pj.angle += (C.spin * (1 - a) + pj.vel) * dt / 1000; pj.vel *= Math.exp(-dt / 700); pj.auto += C.ringSpin * a * dt / 1000;
+    // 공 · 도넛 · 스크롤로 넘기기가 모두 같은 방향으로 늘 돎 (예전: 공만 반대 방향이라 공 → 도넛 중간에 멈췄다가 거꾸로 돎)
+    pj.angle += (-C.spin + pj.vel) * dt / 1000; pj.vel *= Math.exp(-dt / 700); pj.auto += C.ringSpin * dt / 1000;
   } else { pj.dp = clamp(pj.dp, -60, 60); pj.dys = pj.dy; pj.dps = pj.dp; }
   if (a < 0.01) { pj.ringBase = 360 * Math.round(pj.angle / 360); pj.auto = 0; } // 도넛으로 바뀌기 시작할 때의 기준 각도
   const step = 360 / n, mt = C.mouseTilt * (1 - 0.7 * a);
@@ -165,10 +168,12 @@ function renderProject(t) {
     - (1 - pjOut(pj.rev)) * 50;                                                // 들어올 때 살짝 감겼다 풀림
   const V2 = pj.ver === 2, N = C.near, mob = W < 760;
   const cw = mob ? clamp(W * 0.22, 72, 104) : clamp(W * 0.12, 104, 190), wob = live ? C.float * (1 - 0.85 * a) : 0;
-  if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px'); pj.hero.style.setProperty('--res', PROJECT.sharp); }
+  if (cw !== pj.cw) { pj.cw = cw; pj.hero.style.setProperty('--cw', cw.toFixed(0) + 'px');
+    pj.res = Math.max(C.sharp, Math.ceil(0.37 * W / cw)); pj.hero.style.setProperty('--res', pj.res); } // 넓은 화면은 맨 앞 카드가 커서 더 크게 그림
   // 도넛일 때의 모양: 버전 1 = 멀리서 작은 도넛, 버전 2 = 가까이에서 크게
   const ring = V2
-    ? { R: W * (mob ? N.radiusMobile : N.radius), z: -(mob ? 0.55 : N.camera), tilt: N.tilt, roll: N.roll, persp: mob ? 760 : N.perspective,
+    ? { R: W * (mob ? N.radiusMobile : N.radius), z: -(mob ? 0.55 : N.camera), tilt: N.tilt, roll: N.roll, persp: mob ? 760 : N.perspective * W / 1440, // 원근도 화면 너비에 비례 (넓은 화면에서 맨 앞 카드가 지나치게 커지지 않게)
+       
         y: -H * (mob ? 0.04 : N.lift), sc: (W * (mob ? N.cardMobile : N.card)) / cw, fs: 1.05, fo: 0.06, dimBack: 0.35, dimSide: 0.08 }
     : { R: mob ? W * 0.4 : Math.min(W * 0.36, H * 0.46), y: 0, z: -0.35, tilt: -13, roll: 0, persp: 1400, sc: 0.9, fs: C.focusScale, fo: C.focusOut, dimBack: 0.55, dimSide: 0.25 };
   const Rs = Math.max(Math.min(W * 0.5, H * 0.62), H * 0.4);
@@ -176,7 +181,8 @@ function renderProject(t) {
   const tilt = pjLerp(-6, ring.tilt, a) - pj.my * mt * 0.7 + pj.dps * (1 - a) + Math.sin(ts * 0.21) * 4 * wob; // 공은 위아래로도 아주 천천히 흔들림
   const persp = pjLerp(1400, ring.persp, a);
   if (Math.abs(persp - (pj.persp || 0)) > 0.5) { pj.persp = persp; pj.scene.style.perspective = persp.toFixed(0) + 'px'; }
-  pj.space.style.transform = `translate3d(0,${(ring.y * a).toFixed(1)}px,${(R * pjLerp(-0.35, ring.z, a)).toFixed(1)}px)`;
+  pj.lys += (pj.ly - pj.lys) * (1 - Math.exp(-dt / 260));
+  pj.space.style.transform = `translate3d(0,${((ring.y + (V2 ? pj.lys : 0)) * a).toFixed(1)}px,${(R * pjLerp(-0.35, ring.z, a)).toFixed(1)}px)`;
   pj.cloud.style.transform = `rotateZ(${(ring.roll * a).toFixed(2)}deg) rotateX(${tilt.toFixed(2)}deg) rotateY(${spinY.toFixed(2)}deg)`;
   const K = pj.K, mid = (K - 1) / 2, pap = live ? C.paper * (0.35 + 0.65 * a) : 0;
   const hvE = live ? 1 - Math.exp(-dt / 170) : 1, offD = Math.exp(-dt / 220);
@@ -221,10 +227,17 @@ function renderProject(t) {
       const ph2 = x * 2.2 + ts * 0.8 + c.p2;
       const wave = amp * Math.sin(ph2), slope = Math.atan(amp * Math.cos(ph2) * 2.2 * 2 / (cw * sc)) / rad;
       const el = c.strips[j];
-      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad) / PROJECT.sharp).toFixed(4)}, ${(sc / PROJECT.sharp).toFixed(4)})`;
+      el.style.transform = `${head} translate3d(${px.toFixed(2)}px,0,${pz.toFixed(2)}px) rotateY(${(be / rad).toFixed(2)}deg) translateZ(${wave.toFixed(1)}px) rotateY(${(face - slope).toFixed(2)}deg) rotateX(${(twist * x).toFixed(2)}deg) scale(${(sc / Math.cos(slope * rad) / pj.res).toFixed(4)}, ${(sc / pj.res).toFixed(4)})`;
       el.style.setProperty('--sh', (0.34 * (1 - Math.abs(Math.cos(nrm + be)))).toFixed(3)); // 옆으로 돌아간 띠일수록 어둡게 = 휜 종이 그림자
       if (setFog) el.style.setProperty('--fog', fog);
     }
+  }
+  // 도넛일 때 맨 앞 카드가 화면 가운데(N.center)에 오도록: 몇 프레임마다 카드 위치를 재서 벗어난 만큼 도넛을 올리고 내림
+  if (V2 && N.center != null && a > 0.98 && !pj.down && ++pj.lyN % 8 === 0) {
+    let top = 1e9, bot = -1e9;
+    for (const el of pj.cards[pj.frontIdx].strips) { const b = el.getBoundingClientRect(); if (b.top < top) top = b.top; if (b.bottom > bot) bot = b.bottom; }
+    const err = (top + bot) / 2 - pj.hero.getBoundingClientRect().top - H * N.center;
+    if (Math.abs(err) > 1) pj.ly = clamp(pj.lys - err * 0.6, -H, H);
   }
   // 맨 앞 작품 (화면에는 글자 없이, 화면 읽기 프로그램에만 알림)
   const fr = a > 0.85 ? pj.frontIdx : -1;
