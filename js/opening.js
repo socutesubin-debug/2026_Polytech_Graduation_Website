@@ -1,7 +1,7 @@
 /* Intro (#opening) — 스크롤 인트로
    스크롤을 내리면: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속으로 → 하얗게 밝아진 뒤 다음 화면(About)으로 넘어감
    장면 자체는 js/intro-scroll.js (숫자는 그 파일 맨 위 CFG). 여기서는 사이트와 잇는 일만 함
-   - [건너뛰기]·Esc·Enter: 바로 다음 화면
+   - Esc·Enter: 바로 다음 화면 (화면의 [건너뛰기] 버튼은 없앰, 2026-11-16)
    - 상단 메뉴의 Intro를 누르면 처음부터 다시 */
 const OPENING = {
   next: 'about',              // 인트로가 끝나면 갈 화면
@@ -24,4 +24,3 @@ function playOpening() {
 function opStop() { op.playing = false; if (op.intro) op.intro.stop(); }
 function opLeave() { if (page !== 'opening') return; opMarkSeen(); go(OPENING.next); }
 function opSkip() { opLeave(); }
-$('#op-skip').addEventListener('click', opSkip);
