@@ -5,9 +5,11 @@
    주소 끝에 ?intro=video 를 붙이면 사이트가 이 버전으로 열림 */
 function createIntroVideo(root, opts) {
   opts = opts || {};
-  var CFG = { src: 'assets/video/intro-scroll.mp4', poster: 'assets/video/intro-scroll-poster.jpg',
+  // 큰 화면 = 1080p 영상, 휴대폰·작은 화면 = 720p 영상 (용량을 아끼려고)
+  var small = Math.max(screen.width, screen.height) * Math.min(devicePixelRatio || 1, 2) <= 1600 || matchMedia('(pointer:coarse)').matches;
+  var CFG = { src: small ? 'assets/video/intro-scroll-720.mp4' : 'assets/video/intro-scroll.mp4', poster: 'assets/video/intro-scroll-poster.jpg',
     hold: 3,          // 영상 처음 몇 초가 "스크롤 전" 부분인지
-    end: 19.6,        // 스크롤을 끝까지 내렸을 때의 영상 시각(초)
+    end: 19.6,        // 스크롤을 끝까지 내렸을 때의 영상 시각(초) — 영상 길이 20초
     glide: 4 };       // 스크롤을 따라오는 빠르기 (작을수록 부드럽게)
   root.classList.add('iv-stage');
   root.innerHTML = '<video class="iv-video" muted playsinline preload="auto" poster="' + CFG.poster + '"><source src="' + CFG.src + '" type="video/mp4"></video><div class="is-hint">SCROLL<i></i></div>';
