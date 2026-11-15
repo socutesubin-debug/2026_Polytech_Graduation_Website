@@ -41,6 +41,27 @@ const ROOM_ASSETS = [
   },
 ];
 
+/* Project 방 작품 썸네일 (2026-11-15 받음) — 그림은 assets/images/works/학생번호.webp (4:3, 1200×900)
+   title = 썸네일에 적힌 작품 이름. 이 표만 고치면 학생과 작품의 짝이 바뀌어요.
+   ★ 확인됨: 그림에 이름이 있거나 포트폴리오로 확인한 5명. ☆ 임시: 분야만 보고 붙인 짝 — 맞는 짝을 받으면 고치기 */
+const WORKS = {
+  '민하도': { src: 'assets/images/works/02.webp', title: 'flowny' },                       // ★ 그림에 이름
+  '박재연': { src: 'assets/images/works/06.webp', title: '동방구' },                       // ★ PARK JAEYEON
+  '박수빈': { src: 'assets/images/works/07.webp', title: '프린트카페 (PRINT CAFE)' },      // ★
+  '조예빈': { src: 'assets/images/works/11.webp', title: "SQU'ARE LINE" },                // ★ Cho Ye Bin
+  '천승현': { src: 'assets/images/works/14.webp', title: 'FLUIDITY' },                     // ★ fluidity-portfolio
+  '김예일': { src: 'assets/images/works/01.webp', title: '우리 언제 만나?' },              // ☆
+  '김준서': { src: 'assets/images/works/03.webp', title: 'ALIGNEX' },                      // ☆
+  '김우선': { src: 'assets/images/works/04.webp', title: '컬처패스' },                     // ☆
+  '김수연': { src: 'assets/images/works/05.webp', title: '다이소 뷰티 (Daiso Beauty)' },   // ☆
+  '박호성': { src: 'assets/images/works/08.webp', title: '오늘의집 UI/UX 리디자인' },      // ☆
+  '오수한': { src: 'assets/images/works/09.webp', title: 'Luckin Coffee Campaign' },       // ☆
+  '조민영': { src: 'assets/images/works/10.webp', title: 'GTA Online Promotion Website' }, // ☆
+  '손예진': { src: 'assets/images/works/12.webp', title: 'SoundCloud Promotion Web' },     // ☆
+  '송예준': { src: 'assets/images/works/13.webp', title: '春夏秋冬' },                     // ☆
+  '하태랑': { src: 'assets/images/works/15.webp', title: 'bmix studio' },                  // ☆
+};
+
 const STUDENTS = [
   { name: '김예일', field: 'uxui', slogan: '구조와 흐름을 꿰뚫어 불편을 편리로 바꾸는 경험 디자이너', desc: '', email: '', portfolio: '' },
   { name: '민하도', field: 'visual', slogan: '아이디어를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://hadomin91-design.github.io/hadomin_design/' },
@@ -57,7 +78,7 @@ const STUDENTS = [
   { name: '송예준', field: 'visual', slogan: '과거와 현재와 미래를 잇는 디자이너', desc: '', email: '', portfolio: '' },
   { name: '천승현', field: 'uxui', slogan: '흐름에 맞춰 유연하게 변화하는 디자이너', desc: '', email: '', portfolio: 'https://cheon0903.github.io/fluidity-portfolio/' },
   { name: '하태랑', field: 'visual', slogan: '현실과 꿈의 모호한 경계를 시각화하는 디자이너', desc: '', email: '', portfolio: 'https://lalalatototo10-alt.github.io/graduation/' },
-].map((s, i) => ({ ...s, work: null, no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
+].map((s, i) => ({ ...s, work: WORKS[s.name] || null, no: i + 1, room: Math.floor(i / 5), slot: i % 5 }));
 /* V2 공통 칸 (2026-11-11 추가)
    field: 'uxui' = UX/UI·웹 전시관, 'visual' = Visual 전시관, '' = 아직 확인 안 됨
    work: 특별전 대표 작품 { src, title, desc, credit } — 자료를 받으면 채움. 지금은 null
