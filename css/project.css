@@ -41,13 +41,13 @@
 .pj-d-who{align-self:flex-start;padding:0;font-size:18px;color:#fff;text-align:left;line-height:1.4}
 .pj-d-who:disabled{cursor:default;opacity:1;color:#fff}
 .pj-d-who:not(:disabled):hover,.pj-d-who:not(:disabled):focus-visible{text-decoration:underline;text-underline-offset:4px}
-.pj-d-desc{margin:44px 0 0;font-size:16px;line-height:1.9;color:rgba(255,255,255,.92);word-break:keep-all;white-space:pre-line}
+.pj-d-desc{margin:44px 0 0;font-size:14px;line-height:1.85;color:rgba(255,255,255,.92);word-break:keep-all;white-space:pre-line}
 .pj-d-mail{margin-top:auto;padding-top:24px;font-size:17px;color:#fff;text-decoration:none;word-break:break-all}
 .pj-d-mail:hover{text-decoration:underline;text-underline-offset:4px}
-.pj-d-images{display:flex;flex-direction:column;gap:28px;padding:0 0 28px}
-.pj-shot{position:relative;margin:0;width:100%;background:#1a1a1a}
-.pj-shot img{display:block;width:100%;height:auto}
-.pj-shot-temp{aspect-ratio:3/2;display:grid;place-items:center;background:linear-gradient(160deg,#ece8ef,#d9d3dc)}
+.pj-d-images{display:flex;flex-direction:column;align-items:center;gap:28px;padding:10px 0 56px} /* 그림 한 장이 한 화면에 위아래까지 다 보이는 크기 (가로는 칸의 95%까지) */
+.pj-shot{position:relative;margin:0;max-width:95%;background:#1a1a1a}
+.pj-shot img{display:block;width:auto;max-width:100%;height:auto;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}
+.pj-shot-temp{width:95%;aspect-ratio:3/2;display:grid;place-items:center;background:linear-gradient(160deg,#ece8ef,#d9d3dc)}
 .pj-shot-temp span{font-size:13px;letter-spacing:.14em;color:#8a7d8a}
 .pj-d-close{position:sticky;top:0;align-self:start;justify-self:center;width:56px;height:56px;margin-top:calc(36px + env(safe-area-inset-top,0px));display:grid;place-items:center;color:#fff}
 .pj-d-close svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6}
@@ -57,7 +57,8 @@
   .pj-d-side{position:static;height:auto;padding:calc(72px + env(safe-area-inset-top,0px)) 20px 28px}
   .pj-d-desc{margin-top:24px;font-size:15px}
   .pj-d-mail{margin-top:20px;padding-top:0;font-size:15px}
-  .pj-d-images{gap:12px}
+  .pj-d-images{gap:12px;padding:0 0 28px}
+  .pj-shot{width:100%;max-width:none}
   .pj-d-close{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:8px;margin:0;background:rgba(0,0,0,.55);border-radius:50%}
 }
 @media(prefers-reduced-motion:reduce){.pj-detail{transition:none}}

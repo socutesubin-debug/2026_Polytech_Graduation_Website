@@ -45,27 +45,32 @@ const ROOM_ASSETS = [
    title = 썸네일에 적힌 작품 이름. 이 표만 고치면 학생과 작품의 짝이 바뀌어요.
    작품이 둘 이상이면 [ {…}, {…} ] 처럼 목록으로 적어요 → Project 방에 카드가 그만큼 나옴 (예: 박수빈)
    desc = 상세 화면 왼쪽 설명 (빈 줄 = 문단 나눔), images = 상세 화면 오른쪽 그림들 (위에서부터 차례로)
-   ★ 확인됨: 그림에 이름이 있거나 포트폴리오로 확인한 5명. ☆ 임시: 분야만 보고 붙인 짝 — 맞는 짝을 받으면 고치기 */
+   짝은 원본 파일 이름(다운로드/project_학생프로젝트썸네일/학생이름.png, V2·V3 = 같은 학생의 다음 작품)으로 확인함 (2026-11-15)
+   상세 그림 원본: 다운로드/학생 프로젝트 내용/학생이름/학생이름_작품명1·2·3 → 숫자 순서대로 */
 const WORKS = {
-  '민하도': { src: 'assets/images/works/02.webp', title: 'flowny' },                       // ★ 그림에 이름
-  '박재연': { src: 'assets/images/works/06.webp', title: '동방구' },                       // ★ PARK JAEYEON
-  '박수빈': [                                                                              // ★ 작품 2개
+  '김예일': { src: 'assets/images/works/01.webp', title: '컬처패스' },
+  '민하도': { src: 'assets/images/works/02.webp', title: 'flowny' },
+  '김준서': { src: 'assets/images/works/03.webp', title: 'SoundCloud Promotion Web' },
+  '김우선': { src: 'assets/images/works/04.webp', title: '오늘의집 UI/UX 리디자인' },
+  '김수연': { src: 'assets/images/works/05.webp', title: '우리 언제 만나?' },
+  '박재연': { src: 'assets/images/works/06.webp', title: '동방구' },
+  '박호성': [                                                                              // 작품 2개 (ALIGNEX 그림은 2장 받음: 로고·사람 사진 → 썸네일은 사람 사진)
+    { src: 'assets/images/works/08.webp', title: 'ALIGNEX' },
+    { src: 'assets/images/works/08-2.webp', title: 'bmix studio' },
+  ],
+  '오수한': { src: 'assets/images/works/09.webp', title: 'GTA Online Promotion Website' },
+  '조민영': null,                                                                         // 아직 썸네일 없음 → 회색 임시 카드
+  '손예진': { src: 'assets/images/works/12.webp', title: 'Luckin Coffee Campaign' },
+  '송예준': { src: 'assets/images/works/13.webp', title: '春夏秋冬' },
+  '하태랑': { src: 'assets/images/works/15.webp', title: 'ONDO' },
+  '박수빈': [                                                                              // 작품 2개
     { src: 'assets/images/works/07.webp', title: '프린트카페 (PRINT CAFE)' },
     { src: 'assets/images/works/07-2.webp', title: '다이소 뷰티 (Daiso Beauty) BX',
       desc: '‘다이소 뷰티’는 가성비 뷰티템을 발견하는 장소로 주목받는 다이소에서 출발한 가상의 뷰티 브랜드입니다. 합리적인 가격과 친근함을 바탕으로, 새로운 제품을 발견하고 취향을 시도하는 즐거움에 주목했습니다.\n\n사랑스럽고 생기 있는 시각 언어를 통해 소장하고 싶은 브랜드 이미지를 제안하고, 패키지부터 매장과 온라인까지 이어지는 뷰티 경험을 디자인했습니다.',
       images: ['assets/images/works/07-2/01.webp', 'assets/images/works/07-2/02.webp', 'assets/images/works/07-2/03.webp'] },
   ],
-  '조예빈': { src: 'assets/images/works/11.webp', title: "SQU'ARE LINE" },                // ★ Cho Ye Bin
-  '천승현': { src: 'assets/images/works/14.webp', title: 'FLUIDITY' },                     // ★ fluidity-portfolio
-  '김예일': { src: 'assets/images/works/01.webp', title: '우리 언제 만나?' },              // ☆
-  '김준서': { src: 'assets/images/works/03.webp', title: 'ALIGNEX' },                      // ☆
-  '김우선': { src: 'assets/images/works/04.webp', title: '컬처패스' },                     // ☆
-  '박호성': { src: 'assets/images/works/08.webp', title: '오늘의집 UI/UX 리디자인' },      // ☆
-  '오수한': { src: 'assets/images/works/09.webp', title: 'Luckin Coffee Campaign' },       // ☆
-  '조민영': { src: 'assets/images/works/10.webp', title: 'GTA Online Promotion Website' }, // ☆
-  '손예진': { src: 'assets/images/works/12.webp', title: 'SoundCloud Promotion Web' },     // ☆
-  '송예준': { src: 'assets/images/works/13.webp', title: '春夏秋冬' },                     // ☆
-  '하태랑': { src: 'assets/images/works/15.webp', title: 'bmix studio' },                  // ☆
+  '조예빈': { src: 'assets/images/works/11.webp', title: "SQU'ARE LINE" },
+  '천승현': { src: 'assets/images/works/14.webp', title: 'FLUIDITY' },
 };
 
 const STUDENTS = [
