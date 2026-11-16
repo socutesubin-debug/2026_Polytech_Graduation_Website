@@ -25,6 +25,7 @@ const BF_AR = {
   dustLife: 1.7,     // 지나간 자리에 빛가루 잔상이 남는 시간 (1 = 커서와 같음, 클수록 꼬리가 길게)
   glow: 2.2,         // 나비 둘레 빛남 세기 (1 = 커서와 같음)
   fast: 900,         // 화면에서 이 속도(px/초)부터 '빨리 움직임'으로 봄 (커서와 같은 값)
+  fastSpace: 0.5,    // 공간에서 이 속도(m/초)부터 '빨리 날고 있음'으로 봄. 폰이 나비를 따라가서 화면 위치가 그대로여도 빛가루가 나옴
   showBack: 0.45,    // 나비 등을 나 쪽으로 살짝 돌려서 날개가 잘 보이게 (0 = 진짜 방향 그대로, 1 = 늘 등을 보여 줌)
   followCam: 1.3,    // 카메라가 보는 쪽을 따라오는 빠르기 (클수록 바로 따라옴, 0이면 처음 본 쪽에만 머묾)
   handPull: 3.2,     // 손을 보면 손 쪽으로 끌리는 힘
@@ -35,7 +36,7 @@ const BF_AR = {
 
 function startButterflyAR(opt) {
   const C = BF_AR, GL = opt.GL, B = GL.butterflies[0];
-  GL.glow = C.glow; GL.dustBright = C.dustBright; GL.dustSize = C.dustSize; GL.dustLife = C.dustLife; // 빛남·빛가루 세기 (위 BF_AR 숫자)
+  GL.glow = C.glow; GL.dustBright = C.dustBright; GL.dustSize = C.dustSize; GL.dustLife = C.dustLife; GL.lightAlpha = 1; // 빛남·빛가루 세기 (위 BF_AR 숫자)
   const root = opt.root, video = opt.video, arrow = opt.arrow;
   let raf = 0, last = performance.now(), alive = true, stream = null, hasOri = false, oriRaw = null;
   /* ---- 3x3 행렬·벡터 (행 우선) ---- */
@@ -163,7 +164,8 @@ function startButterflyAR(opt) {
     B.hzMul = (1 + 0.8*Math.min(1, sp/0.8))*(1 - s.sit) + C.sitFlap*s.sit;
     /* 빛가루: 웹사이트 나비 커서와 같은 방식 — 화면에서 빨리 움직일수록 빛가루가 뒤로 흩날림, 가만히 있으면 아주 조금 */
     const scrV = s.lastS ? Math.min(1, Math.hypot(sx - s.lastS[0], sy - s.lastS[1])/dt/C.fast) : 0; s.lastS = [sx, sy];
-    s.mv += (scrV - s.mv)*(1 - Math.exp(-dt*8));
+    const flyV = Math.min(1, sp/C.fastSpace); // 공간에서 나는 빠르기
+    s.mv += (Math.max(scrV, flyV) - s.mv)*(1 - Math.exp(-dt*8));
     B.dust = behind || reduceMotion ? 0 : (C.dust + C.dustMove*s.mv)*(1 - 0.8*s.sit);
     /* 빛가루가 화면에 붙어 다니지 않고 공간에 남도록: 폰이 돈 만큼만 가루를 같이 밀어 줌 (나비가 움직인 몫은 빼고) */
     if (camPrev) {

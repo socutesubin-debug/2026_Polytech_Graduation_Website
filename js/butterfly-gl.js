@@ -179,7 +179,7 @@ void main(){
 }`;
 const COMP_FS = `#version 300 es
 precision highp float;
-in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque, uDense, uGlow;
+in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque, uDense, uGlow, uLightA;
 void main(){
   vec4 sc = texture(uScene, vUv);
   vec3 c = sc.rgb + (texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.65)*(1. - .6*uDense*(1. - uOpaque))*uGlow;
@@ -189,7 +189,8 @@ void main(){
   vec3 onLight = c*mix(vec3(1., .84, .56), vec3(1.), smoothstep(.4, .85, m));
   /* uDense = 1 이면 날개가 덮은 곳만 배경을 가리고, 빛 번짐과 가루는 빛으로만 더해진다 (어두운 테두리 없음) */
   float aGlass = clamp(m*1.2, 0., 1.), aSolid = clamp(sc.a, 0., 1.)*.9;
-  float a = mix(mix(aGlass, aSolid, uDense), 1., uOpaque);
+  float a = mix(mix(aGlass, max(aSolid, aGlass*uLightA), uDense), 1., uOpaque);
+  /* uLightA = 1: 빛가루·빛 번짐에도 알파를 줌. 아이폰 사파리 등은 알파 0인 곳의 빛을 지워 버려서, 카메라 위 AR에서는 꼭 필요 */
   /* 불투명 모드: 밝은 배경에서도 보이도록 날개 면을 옅은 금빛으로 */
   vec3 solid = c*mix(vec3(1., .9, .68), vec3(1.), smoothstep(.72, .98, m)*.8 + .2*(1. - clamp(sc.a, 0., 1.)));
   o = vec4(mix(mix(onLight, solid, uDense), c, uOpaque), a);
@@ -454,7 +455,7 @@ function draw() {
   blur(fbB2, fbA2, 2.6/fbA2.w, 0);    blur(fbA2, fbB2, 0, 2.6/fbB2.h);
   fsPass(pComp, null, () => {
     bindTex(0, fbScene.tex, pComp.u.uScene); bindTex(1, fbB1.tex, pComp.u.uB1); bindTex(2, fbB2.tex, pComp.u.uB2);
-    gl.uniform1f(pComp.u.uOpaque, OPT.sky ? 0 : 1); gl.uniform1f(pComp.u.uDense, api.dense); gl.uniform1f(pComp.u.uGlow, api.glow);
+    gl.uniform1f(pComp.u.uOpaque, OPT.sky ? 0 : 1); gl.uniform1f(pComp.u.uDense, api.dense); gl.uniform1f(pComp.u.uGlow, api.glow); gl.uniform1f(pComp.u.uLightA, api.lightAlpha);
   });
 }
 const api = {
@@ -463,6 +464,7 @@ const api = {
   glow: 1,                  /* 나비 둘레 빛 번짐 세기 (1 = 기본, 클수록 더 환하게 빛남) */
   dustBright: 1,            /* 빛가루 밝기 (1 = 기본) */
   dustSize: 1,              /* 빛가루 알갱이 크기 (1 = 기본) */
+  lightAlpha: 0,            /* 1 = 빛가루·빛 번짐이 날개 밖에서도 확실히 보이게 (아이폰 사파리용. AR 페이지에서 켬) */
   dustLife: 1,              /* 빛가루가 남아 있는 시간 (1 = 기본, 클수록 지나간 자리에 잔상이 오래 남음) */
   butterflies, simulate, draw, resize,
   /* 화면 픽셀 좌표를 나비가 있는 평면(z=0)의 좌표로 바꾼다 */
