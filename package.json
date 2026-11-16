@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node tools/serve.cjs",
     "upload": "node tools/build-upload.cjs",
-    "test": "node tests/v2-flow.cjs && node tests/designer.cjs",
+    "test": "node tests/v2-flow.cjs && node tests/designer.cjs && node tests/butterfly-phone.cjs",
     "test:designer": "node tests/designer.cjs",
     "test:flow": "node tests/v2-flow.cjs",
     "setup": "npm install && npx playwright install chromium"
