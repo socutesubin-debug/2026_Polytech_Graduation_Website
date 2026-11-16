@@ -118,7 +118,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
 
  // 3) Designer: 밝은 미술관 (자세한 검사는 tests/designer.cjs). 14명, 이름표 = 학생 소개, 포트폴리오는 새 탭
  assert.equal(await p.locator('.dg-cap').count(),14);assert.equal(await p.locator('.dg-cap[data-i="9"]').count(),0,'조민영은 Designer에서 빠짐');
- assert.equal(await p.locator('.dg-cap[data-i="6"] a.dg-plaque').getAttribute('href'),'https://vin-portfolio-swart.vercel.app/'); // 이름표 = 포트폴리오 링크
+ assert.equal(await p.locator('.dg-cap[data-i="6"] a.dg-plaque').getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app'); // 이름표 = 포트폴리오 링크
  assert.equal(await p.locator('.dg-fork, .dg-plate, .dg-amb, .dg-seam, .dg-work').count(),0,'옛 팻말·금속 표찰·어두운 벽 없음');
  await p.evaluate(()=>{go('project');pjOpen(7,null);});await p.locator('#pj-detail.on').waitFor();
  assert.equal(await state(p),'project');assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
