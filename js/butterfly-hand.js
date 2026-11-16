@@ -1,4 +1,4 @@
-/* 손 알아보기 — 카메라 영상에서 손을 찾아 '손바닥이 화면 어디에, 얼마나 가까이 있는지'를 알려 줌 (2026-11-16, butterfly.html에서 씀)
+/* 손 알아보기 — 카메라 영상에서 손을 찾아 '손가락 끝(또는 손바닥)이 화면 어디에, 얼마나 가까이 있는지'를 알려 줌 (2026-11-16, butterfly.html에서 씀)
    - 구글 MediaPipe 손 인식(HandLandmarker, Apache-2.0)을 씀. 파일은 assets/vendor/mediapipe/ (프로그램 약 9MB + 손 모델 약 8MB)
      용량이 커서 나비가 먼저 날기 시작한 뒤에 따로 내려받고, 준비되면 그때부터 손을 찾아요. 실패해도 나비는 그대로 날아요
    - 손목~가운뎃손가락 뿌리 길이(진짜 손은 약 9cm)가 화면에서 얼마나 크게 보이는지로 손까지 거리를 어림해요
@@ -30,11 +30,15 @@ async function startButterflyHand(video, fovDeg, onHand) {
     /* 영상은 화면을 가득 채우게 잘려 있음(object-fit: cover) → 영상 좌표를 화면 px로 */
     const W = innerWidth, Hh = innerHeight, vw = video.videoWidth, vh = video.videoHeight, sc = Math.max(W/vw, Hh/vh);
     const px = (p) => [(p.x*vw - vw/2)*sc + W/2, (p.y*vh - vh/2)*sc + Hh/2];
-    const ids = [0, 5, 9, 13, 17]; let cx = 0, cy = 0; // 손바닥 가운데 = 손목 + 손가락 뿌리 4개의 평균
-    for (const i of ids) { const q = px(pts[i]); cx += q[0]/ids.length; cy += q[1]/ids.length; }
+    /* 앉을 자리: 집게손가락 끝(8번 점). 손가락을 펴고 있지 않으면(끝이 뿌리보다 손목에 가까움) 손바닥 가운데 */
+    const tip = px(pts[8]), knuckle = px(pts[5]), wrist = px(pts[0]);
+    const pointing = Math.hypot(tip[0] - wrist[0], tip[1] - wrist[1]) > Math.hypot(knuckle[0] - wrist[0], knuckle[1] - wrist[1])*1.25;
+    let cx = 0, cy = 0;
+    if (pointing) { cx = tip[0]; cy = tip[1]; }
+    else { const ids = [0, 5, 9, 13, 17]; for (const i of ids) { const q = px(pts[i]); cx += q[0]/ids.length; cy += q[1]/ids.length; } }
     const a = px(pts[0]), b = px(pts[9]), len = Math.hypot(a[0] - b[0], a[1] - b[1]);
     const fpx = Hh/2/Math.tan(fovDeg*Math.PI/360);
-    onHand({ sx: cx, sy: cy, depth: H.palm*fpx/Math.max(20, len) });
+    onHand({ sx: cx, sy: cy, finger: pointing, depth: H.palm*fpx/Math.max(20, len) });
   }
   tick();
   return { stop() { alive = false; try { lm.close(); } catch (e) {} } };
