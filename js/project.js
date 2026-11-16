@@ -42,7 +42,7 @@ const PROJECT = {
   // 주소 끝에 ?v=1 을 붙이면 (예: index.html?v=1#project) 예전 버전으로 비교해 볼 수 있음
   version: 2,
   near: {                         // 버전 2 숫자 (화면 너비 W에 대한 비율)
-    radius: 0.62, radiusMobile: 1.2,  // 도넛 반지름
+    radius: 0.7, radiusMobile: 1.3,   // 도넛 반지름 (클수록 카드 사이가 넓어짐. 작품 19장 기준 2026-11-17: 0.62 → 0.7)
     card: 0.19, cardMobile: 0.4,      // 도넛일 때 카드 너비
     camera: 0.6,                      // 도넛 안쪽으로 다가가는 정도 (클수록 가까움)
     perspective: 1000,                // 원근 (작을수록 가까운 카드가 더 크게 휘어 보임) — 화면 너비 1440 기준, 넓으면 비례해서 커짐
