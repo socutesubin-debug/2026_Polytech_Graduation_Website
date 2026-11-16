@@ -188,10 +188,49 @@ $b=[Convert]::ToBase64String([IO.File]::ReadAllBytes("assets/models/03.glb"))
 "GLB_DATA['assets/models/03.glb'] = 'data:model/gltf-binary;base64,$b';" | Set-Content assets/models/03.model.js -NoNewline
 ```
 
+## 다른 컴퓨터에서 이어서 작업하기
+
+필요한 것: **Git**, **Node.js**(18 이상), 인터넷. (Python은 없어도 됨)
+
+```bash
+# 1. 내려받기 (작업 브랜치)
+git clone -b claude/project-thread-1ym3nr https://github.com/socutesubin-debug/2026_Polytech_Graduation_Website.git
+cd 2026_Polytech_Graduation_Website
+
+# 2. 작업 도구 설치 (처음 한 번만: 테스트용 브라우저 Playwright)
+npm run setup
+
+# 3. 사이트 보기 → 브라우저에서 http://localhost:8765/
+npm start
+```
+
+| 하고 싶은 일 | 명령 |
+|---|---|
+| 사이트 보기 (파일을 고치면 새로고침만 하면 반영) | `npm start` |
+| 검사 (Intro · About · Project · Designer 전체 + Designer 자세히) | 다른 터미널에서 `npm test` (먼저 `npm start`가 켜져 있어야 함) |
+| 닷홈에 올릴 폴더 만들기 | `npm run upload` → `dist/dothome_upload` |
+
+이미 내려받은 컴퓨터에서 다시 시작할 때는 `git pull`로 최신 내용을 받은 뒤 `npm start`.
+Claude Code로 이어서 할 때 필요한 작업 맥락(진행 방식, 규칙, 배포 방법, 남은 일)은 저장소의 **`CLAUDE.md`**에 적어 두었어요 (Claude Code가 자동으로 읽음).
+
+석고상 원본 3D 파일(Hyper3D가 만든 .glb, 학생마다 약 28MB, 합계 413MB)은 너무 커서 저장소에 없어요. 원래 작업 컴퓨터의 `다운로드\학생 석고상 얼굴\3d`에만 있으니, **석고상을 새로 만들 때만** USB·클라우드로 옮겨 쓰면 돼요. 사이트에 쓰는 줄인 파일(`assets/models`, `assets/images/busts`)과 생성 기록(`tools/bust-generations.tsv`)은 저장소에 있어요.
+
 ## 내 컴퓨터에서 실행하기
 
-폴더 압축을 풀고 `index.html`을 **더블클릭해서 열면** 3D 석고상까지 나옵니다 (three.js와 글꼴을 인터넷에서 불러오므로 인터넷 연결은 필요).
-3D 파일은 `assets/models/*.model.js` 하나만 쓰기 때문에 GitHub Pages에서도 같은 방식으로 동작하고, 별도의 로컬 서버가 필요 없습니다.
+`npm start`로 켜고 `http://localhost:8765/`로 보는 것을 권해요 (위 표). Python이 있으면 `python -m http.server 8765`도 됩니다.
+`index.html`을 **더블클릭해서 열면**(`file://`) 브라우저가 내 컴퓨터의 그림을 3D 화면에 올리지 못하게 막아서 **Designer 석고상이 보이지 않고**, 배경음 막대도 실제 소리 대신 비슷한 움직임으로 대신 움직여요. 닷홈 같은 웹 서버에서는 문제없어요.
+
+## 닷홈에 올리기 (실제 사이트)
+
+닷홈 유료 호스팅에 **알드라이브(FTP)**로 올려요.
+
+1. `npm run upload` → `dist/dothome_upload` 폴더가 생김 (사이트에 실제로 쓰는 파일만, 약 21MB. 테스트·도구·안 쓰는 이미지·더블클릭용 예비 파일은 뺌)
+2. 닷홈 **마이닷홈 → 호스팅 관리**에서 FTP 주소(보통 `아이디.dothome.co.kr`)·아이디·비밀번호 확인
+3. 알드라이브 → 새 접속: 프로토콜 **FTP**, 포트 **21** (안 되면 SFTP·22) → 연결
+4. 오른쪽(서버)에서 **`html` 폴더**로 들어가고, 왼쪽에서 `dist/dothome_upload` **안의** `index.html`, `css`, `js`, `assets`를 골라 끌어다 놓기 → **모두 덮어쓰기** (폴더째 올리면 주소가 바뀌니 내용물만)
+5. `http://아이디.dothome.co.kr`에서 확인 (예전 화면이면 Ctrl+F5)
+
+js·css를 고쳐서 다시 올릴 때는 `index.html`의 `?v=날짜` 버전 번호도 바꿔 두면 방문자 브라우저가 예전 파일을 쓰지 않아요. 바뀐 파일만 덮어써도 되지만, 헷갈리면 1번부터 다시 해서 통째로 덮어쓰면 됩니다.
 
 ## GitHub Pages 배포
 
