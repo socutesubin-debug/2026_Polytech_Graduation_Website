@@ -18,8 +18,12 @@ const BF_AR = {
   pull: 1.35,        // 가려는 곳으로 끌리는 힘
   comeClose: 0.42,   // 톡 치면 내 앞 몇 m까지 오는지
   comeTime: 2.6,     // 가까이 와서 머무는 시간 (초)
-  dust: 0.03,        // 가만히 있을 때 빛가루 양 (웹사이트 나비 커서 BF_CURSOR와 같은 값)
-  dustMove: 0.55,    // 빨리 날 때 더해지는 빛가루 양 (커서와 같은 값)
+  dust: 0.12,        // 가만히 있을 때 빛가루 양 (웹사이트 커서는 0.03. 카메라 화면 위라 더 많이)
+  dustMove: 1.0,     // 빨리 날 때 더해지는 빛가루 양 (커서는 0.55)
+  dustBright: 2.0,   // 빛가루 밝기 (1 = 웹사이트 커서와 같음)
+  dustSize: 1.35,    // 빛가루 알갱이 크기 (1 = 커서와 같음)
+  dustLife: 1.7,     // 지나간 자리에 빛가루 잔상이 남는 시간 (1 = 커서와 같음, 클수록 꼬리가 길게)
+  glow: 2.2,         // 나비 둘레 빛남 세기 (1 = 커서와 같음)
   fast: 900,         // 화면에서 이 속도(px/초)부터 '빨리 움직임'으로 봄 (커서와 같은 값)
   showBack: 0.45,    // 나비 등을 나 쪽으로 살짝 돌려서 날개가 잘 보이게 (0 = 진짜 방향 그대로, 1 = 늘 등을 보여 줌)
   followCam: 1.3,    // 카메라가 보는 쪽을 따라오는 빠르기 (클수록 바로 따라옴, 0이면 처음 본 쪽에만 머묾)
@@ -31,6 +35,7 @@ const BF_AR = {
 
 function startButterflyAR(opt) {
   const C = BF_AR, GL = opt.GL, B = GL.butterflies[0];
+  GL.glow = C.glow; GL.dustBright = C.dustBright; GL.dustSize = C.dustSize; GL.dustLife = C.dustLife; // 빛남·빛가루 세기 (위 BF_AR 숫자)
   const root = opt.root, video = opt.video, arrow = opt.arrow;
   let raf = 0, last = performance.now(), alive = true, stream = null, hasOri = false, oriRaw = null;
   /* ---- 3x3 행렬·벡터 (행 우선) ---- */
