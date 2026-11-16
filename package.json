@@ -1,0 +1,16 @@
+{
+  "name": "beyond-the-frame-2026",
+  "private": true,
+  "description": "2026 한국폴리텍 시각디자인과 졸업전시 웹사이트 (빌드 없이 index.html이 바로 사이트). 여기 적은 것은 작업용 도구뿐",
+  "scripts": {
+    "start": "node tools/serve.cjs",
+    "upload": "node tools/build-upload.cjs",
+    "test": "node tests/v2-flow.cjs && node tests/designer.cjs",
+    "test:designer": "node tests/designer.cjs",
+    "test:flow": "node tests/v2-flow.cjs",
+    "setup": "npm install && npx playwright install chromium"
+  },
+  "devDependencies": {
+    "playwright": "1.61.0"
+  }
+}
