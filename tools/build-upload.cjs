@@ -25,6 +25,7 @@ const keep = [], skip = [];
 for (const f of [...PAGES, ...['css', 'js', 'assets'].flatMap((d) => walk(path.join(src, d)).map(rel))]) {
   let ok = loaded.has(f);
   if (!ok) { const base = path.basename(f); ok = corpus.includes(f) || corpus.includes(encodeURI(f)) || corpus.includes(base) || corpus.includes(encodeURIComponent(base)); }
+  if (/^assets\/vendor\/mediapipe\//.test(f)) ok = true; // 폰 AR 나비의 손 알아보기 파일
   if (/^assets\/images\/busts\/\d+\.webp$/.test(f) || /^assets\/models\/\d+\.glb$/.test(f)) ok = true;
   if (DROP.some((r) => r.test(f))) ok = false;
   (ok ? keep : skip).push(f);

@@ -20,6 +20,13 @@ const BF_AR = {
   comeTime: 2.6,     // 가까이 와서 머무는 시간 (초)
   dust: 0.45,        // 빛가루 양
   showBack: 0.45,    // 나비 등을 나 쪽으로 살짝 돌려서 날개가 잘 보이게 (0 = 진짜 방향 그대로, 1 = 늘 등을 보여 줌)
+  followCam: 1.3,    // 카메라가 보는 쪽을 따라오는 빠르기 (클수록 바로 따라옴, 0이면 처음 본 쪽에만 머묾)
+  handPull: 3.2,     // 손을 보면 손 쪽으로 끌리는 힘
+  handSit: 0.07,     // 손에 이만큼(m) 가까워지면 '앉은' 것으로 봄
+  sitFlap: 0.28,     // 앉아 있을 때 날갯짓 빠르기 (평소의 몇 배)
+  sparkle: 26,       // 빨리 날 때 1초에 생기는 반짝이 수 (0이면 끔)
+  sparkleIdle: 3,    // 천천히 날 때 1초에 생기는 반짝이 수
+  sparkleSize: 13,   // 반짝이 크기 (px)
   smooth: 14,        // 센서 흔들림 줄이기 (클수록 즉각, 작을수록 부드러움)
 };
 
@@ -62,7 +69,7 @@ function startButterflyAR(opt) {
   let usedOri = false, camQ = null, cam = [1, 0, 0, 0, 1, 0, 0, 0, 1], camPrev = null, yaw0 = null;
 
   /* ---- 나비 상태 (m) ---- */
-  const s = { p: [0, 0.05, -1.1], v: [0, 0, 0], f: [1, 0, 0], bank: 0, t: 0, come: -99, now: 0 };
+  const s = { F: null, hand: null, handT: -99, sit: 0, p: [0, 0.05, -1.1], v: [0, 0, 0], f: [1, 0, 0], bank: 0, t: 0, come: -99, now: 0 };
 
   function frame(t) {
     if (!alive) return;
@@ -86,6 +93,7 @@ function startButterflyAR(opt) {
     const view = T(cam);
     if (yaw0 === null) { const f0 = app(cam, [0, 0, -1]); yaw0 = Math.atan2(-f0[0], -f0[2]); s.p = [-Math.sin(yaw0)*1.1, 0.05, -Math.cos(yaw0)*1.1]; }
 
+    { const fw0 = app(cam, [0, 0, -1]); if (!s.F) s.F = fw0; const a = 1 - Math.exp(-dt*C.followCam); s.F = norm([s.F[0] + (fw0[0] - s.F[0])*a, s.F[1] + (fw0[1] - s.F[1])*a, s.F[2] + (fw0[2] - s.F[2])*a]); }
     /* 2) 나비가 갈 곳: 내 주위를 천천히 돌아다니다가, 톡 치면 내 앞으로 */
     s.t += dt*C.speed*6;
     let goal;
@@ -93,15 +101,27 @@ function startButterflyAR(opt) {
       const fw = app(cam, [0, -0.08, -1]);
       goal = [fw[0]*C.comeClose, fw[1]*C.comeClose, fw[2]*C.comeClose];
     } else {
-      const ph = yaw0 + C.wander*(0.75*Math.sin(s.t*0.17) + 0.25*Math.sin(s.t*0.53 + 1.3));
+      /* 카메라가 보는 쪽(천천히 따라가는 방향 s.F)을 가운데로 삼아 그 둘레를 돌아다님 → 폰을 돌리면 나비가 따라옴 */
+      const ph = Math.atan2(-s.F[0], -s.F[2]) + C.wander*(0.75*Math.sin(s.t*0.17) + 0.25*Math.sin(s.t*0.53 + 1.3));
       const r = C.dist[0] + (C.dist[1] - C.dist[0])*(0.5 + 0.5*Math.sin(s.t*0.31 + 2));
-      const y = 0.05 + C.height*Math.sin(s.t*0.41) + 0.06*Math.sin(s.t*1.3);
-      goal = [-Math.sin(ph)*r, y, -Math.cos(ph)*r];
+      const y = s.F[1]*r + 0.05 + C.height*Math.sin(s.t*0.41) + 0.06*Math.sin(s.t*1.3);
+      const hr = Math.sqrt(Math.max(0.05, 1 - s.F[1]*s.F[1]))*r;
+      goal = [-Math.sin(ph)*hr, y, -Math.cos(ph)*hr];
     }
-    const k = C.pull*C.pull, damp = 2*C.pull*0.75;
+    /* 손이 보이면: 손바닥 자리로 날아가서 앉음 */
+    let pull = C.pull, sitting = false;
+    const handOn = s.hand && s.now - s.handT < 0.6;
+    if (handOn) {
+      const fpx0 = H/2/Math.tan(C.fov*Math.PI/360), d = Math.max(C.near*0.8, Math.min(1.2, s.hand.depth));
+      goal = app(cam, [(s.hand.sx - W/2)/fpx0*d, -(s.hand.sy - H/2)/fpx0*d + 0.015, -d]);
+      const gd = Math.hypot(goal[0] - s.p[0], goal[1] - s.p[1], goal[2] - s.p[2]);
+      sitting = gd < C.handSit; pull = sitting ? 9 : C.handPull;
+    }
+    s.sit += ((sitting ? 1 : 0) - s.sit)*(1 - Math.exp(-dt*5));
+    const k = pull*pull, damp = 2*pull*(sitting ? 1 : 0.75);
     for (let i = 0; i < 3; i++) { s.v[i] += ((goal[i] - s.p[i])*k - s.v[i]*damp)*dt; s.p[i] += s.v[i]*dt; }
     const dl = Math.hypot(s.p[0], s.p[1], s.p[2]); // 너무 가까이 오지 않게
-    if (dl < C.near) for (let i = 0; i < 3; i++) s.p[i] *= C.near/dl;
+    if (dl < C.near && !handOn) for (let i = 0; i < 3; i++) s.p[i] *= C.near/dl;
 
     /* 3) 몸 방향: 날아가는 쪽으로 머리, 도는 쪽으로 몸을 기울임 */
     const sp = Math.hypot(s.v[0], s.v[1], s.v[2]);
@@ -111,6 +131,7 @@ function startButterflyAR(opt) {
       const a = 1 - Math.exp(-dt*(1.5 + 4*Math.min(1, sp)));
       s.f = norm([s.f[0] + (want[0] - s.f[0])*a, s.f[1] + (want[1] - s.f[1])*a, s.f[2] + (want[2] - s.f[2])*a]);
     }
+    if (s.sit > 0.5) { const cu = app(cam, [0.15, 1, 0]), a = 1 - Math.exp(-dt*4); s.f = norm([s.f[0] + (cu[0] - s.f[0])*a, s.f[1] + (cu[1] - s.f[1])*a, s.f[2] + (cu[2] - s.f[2])*a]); } // 앉으면 머리를 위로
     const turn = Math.atan2(fPrev[0]*s.f[2] - fPrev[2]*s.f[0], fPrev[0]*s.f[0] + fPrev[2]*s.f[2])/dt;
     s.bank += (Math.max(-0.7, Math.min(0.7, turn*0.35)) - s.bank)*(1 - Math.exp(-dt*4));
     /* 등(날개 윗면)이 하늘 쪽 + 조금은 나 쪽을 보게: 옆에서 날개가 납작한 선으로만 보이는 때를 줄임 */
@@ -135,8 +156,9 @@ function startButterflyAR(opt) {
     const u2 = GL.unitsPerPx(), wpt = GL.toWorld(sx, sy);
     const spanPx = Math.min(W*1.1, fpx*C.span/depth);
     B.pose = { x: wpt[0], y: wpt[1], z: 0, yaw, pitch, roll, scale: spanPx/2.2*u2 };
-    B.hzMul = 1 + 0.8*Math.min(1, sp/0.8);
-    B.dust = behind ? 0 : C.dust*(0.5 + Math.min(1, sp/0.6));
+    B.hzMul = (1 + 0.8*Math.min(1, sp/0.8))*(1 - s.sit) + C.sitFlap*s.sit;
+    B.dust = behind ? 0 : C.dust*(0.5 + Math.min(1, sp/0.6))*(1 - 0.9*s.sit);
+    sparkles(dt, sx, sy, spanPx, behind ? 0 : Math.min(1, sp/0.5)*(1 - s.sit) , W, H);
     /* 빛가루가 화면에 붙어 다니지 않고 공간에 남도록: 폰이 돈 만큼만 가루를 같이 밀어 줌 (나비가 움직인 몫은 빼고) */
     if (camPrev) {
       const pPrev = app(T(camPrev), s.p), d0 = Math.max(0.05, -pPrev[2]);
@@ -158,6 +180,37 @@ function startButterflyAR(opt) {
       arrow.style.transform = `translate(${W/2 + ex*tt}px, ${H/2 + ey*tt}px) rotate(${a}rad)`;
     }
   }
+  /* ---- 반짝이: 나비가 지나간 자리에 네 갈래 별빛이 톡톡 켜졌다 사라짐 (움직일수록 많이) ---- */
+  const sk = document.createElement('canvas'); sk.setAttribute('aria-hidden', 'true');
+  sk.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none';
+  opt.canvas.insertAdjacentElement('afterend', sk);
+  const sctx = sk.getContext('2d'), stars = []; let sAcc = 0, sLast = null;
+  function sparkles(dt, x, y, span, move, W, H) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (sk.width !== Math.round(W*dpr) || sk.height !== Math.round(H*dpr)) { sk.width = Math.round(W*dpr); sk.height = Math.round(H*dpr); }
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0); sctx.clearRect(0, 0, W, H);
+    if (reduceMotion || !C.sparkle) return;
+    const scr = sLast ? Math.min(1, Math.hypot(x - sLast[0], y - sLast[1])/dt/500) : 0; sLast = [x, y]; // 화면에서 움직인 빠르기도 같이 봄
+    const m = Math.max(move, scr);
+    sAcc += dt*(C.sparkleIdle + (C.sparkle - C.sparkleIdle)*m);
+    while (sAcc >= 1 && stars.length < 90) { sAcc -= 1;
+      const a = Math.random()*6.283, rr = span*(0.15 + 0.55*Math.random());
+      stars.push({ x: x + Math.cos(a)*rr, y: y + Math.sin(a)*rr*0.8, vy: 8 + 22*Math.random(), life: 0, dur: 0.45 + 0.6*Math.random(), size: C.sparkleSize*(0.45 + 0.9*Math.random())*(0.6 + 0.4*Math.min(2, span/120)), rot: Math.random()*0.6 - 0.3 }); }
+    if (sAcc > 3) sAcc = 3;
+    sctx.globalCompositeOperation = 'lighter';
+    for (let i = stars.length - 1; i >= 0; i--) {
+      const st = stars[i]; st.life += dt/st.dur; if (st.life >= 1) { stars.splice(i, 1); continue; }
+      st.y += st.vy*dt;
+      const e = Math.sin(st.life*Math.PI), r = st.size*e;
+      sctx.save(); sctx.translate(st.x, st.y); sctx.rotate(st.rot + st.life*0.8);
+      const g = sctx.createRadialGradient(0, 0, 0, 0, 0, r*0.9); g.addColorStop(0, `rgba(255,244,214,${0.55*e})`); g.addColorStop(1, 'rgba(255,220,150,0)');
+      sctx.fillStyle = g; sctx.beginPath(); sctx.arc(0, 0, r*0.9, 0, 6.283); sctx.fill();
+      sctx.fillStyle = `rgba(255,250,235,${0.95*e})`; sctx.beginPath(); // 네 갈래 별
+      for (let j = 0; j < 8; j++) { const aa = j*Math.PI/4, rad = j % 2 ? r*0.13 : (j % 4 ? r*0.7 : r); sctx.lineTo(Math.cos(aa)*rad, Math.sin(aa)*rad); }
+      sctx.closePath(); sctx.fill(); sctx.restore();
+    }
+  }
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function norm4(q) { const l = Math.hypot(q[0], q[1], q[2], q[3]) || 1; return q.map(v => v/l); }
 
   /* 톡 치기 = 가까이 와 줘 / 끌기 = (센서 없을 때) 둘러보기 */
@@ -178,7 +231,10 @@ function startButterflyAR(opt) {
   return {
     get hasSensor() { return hasOri; },
     state: s,
+    /* 손 위치 알려 주기: { sx, sy } = 화면 px, depth = 손까지 거리(m). 손이 안 보이면 null */
+    setHand(h) { if (h) { s.hand = h; s.handT = s.now; } else s.hand = null; },
     stop() {
+      sk.remove();
       alive = false; cancelAnimationFrame(raf);
       removeEventListener('deviceorientation', onOri);
       root.removeEventListener('pointerdown', down); root.removeEventListener('pointermove', move); root.removeEventListener('pointerup', up);
