@@ -346,6 +346,7 @@ function spawn(b, m, prevM, dt, n) {
 /* 날개 끝에서 가늘게 이어지는 가루 줄기 */
 const WISPS = [[.50, 0, .97], [.30, 0, .98], [-1.02, 1, .97], [-.72, 1, .98]];  /* [각도, 0=앞날개 1=뒷날개, 반지름 비율] */
 function spawnWisps(b, m, dt) {
+  if (b.dust === 0) return; /* 빛가루 0이면 날개 끝 가루 줄기도 없음 */
   const tail = M.dir(m, 0, -1, -.3), n = Math.max(1, Math.round(3*dt*60*(b.dust === undefined ? 1 : b.dust)));
   for (const [th, hind, k] of WISPS) for (const side of [-1, 1]) for (let j = 0; j < n; j++) {
     const i = pNext; pNext = (pNext + 1) % NP;
