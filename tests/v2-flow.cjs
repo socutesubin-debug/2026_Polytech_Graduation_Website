@@ -80,9 +80,9 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.equal(await p.evaluate(()=>'sv' in pj),false);
 
 
- // 그림·설명을 넣은 작품만 상세가 열림 (지금은 김수연 우리 언제 만나?, 박수빈 다이소 뷰티). 없는 작품은 눌러도 열리지 않음
- assert.deepEqual(await p.evaluate(()=>PJ_ITEMS.map((it,i)=>pjHasDetail(it)?i:-1).filter(i=>i>=0)),[4,7],'상세가 있는 작품');
- assert.equal(await p.locator('.pj-card.no-detail').count(),await p.evaluate(()=>PJ_ITEMS.length-2));
+ // 그림·설명을 넣은 작품만 상세가 열림 (2026-11-17: 민하도·김준서·김수연·박수빈 다이소·박호성 3개·오수한 Bugs!·조예빈·천승현 백금당). 없는 작품은 눌러도 열리지 않음
+ assert.deepEqual(await p.evaluate(()=>PJ_ITEMS.map((it,i)=>pjHasDetail(it)?i:-1).filter(i=>i>=0)),[1,2,4,7,8,9,10,13,14,17],'상세가 있는 작품');
+ assert.equal(await p.locator('.pj-card.no-detail').count(),await p.evaluate(()=>PJ_ITEMS.length-10));
  const jn=await p.evaluate(()=>pj.cards.findIndex(c=>c.s===0));await p.evaluate(j=>pj.cards[j].el.click(),jn);await p.waitForTimeout(400);
  assert.equal(await p.locator('#pj-detail').isHidden(),true,'자료 없는 작품: 상세 안 열림');
  // 카드를 누르면 그 작품 상세, Enter 키 = 맨 앞 카드
@@ -102,8 +102,11 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.equal(await p.locator('#pj-d-who').textContent(),'박수빈');
  assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);assert.equal(await p.locator('#pj-d-images img').count(),3);assert.equal(await p.locator('.pj-shot').count(),3);
  assert.match(await p.locator('#pj-d-desc').textContent(),/가상의 뷰티 브랜드/);
- await p.keyboard.press('ArrowRight');assert.match(await p.locator('#pj-d-title').textContent(),/우리 언제 만나/,'→: 자료 없는 작품은 건너뛰고 다음 자료 있는 작품으로');
- assert.equal(await p.locator('#pj-d-who').textContent(),'김수연');assert.equal(await p.locator('#pj-d-images img').count(),3);
+ await p.keyboard.press('ArrowRight');assert.match(await p.locator('#pj-d-title').textContent(),/ALIGNEX/,'→: 다음 자료 있는 작품');
+ assert.equal(await p.locator('#pj-d-who').textContent(),'박호성');assert.equal(await p.locator('#pj-d-images img').count(),3);
+ await p.keyboard.press('ArrowRight');await p.keyboard.press('ArrowRight');assert.match(await p.locator('#pj-d-title').textContent(),/KT/);assert.equal(await p.locator('#pj-d-images img').count(),3,'KT: 설명 없이 그림만');
+ await p.keyboard.press('ArrowRight');assert.match(await p.locator('#pj-d-title').textContent(),/Bugs/,'→: bmix·GTA(자료 없음)는 건너뜀');
+ await p.keyboard.press('ArrowLeft');await p.keyboard.press('ArrowLeft');await p.keyboard.press('ArrowLeft');
  await p.keyboard.press('ArrowLeft');assert.match(await p.locator('#pj-d-title').textContent(),/다이소/);await p.keyboard.press('Escape');await p.waitForTimeout(400);
  assert.equal(await p.locator('#pj-detail').isHidden(),true);
  assert(await p.evaluate(()=>document.activeElement===pj.root),'닫으면 Project 방에 초점');
