@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140e09">
+<title>BEYOND THE FRAME — 나비</title>
+<meta name="description" content="2026 한국폴리텍 서울정수캠퍼스 시각디자인과 졸업전시 BEYOND THE FRAME. 손가락으로 금빛 나비를 불러 보세요.">
+<!-- 포스터 QR로 들어오는 폰 전용 페이지 (2026-11-16)
+     - 사이트 인트로와 같은 금빛 나비(js/butterfly-gl.js)가 화면 위를 날아다님
+     - 화면을 만지면 나비가 손가락 쪽으로 날아오고, 톡 치면 빛가루가 터짐. 손을 떼면 잠시 뒤 다시 혼자 날아다님
+     - '움직임 줄이기'를 켠 폰: 나비가 가운데에서 천천히 날갯짓만 하고, 빛가루 없음
+     - 3D(WebGL2)가 안 되는 폰: 나비 대신 메인 포스터 그림을 보여 줌
+     - 아래 버튼을 누르면 전시 웹사이트(index.html)로 감
+     숫자를 바꾸고 싶으면 아래 <script> 맨 위의 BF_PHONE만 고치면 됩니다 -->
+<style>
+  :root { --ink: #f1e6d2; --dim: rgba(241,230,210,.62); --gold: #e7c98f; --bg: #140e09; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden;
+    font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+  body { overscroll-behavior: none; }
+  /* 배경: 어두운 갈색 밤 + 아래쪽 따뜻한 빛 (포스터 색에서 따옴) */
+  .bg { position: fixed; inset: 0; background:
+      radial-gradient(120% 70% at 50% 108%, rgba(214,160,92,.30), rgba(214,160,92,0) 60%),
+      radial-gradient(90% 55% at 50% 40%, rgba(120,86,52,.22), rgba(0,0,0,0) 70%),
+      linear-gradient(#0d0906, #1a120b 55%, #24180e); }
+  .grain { position: fixed; inset: 0; opacity: .08; mix-blend-mode: screen; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  .ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+    padding: calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); }
+  .top { display: flex; justify-content: space-between; font-size: 11px; line-height: 1.6; letter-spacing: .08em; color: var(--dim); }
+  .top b { font-weight: 500; color: var(--ink); letter-spacing: .02em; }
+  .bottom { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+  .logo { width: min(46vw, 220px); aspect-ratio: 240 / 160; background: var(--gold);
+    -webkit-mask: url(assets/images/logo.webp) left bottom / contain no-repeat; mask: url(assets/images/logo.webp) left bottom / contain no-repeat;
+    filter: drop-shadow(0 0 18px rgba(231,201,143,.25)); }
+  .slogan { margin: 0; font-size: 15px; letter-spacing: .02em; }
+  .when { margin: -6px 0 0; font-size: 12px; line-height: 1.6; color: var(--dim); }
+  .go { pointer-events: auto; display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; padding: 13px 20px;
+    border: 1px solid rgba(231,201,143,.55); border-radius: 999px; color: var(--ink); text-decoration: none; font-size: 14px;
+    background: rgba(20,14,9,.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .go:active { background: rgba(231,201,143,.18); }
+  .go:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .hint { position: fixed; left: 0; right: 0; top: calc(96px + env(safe-area-inset-top)); text-align: center; font-size: 13px; letter-spacing: .04em;
+    color: var(--dim); pointer-events: none; transition: opacity .8s; animation: breathe 2.6s ease-in-out infinite; }
+  .hint.off { opacity: 0; }
+  @keyframes breathe { 50% { opacity: .45; } }
+
+  /* 3D가 안 될 때: 포스터 그림 */
+  .fallback { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; padding: 84px 28px 230px; }
+  .fallback img { max-width: 100%; max-height: 100%; border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  body.no-gl canvas, body.no-gl .hint, body.no-gl .logo { display: none; }
+  body.no-gl .fallback { display: flex; }
+  .retry { pointer-events: auto; background: none; border: 0; color: var(--dim); font: inherit; font-size: 12px; text-decoration: underline; padding: 6px 0; display: none; }
+  body.no-gl .retry { display: inline-block; }
+
+  @media (min-width: 700px) { .ui { padding: 36px 44px; } .top { font-size: 12px; } .slogan { font-size: 17px; } }
+  @media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<div class="fallback"><img src="assets/images/intro-webgl/main-poster.webp" alt="BEYOND THE FRAME 졸업전시 메인 포스터"></div>
+<canvas id="bf" aria-label="화면을 만지면 금빛 나비가 손가락을 따라 날아와요" role="img"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<p class="hint" id="hint">화면을 만져 나비를 불러 보세요</p>
+<div class="ui">
+  <div class="top">
+    <span><b>한국폴리텍 서울정수캠퍼스</b><br>시각디자인과 졸업전시</span>
+    <span style="text-align:right">2026<br>GRADUATION</span>
+  </div>
+  <div class="bottom">
+    <h1 class="logo" role="img" aria-label="BEYOND THE FRAME" style="margin:0"></h1>
+    <p class="slogan">프레임을 넘어, 우리를 만나다</p>
+    <p class="when">11.17 – 11.18 · 제3공학관 2층 시각디자인과</p>
+    <a class="go" href="./">전시 웹사이트 보기 <span aria-hidden="true">→</span></a>
+    <button class="retry" type="button" onclick="location.reload()">나비가 안 보이나요? 다시 시도</button>
+  </div>
+</div>
+
+<script src="js/butterfly-gl.js?v=20261117b"></script>
+<script>
+/* ===== 숫자 설정 (여기만 고치면 됨) ===== */
+const BF_PHONE = {
+  size: 64,          // 나비 크기 (px 기준. 날개 폭이 대략 이 값의 2.2배)
+  sizeWide: 84,      // 넓은 화면(태블릿·PC)에서 나비 크기
+  wanderSpeed: 0.11, // 혼자 날 때 길을 도는 빠르기 (클수록 빨리 돌아다님)
+  follow: 5.5,       // 손가락을 따라오는 힘 (클수록 바짝 따라옴)
+  fingerGap: 70,     // 손가락에 가리지 않게 손가락보다 이만큼(px) 위에서 날기
+  idleBack: 1.6,     // 손을 떼고 몇 초 뒤에 다시 혼자 날기 시작할지
+  dust: 0.35,        // 평소 빛가루 양
+  dustMove: 1.2,     // 빨리 날 때 더해지는 빛가루 양
+  burst: 2.6,        // 톡 쳤을 때 잠깐 터지는 빛가루 양
+  flapHz: 2.6,       // 날갯짓 빠르기 (1초에 몇 번)
+  maxDpr: 2,         // 선명도 상한 (폰이 느리면 1.5로)
+};
+
+(() => {
+  const C = BF_PHONE, cv = document.getElementById('bf'), hint = document.getElementById('hint');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const noGL = () => document.body.classList.add('no-gl');
+  let GL = null;
+  try { GL = window.createButterflyGL ? createButterflyGL(cv, { sky: true, dense: 1, maxDpr: C.maxDpr, flapHz: C.flapHz }) : null; } catch (e) { GL = null; }
+  if (!GL) { noGL(); return; }
+  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); noGL(); cancelAnimationFrame(raf); });
+  const B = GL.butterflies[0];
+
+  /* 나비 상태 (화면 px 좌표) */
+  const s = { x: innerWidth / 2, y: innerHeight * 0.42, vx: 0, vy: 0, head: 0, bank: 0, t: Math.random() * 100,
+              touch: false, tx: 0, ty: 0, lastTouch: -99, burst: 0, wx: 0, wy: 0 };
+  let raf = 0, last = performance.now(), now = 0;
+
+  /* 혼자 날 때 따라가는 점: 화면 안에서 부드럽게 도는 곡선 (사인 여러 개를 섞음) */
+  function wanderPoint(t) {
+    const w = innerWidth, h = innerHeight, mx = Math.min(90, w * 0.2), top = h * 0.16, bot = h * 0.62;
+    const u = 0.5 + 0.32 * Math.sin(t * 1.0) + 0.14 * Math.sin(t * 2.3 + 1.7) + 0.04 * Math.sin(t * 5.1);
+    const v = 0.5 + 0.30 * Math.sin(t * 1.37 + 0.6) + 0.15 * Math.sin(t * 2.9 + 2.1) + 0.05 * Math.cos(t * 4.3);
+    return [mx + u * (w - 2 * mx), top + v * (bot - top)];
+  }
+
+  function frame(t) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, Math.max(0.001, (t - last) / 1000)); last = t; now = t / 1000;
+    if (document.hidden) return;
+    GL.resize();
+    const W = innerWidth, H = innerHeight;
+
+    /* 1) 어디로 갈지 */
+    let gx, gy, pull;
+    if (s.touch || now - s.lastTouch < C.idleBack) { gx = s.tx; gy = s.ty; pull = C.follow; }
+    else if (reduce) { gx = W / 2; gy = H * 0.4; pull = 1.2; }
+    else { s.t += dt * C.wanderSpeed * 6; [gx, gy] = wanderPoint(s.t); pull = 1.6; }
+
+    /* 2) 스프링처럼 다가가기 (살짝 출렁이며 따라옴) */
+    const k = pull * pull, damp = 2 * pull * 0.72;
+    s.vx += ((gx - s.x) * k - s.vx * damp) * dt;
+    s.vy += ((gy - s.y) * k - s.vy * damp) * dt;
+    if (reduce) { s.vx *= 0.9; s.vy *= 0.9; }
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    s.x = Math.max(-40, Math.min(W + 40, s.x)); s.y = Math.max(-40, Math.min(H + 40, s.y));
+
+    /* 3) 머리 방향: 날아가는 쪽을 봄 (느릴 때는 천천히 위쪽으로 돌아옴) */
+    const sp = Math.hypot(s.vx, s.vy), fast = Math.min(1, sp / 900);
+    const want = sp > 40 && !reduce ? Math.atan2(-s.vx, -s.vy) : 0.25 * Math.sin(now * 0.7);
+    let d = want - s.head; d = Math.atan2(Math.sin(d), Math.cos(d));
+    const turn = d * (1 - Math.exp(-dt * (2 + 4 * fast)));
+    s.head += turn;
+    s.bank += (Math.max(-0.8, Math.min(0.8, -turn / dt * 0.18)) - s.bank) * (1 - Math.exp(-dt * 5));
+    s.burst *= Math.exp(-dt * 3);
+
+    /* 4) 나비에게 자세 넘기기 */
+    const wpt = GL.toWorld(s.x, s.y), u = GL.unitsPerPx(), size = Math.min(W, H) > 600 ? C.sizeWide : C.size;
+    B.pose = { x: wpt[0], y: wpt[1], z: 0, scale: size * u * (1 + 0.15 * s.burst), roll: s.head, yaw: s.bank, pitch: 0.28 };
+    B.hzMul = reduce ? 0.7 : 1 + 0.9 * fast + 0.6 * s.burst;
+    B.dust = reduce ? 0 : C.dust + C.dustMove * fast + C.burst * s.burst;
+    GL.simulate(dt); GL.draw();
+  }
+
+  /* 손가락 (마우스도 같이) */
+  const set = (e) => { s.tx = e.clientX; s.ty = e.clientY - (e.pointerType === 'mouse' ? 0 : C.fingerGap); };
+  cv.addEventListener('pointerdown', (e) => {
+    set(e); s.touch = true; s.lastTouch = now; s.burst = 1; hint.classList.add('off');
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (s.touch) { set(e); s.lastTouch = now; }
+    else if (e.pointerType === 'mouse') { set(e); s.lastTouch = now; hint.classList.add('off'); } // PC: 마우스를 따라옴
+  });
+  const up = () => { if (s.touch) { s.touch = false; s.lastTouch = now; } };
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up);
+  setTimeout(() => hint.classList.add('off'), 9000);
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) last = performance.now(); });
+  raf = requestAnimationFrame(frame);
+  window.__bf = { s, GL }; // 검사용
+})();
+</script>
+</body>
+</html>

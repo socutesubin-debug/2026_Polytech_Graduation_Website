@@ -23,6 +23,19 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer | `#designer` | `⑪ Designer` | `css/designer.css` | `js/designer.js` | 맨 위 `DG` (간격·받침대 크기·화각·벽 색·색 진하기, `hub` 가운데 이정표에서 첫 학생까지 거리, `sign` 이정표·입구 아치 크기, `endGap` 양 끝 옆벽, `light` 빛줄기·먼지·마우스 밝기, `turn` 3D 돌기, `turnShade`·`turnGlow`·`turnMix` 3D 석고상 밝기·색 맞춤 — 사진과 같은 색이 되게 화면 색을 재서 맞춘 값, `colors.plaster` 석고상 색 기준) |
 
+## 포스터 QR → 폰 나비 페이지 (2026-11-16) — `butterfly.html`
+
+포스터의 QR을 폰으로 찍으면 열리는 **폰 전용 페이지**예요. 사이트 Intro와 같은 금빛 나비(`js/butterfly-gl.js`)가 어두운 갈색 화면 위를 혼자 날아다녀요.
+
+- 화면을 만지면 나비가 손가락 쪽으로 날아와요 (손가락에 가리지 않게 손가락보다 조금 위). 톡 치면 빛가루가 터지고, 손을 떼면 1.6초 뒤 다시 혼자 날아요. PC에서는 마우스를 따라와요
+- 아래 `전시 웹사이트 보기 →` 버튼 = 사이트 첫 화면(`index.html`)
+- 움직임 줄이기를 켠 폰: 나비가 가운데에서 천천히 날갯짓만, 빛가루 없음
+- 3D(WebGL2)가 안 되는 폰: 나비 대신 메인 포스터 그림 + '다시 시도'
+- 숫자(나비 크기·빠르기·손가락 따라오는 힘·빛가루 양)는 `butterfly.html` 아래쪽 `<script>` 맨 위 `BF_PHONE`
+- 용량: 페이지 + 나비 코드 + 로고 합쳐 약 60KB (글꼴도 폰 기본 글꼴이라 따로 안 받음)
+- QR 그림: `docs/qr/butterfly-qr.png`(인쇄용 큰 그림), `docs/qr/butterfly-qr.svg`(크기를 키워도 안 깨짐). 담긴 주소 `http://polyjungsudesign.com/butterfly.html`. 주소가 바뀌면 QR도 새로 만들어야 해요
+- 확인: `npm start` 후 `http://localhost:8765/butterfly.html` (PC 브라우저 개발자 도구에서 휴대폰 화면으로 바꿔 보기)
+
 ## 새 WebGL 인트로 미리보기 (2026-11-15) — `intro-webgl.html`
 
 기존 인트로(`index.html`의 Intro, `intro-proto.html`)는 그대로 두고, **별도 페이지**에 하나의 3D 공간(하늘 · 미술관 외벽 · 포스터)으로 만든 새 인트로예요. 카메라만 움직여요: 하늘에서 나비 등장 → 나비가 오른쪽으로 나감 → 시선이 벽으로 내려옴 → 나비가 왼쪽에서 들어와 포스터 속으로. 나비는 기존 인트로와 같은 `js/butterfly-gl.js`를 쓰고, 나비가 지나가는 길을 따라 벽과 하늘에 물결이 번져요 (바닥 연못은 뺐어요).
@@ -227,7 +240,7 @@ Claude Code로 이어서 할 때 필요한 작업 맥락(진행 방식, 규칙, 
 1. `npm run upload` → `dist/dothome_upload` 폴더가 생김 (사이트에 실제로 쓰는 파일만, 약 21MB. 테스트·도구·안 쓰는 이미지·더블클릭용 예비 파일은 뺌)
 2. 닷홈 **마이닷홈 → 호스팅 관리**에서 FTP 주소(보통 `아이디.dothome.co.kr`)·아이디·비밀번호 확인
 3. 알드라이브 → 새 접속: 프로토콜 **FTP**, 포트 **21** (안 되면 SFTP·22) → 연결
-4. 오른쪽(서버)에서 **`html` 폴더**로 들어가고, 왼쪽에서 `dist/dothome_upload` **안의** `index.html`, `css`, `js`, `assets`를 골라 끌어다 놓기 → **모두 덮어쓰기** (폴더째 올리면 주소가 바뀌니 내용물만)
+4. 오른쪽(서버)에서 **`html` 폴더**로 들어가고, 왼쪽에서 `dist/dothome_upload` **안의** `index.html`, `butterfly.html`, `css`, `js`, `assets`를 골라 끌어다 놓기 → **모두 덮어쓰기** (폴더째 올리면 주소가 바뀌니 내용물만)
 5. `http://아이디.dothome.co.kr`에서 확인 (예전 화면이면 Ctrl+F5)
 
 js·css를 고쳐서 다시 올릴 때는 `index.html`의 `?v=날짜` 버전 번호도 바꿔 두면 방문자 브라우저가 예전 파일을 쓰지 않아요. 바뀐 파일만 덮어써도 되지만, 헷갈리면 1번부터 다시 해서 통째로 덮어쓰면 됩니다.
