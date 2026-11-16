@@ -11,6 +11,7 @@
      - 화면을 만지면 나비가 손가락 쪽으로 날아오고, 톡 치면 빛가루가 터짐. 손을 떼면 잠시 뒤 다시 혼자 날아다님
      - '움직임 줄이기'를 켠 폰: 나비가 가운데에서 천천히 날갯짓만 하고, 빛가루 없음
      - 3D(WebGL2)가 안 되는 폰: 나비 대신 메인 포스터 그림을 보여 줌
+     - 'AR로 나비 만나기': 카메라 화면 위에 나비가 진짜 공간에 떠 있는 것처럼 날아다님 (js/butterfly-ar.js, 숫자는 그 파일 맨 위 BF_AR)
      - 아래 버튼을 누르면 전시 웹사이트(index.html)로 감
      숫자를 바꾸고 싶으면 아래 <script> 맨 위의 BF_PHONE만 고치면 됩니다 -->
 <style>
@@ -57,12 +58,39 @@
   .retry { pointer-events: auto; background: none; border: 0; color: var(--dim); font: inherit; font-size: 12px; text-decoration: underline; padding: 6px 0; display: none; }
   body.no-gl .retry { display: inline-block; }
 
+  /* AR 버튼 + AR 화면 */
+  .ar-btn { pointer-events: auto; display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border: 0; border-radius: 999px;
+    background: linear-gradient(135deg, #f3dcab, #c99a55); color: #24170c; font: inherit; font-size: 14px; font-weight: 600;
+    box-shadow: 0 0 24px rgba(231,201,143,.35); }
+  .ar-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btns .go { margin-top: 0; }
+  #cam { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; background: #000; }
+  .ar-ui { position: fixed; inset: 0; display: none; pointer-events: none; }
+  .ar-close { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; padding: 10px 16px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.5); background: rgba(0,0,0,.35); color: #fff; font: inherit; font-size: 13px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .ar-tip { position: absolute; left: 0; right: 0; bottom: calc(26px + env(safe-area-inset-bottom)); text-align: center; color: #fff; font-size: 13px; line-height: 1.6;
+    text-shadow: 0 1px 6px rgba(0,0,0,.7); transition: opacity .8s; }
+  .ar-arrow { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; opacity: 0; transition: opacity .3s; }
+  .ar-arrow.on { opacity: 1; }
+  .ar-arrow::before { content: ""; position: absolute; inset: 6px; background: #f3dcab; clip-path: polygon(100% 50%, 0 0, 25% 50%, 0 100%);
+    filter: drop-shadow(0 0 6px rgba(243,220,171,.9)); }
+  .note { position: fixed; left: 22px; right: 22px; top: 40%; padding: 16px 18px; border-radius: 14px; background: rgba(20,14,9,.92); border: 1px solid rgba(231,201,143,.4);
+    font-size: 14px; line-height: 1.6; text-align: center; display: none; }
+  .note.on { display: block; }
+  body.ar .bg, body.ar .grain, body.ar .ui, body.ar .hint { display: none; }
+  body.ar #cam, body.ar .ar-ui { display: block; }
+  body.ar canvas { touch-action: none; }
+  body.ar-start .ar-btn { animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 0 40px rgba(243,220,171,.75); } }
+
   @media (min-width: 700px) { .ui { padding: 36px 44px; } .top { font-size: 12px; } .slogan { font-size: 17px; } }
   @media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
 </style>
 </head>
 <body>
 <div class="bg" aria-hidden="true"></div>
+<video id="cam" playsinline muted aria-hidden="true"></video>
 <div class="fallback"><img src="assets/images/intro-webgl/main-poster.webp" alt="BEYOND THE FRAME 졸업전시 메인 포스터"></div>
 <canvas id="bf" aria-label="화면을 만지면 금빛 나비가 손가락을 따라 날아와요" role="img"></canvas>
 <div class="grain" aria-hidden="true"></div>
@@ -76,12 +104,23 @@
     <h1 class="logo" role="img" aria-label="BEYOND THE FRAME" style="margin:0"></h1>
     <p class="slogan">프레임을 넘어, 우리를 만나다</p>
     <p class="when">11.17 – 11.18 · 제3공학관 2층 시각디자인과</p>
-    <a class="go" href="./">전시 웹사이트 보기 <span aria-hidden="true">→</span></a>
+    <div class="btns">
+      <button class="ar-btn" id="arBtn" type="button">AR로 나비 만나기 <span aria-hidden="true">✦</span></button>
+      <a class="go" href="./">전시 웹사이트 <span aria-hidden="true">→</span></a>
+    </div>
     <button class="retry" type="button" onclick="location.reload()">나비가 안 보이나요? 다시 시도</button>
   </div>
 </div>
 
+<div class="ar-ui" id="arUi">
+  <button class="ar-close" id="arClose" type="button">✕ 나가기</button>
+  <div class="ar-arrow" id="arArrow" aria-hidden="true"></div>
+  <p class="ar-tip" id="arTip">폰을 들고 천천히 주위를 둘러보세요<br>화면을 톡 치면 나비가 가까이 와요</p>
+</div>
+<p class="note" id="note" role="status"></p>
+
 <script src="js/butterfly-gl.js?v=20261117b"></script>
+<script src="js/butterfly-ar.js?v=20261117c"></script>
 <script>
 /* ===== 숫자 설정 (여기만 고치면 됨) ===== */
 const BF_PHONE = {
@@ -96,6 +135,9 @@ const BF_PHONE = {
   burst: 2.6,        // 톡 쳤을 때 잠깐 터지는 빛가루 양
   flapHz: 2.6,       // 날갯짓 빠르기 (1초에 몇 번)
   maxDpr: 2,         // 선명도 상한 (폰이 느리면 1.5로)
+  // AR(카메라)은 https 주소에서만 켜져요. 지금 주소가 http면 'AR로 나비 만나기'를 눌렀을 때 아래 https 주소로 옮겨 가서 AR을 시작해요.
+  // 닷홈에 https(SSL)를 켜면 이 줄은 지워도 돼요 (빈 '' 이면 같은 주소의 https로 감)
+  arHttpsUrl: 'https://socutesubin-debug.github.io/2026_Polytech_Graduation_Website/butterfly.html?ar=1',
 };
 
 (() => {
@@ -123,6 +165,7 @@ const BF_PHONE = {
 
   function frame(t) {
     raf = requestAnimationFrame(frame);
+    if (document.body.classList.contains('ar')) return; // AR 중에는 AR이 나비를 움직임
     const dt = Math.min(0.05, Math.max(0.001, (t - last) / 1000)); last = t; now = t / 1000;
     if (document.hidden) return;
     GL.resize();
@@ -176,6 +219,36 @@ const BF_PHONE = {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) last = performance.now(); });
   raf = requestAnimationFrame(frame);
   window.__bf = { s, GL }; // 검사용
+
+  /* ===== AR ===== */
+  const btn = document.getElementById('arBtn'), video = document.getElementById('cam'), note = document.getElementById('note');
+  let ar = null, stream = null;
+  const say = (msg, ms) => { note.textContent = msg; note.classList.add('on'); clearTimeout(say.t); say.t = setTimeout(() => note.classList.remove('on'), ms || 4000); };
+  async function startAR() {
+    if (!window.isSecureContext) { // http 주소 → https 주소로 옮겨서 시작
+      location.href = C.arHttpsUrl || location.href.replace(/^http:/, 'https:').replace(/[?#].*$/, '') + '?ar=1'; return;
+    }
+    btn.disabled = true;
+    const r = await askButterflyAR(video);
+    btn.disabled = false;
+    if (r.error) { say(r.error === 'camera' ? '카메라를 켤 수 없어요. 카메라를 허용하면 AR로 볼 수 있어요. (설정 → 브라우저 → 카메라)' : '이 브라우저에서는 AR을 쓸 수 없어요.', 6000); return; }
+    stream = r.stream;
+    document.body.classList.add('ar'); document.body.classList.remove('ar-start');
+    s.lastTouch = -99;
+    ar = startButterflyAR({ GL, root: cv, video, canvas: cv, arrow: document.getElementById('arArrow') });
+    setTimeout(() => { if (ar && !ar.hasSensor) document.getElementById('arTip').innerHTML = '화면을 끌어서 둘러보세요<br>(이 기기는 기울기 센서가 없어요)'; }, 1500);
+    setTimeout(() => { document.getElementById('arTip').style.opacity = '0'; }, 9000);
+  }
+  function stopAR() {
+    if (ar) ar.stop(); ar = null;
+    if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; video.srcObject = null;
+    document.body.classList.remove('ar'); document.getElementById('arTip').style.opacity = '1';
+  }
+  btn.addEventListener('click', startAR);
+  document.getElementById('arClose').addEventListener('click', stopAR);
+  window.__bfAR = { get ar() { return ar; } }; // 검사용
+  // ?ar=1 로 들어오면(http에서 옮겨 온 경우 등) 버튼을 반짝여서 누르게 함 (아이폰은 누르기 전에 카메라를 켤 수 없음)
+  if (/[?&]ar=1/.test(location.search)) { document.body.classList.add('ar-start'); hint.textContent = '아래 ‘AR로 나비 만나기’를 눌러 주세요'; }
 })();
 </script>
 </body>
