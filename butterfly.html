@@ -9,6 +9,7 @@
 <!-- 포스터 QR로 들어오는 폰 전용 AR 나비 페이지 (2026-11-16)
      - 열자마자 뒤 카메라가 켜지고, 그 위에 금빛 나비(js/butterfly-gl.js)가 내 주위 공간을 날아다님 (AR 계산: js/butterfly-ar.js, 숫자는 그 파일 맨 위 BF_AR)
      - 화면 아래 버튼은 '웹사이트 구경하기' 하나뿐 (전시 웹사이트 index.html로 감)
+     - 나비는 카메라가 보는 쪽을 따라오고, 손바닥을 내밀면 손 위에 앉음 (손 알아보기: js/butterfly-hand.js). 움직일 때 별빛 반짝이
      - 화면을 톡 치면 나비가 가까이 옴. 아이폰은 이 첫 톡에서 '동작 센서' 허락을 물어봄 (아이폰 규칙상 누르기 전에는 물을 수 없음)
      - 카메라를 거절하거나 없으면: 어두운 배경 위에서 같은 나비 (화면을 끌어서 둘러보기)
      - 3D(WebGL2)가 안 되는 폰: 메인 포스터 그림
@@ -32,10 +33,15 @@
   .tip { position: fixed; left: 16px; right: 16px; top: calc(20px + env(safe-area-inset-top)); margin: 0; text-align: center; font-size: 13px; line-height: 1.6;
     color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.7); pointer-events: none; transition: opacity .8s; }
   .tip.off { opacity: 0; }
+  /* 유리 느낌 버튼 (글래스모피즘): 뒤 배경이 흐리게 비치고, 가장자리에 밝은 선 */
   .go { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-    display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 999px; white-space: nowrap;
-    background: linear-gradient(135deg, #f3dcab, #c99a55); color: #24170c; text-decoration: none; font-size: 15px; font-weight: 600;
-    box-shadow: 0 6px 28px rgba(0,0,0,.35), 0 0 24px rgba(231,201,143,.35); }
+    padding: 15px 30px; border-radius: 999px; white-space: nowrap; color: #fff; text-decoration: none; font-size: 15px; font-weight: 600; letter-spacing: .02em;
+    background: linear-gradient(135deg, rgba(255,255,255,.30), rgba(255,255,255,.10));
+    -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255,255,255,.45);
+    box-shadow: 0 8px 32px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(255,255,255,.12);
+    text-shadow: 0 1px 4px rgba(0,0,0,.45); }
+  .go:active { background: linear-gradient(135deg, rgba(255,255,255,.42), rgba(255,255,255,.18)); }
   .go:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
   /* 3D가 안 될 때: 포스터 그림 */
   .fallback { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; padding: 40px 28px 110px; }
@@ -56,10 +62,11 @@
 <canvas id="bf" role="img" aria-label="내 주위를 날아다니는 금빛 나비. 화면을 톡 치면 가까이 와요"></canvas>
 <div class="arrow" id="arrow" aria-hidden="true"></div>
 <p class="tip" id="tip">폰을 들고 주위를 둘러보세요 · 톡 치면 나비가 가까이 와요</p>
-<a class="go" href="./">웹사이트 구경하기 <span aria-hidden="true">→</span></a>
+<a class="go" href="./">웹사이트 구경하기</a>
 
 <script src="js/butterfly-gl.js?v=20261117b"></script>
-<script src="js/butterfly-ar.js?v=20261117e"></script>
+<script src="js/butterfly-ar.js?v=20261117f"></script>
+<script src="js/butterfly-hand.js?v=20261117f"></script>
 <script>
 (() => {
   const cv = document.getElementById('bf'), video = document.getElementById('cam'), tip = document.getElementById('tip');
@@ -71,11 +78,14 @@
   /* 1) 나비는 바로 날기 시작 */
   ar = startButterflyAR({ GL, root: cv, video, canvas: cv, arrow: document.getElementById('arrow') });
 
+  window.__bfAR = { ar, hand: false }; // 검사용
   /* 2) 카메라 바로 켜기 (허락 창이 뜸). 거절·실패하면 어두운 배경 그대로 */
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } })
       .then((stream) => { video.srcObject = stream; return video.play().catch(() => {}); })
       .then(() => { if (video.srcObject && !video.paused) document.body.classList.add('cam-on'); })
+      .then(() => /[?&]hand=0/.test(location.search) ? Promise.reject() : startButterflyHand(video, BF_AR.fov, (h) => ar.setHand(h))) // 손 알아보기 (큰 파일이라 카메라가 켜진 뒤에 받음)
+      .then(() => { window.__bfAR.hand = true; tip.textContent = '손바닥을 내밀면 나비가 앉아요'; tip.classList.remove('off'); setTimeout(() => tip.classList.add('off'), 7000); })
       .catch(() => {});
   }
 
@@ -91,7 +101,6 @@
   setTimeout(() => { if (!ar.hasSensor && !needAsk) tip.textContent = '화면을 끌어서 둘러보세요 · 톡 치면 나비가 가까이 와요'; }, 1500);
   setTimeout(() => tip.classList.add('off'), 10000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && video.srcObject) video.play().catch(() => {}); });
-  window.__bfAR = { ar }; // 검사용
 })();
 </script>
 </body>
