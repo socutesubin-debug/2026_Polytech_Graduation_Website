@@ -23,6 +23,22 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer | `#designer` | `⑪ Designer` | `css/designer.css` | `js/designer.js` | 맨 위 `DG` (간격·받침대 크기·화각·벽 색·색 진하기, `hub` 가운데 이정표에서 첫 학생까지 거리, `sign` 이정표·입구 아치 크기, `endGap` 양 끝 옆벽, `light` 빛줄기·먼지·마우스 밝기, `turn` 3D 돌기, `turnShade`·`turnGlow`·`turnMix` 3D 석고상 밝기·색 맞춤 — 사진과 같은 색이 되게 화면 색을 재서 맞춘 값, `colors.plaster` 석고상 색 기준) |
 
+## 포스터 QR → 폰 AR 나비 페이지 (2026-11-16) — `butterfly.html`
+
+포스터의 QR을 폰으로 찍으면 열리는 **폰 전용 AR 페이지**예요. 화면에는 나비와 아래 `웹사이트 구경하기` 버튼 하나만 있어요.
+
+- 열자마자 뒤 카메라가 켜지고(허락 창), 그 위에 사이트 Intro와 같은 금빛 나비(`js/butterfly-gl.js`)가 내 주위 공간을 날아다녀요 (`js/butterfly-ar.js`, 숫자는 맨 위 `BF_AR`: 나비 크기 `span`, 거리 `dist`, 좌우로 돌아다니는 폭 `wander` 등)
+- 폰 기울기 센서로 폰이 보는 방향을 알아내서, 폰을 돌려도 나비가 공간에 그대로 있어요. 가까우면 크게, 멀면 작게, 몸 방향도 3D. 화면 밖으로 나가면 가장자리에 금색 화살표. 톡 치면 가까이 와요
+- **나비는 카메라가 보는 쪽을 따라와요** (`BF_AR.followCam`). 폰을 돌리면 잠깐 뒤처졌다가 다시 화면 안으로 날아와요
+- **손가락을 내밀면 나비가 손가락 끝에 앉아요** (손가락을 펴지 않으면 손바닥) (`js/butterfly-hand.js`, 숫자는 맨 위 `BF_HAND`). 구글 MediaPipe 손 인식(Apache-2.0)을 쓰고 파일은 `assets/vendor/mediapipe/`(약 26MB, 폰이 받는 건 그중 약 17MB). 커서 나비가 먼저 날고 난 뒤에 받아요. 준비되면 위에 "손가락을 내밀면 나비가 앉아요"가 나와요. 주소 끝에 `?hand=0`을 붙이면 손 인식을 끔
+- **빛가루·움직일 때 빛 효과는 없음 (사용자 요청, 2026-11-16)**: 나비 자체만 은은하게 빛남. 다시 켜려면 `BF_AR.dust`·`dustMove`를 0보다 크게 (웹사이트 커서는 0.03·0.55). 빛남 세기는 `glow`(1 = 커서와 같음)
+- 버튼은 유리 느낌(글래스모피즘), 화살표 없음
+- 아이폰: 동작 센서는 규칙상 '누른 뒤'에만 허락을 물을 수 있어서, 처음 한 번 화면을 톡 치면 물어봐요 (그 전에는 나비가 화면에 붙어 날아요)
+- 카메라를 거절하면 어두운 배경 위의 나비, 3D(WebGL2)가 안 되면 메인 포스터 그림
+- **카메라는 https 주소에서만 켜져요.** http(닷홈 기본 주소)로 들어오면 바로 GitHub Pages https 주소로 옮겨 가요 (`butterfly.html` 위쪽 `PAGE_HTTPS`). 닷홈에 SSL(https)을 켜면 그 주소를 바꾸면 돼요
+- QR: 기본 QR `docs/qr/butterfly-qr.*`(닷홈 주소), 꾸민 QR `docs/qr/butterfly-qr-design-*.*` (다시 만들기: `python tools/make-qr-design.py`). GitHub Pages 주소 QR은 프로젝트 파일 `qr/butterfly-qr-plain.png`
+- 확인: `npm start` 후 `http://localhost:8765/butterfly.html` (localhost는 http여도 카메라가 켜짐) · 검사 `node tests/butterfly-phone.cjs`
+
 ## 새 WebGL 인트로 미리보기 (2026-11-15) — `intro-webgl.html`
 
 기존 인트로(`index.html`의 Intro, `intro-proto.html`)는 그대로 두고, **별도 페이지**에 하나의 3D 공간(하늘 · 미술관 외벽 · 포스터)으로 만든 새 인트로예요. 카메라만 움직여요: 하늘에서 나비 등장 → 나비가 오른쪽으로 나감 → 시선이 벽으로 내려옴 → 나비가 왼쪽에서 들어와 포스터 속으로. 나비는 기존 인트로와 같은 `js/butterfly-gl.js`를 쓰고, 나비가 지나가는 길을 따라 벽과 하늘에 물결이 번져요 (바닥 연못은 뺐어요).
@@ -227,7 +243,7 @@ Claude Code로 이어서 할 때 필요한 작업 맥락(진행 방식, 규칙, 
 1. `npm run upload` → `dist/dothome_upload` 폴더가 생김 (사이트에 실제로 쓰는 파일만, 약 21MB. 테스트·도구·안 쓰는 이미지·더블클릭용 예비 파일은 뺌)
 2. 닷홈 **마이닷홈 → 호스팅 관리**에서 FTP 주소(보통 `아이디.dothome.co.kr`)·아이디·비밀번호 확인
 3. 알드라이브 → 새 접속: 프로토콜 **FTP**, 포트 **21** (안 되면 SFTP·22) → 연결
-4. 오른쪽(서버)에서 **`html` 폴더**로 들어가고, 왼쪽에서 `dist/dothome_upload` **안의** `index.html`, `css`, `js`, `assets`를 골라 끌어다 놓기 → **모두 덮어쓰기** (폴더째 올리면 주소가 바뀌니 내용물만)
+4. 오른쪽(서버)에서 **`html` 폴더**로 들어가고, 왼쪽에서 `dist/dothome_upload` **안의** `index.html`, `butterfly.html`, `css`, `js`, `assets`를 골라 끌어다 놓기 → **모두 덮어쓰기** (폴더째 올리면 주소가 바뀌니 내용물만)
 5. `http://아이디.dothome.co.kr`에서 확인 (예전 화면이면 Ctrl+F5)
 
 js·css를 고쳐서 다시 올릴 때는 `index.html`의 `?v=날짜` 버전 번호도 바꿔 두면 방문자 브라우저가 예전 파일을 쓰지 않아요. 바뀐 파일만 덮어써도 되지만, 헷갈리면 1번부터 다시 해서 통째로 덮어쓰면 됩니다.

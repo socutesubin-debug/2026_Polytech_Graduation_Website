@@ -158,11 +158,11 @@ void main(){
 }`;
 const PT_FS = `#version 300 es
 precision highp float;
-in float vA; in float vW; out vec4 o; uniform vec3 uWarm, uCool;
+in float vA; in float vW; out vec4 o; uniform vec3 uWarm, uCool; uniform float uBright;
 void main(){
   vec2 d = gl_PointCoord - .5; float r = length(d)*2.;
   float a = smoothstep(1., .0, r); a *= a;
-  o = vec4(mix(uCool, uWarm, vW)*a*vA*1.4, 0.);
+  o = vec4(mix(uCool, uWarm, vW)*a*vA*1.4*uBright, 0.);
 }`;
 const FS_VS = `#version 300 es
 precision highp float;
@@ -179,17 +179,18 @@ void main(){
 }`;
 const COMP_FS = `#version 300 es
 precision highp float;
-in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque, uDense;
+in vec2 vUv; out vec4 o; uniform sampler2D uScene, uB1, uB2; uniform float uOpaque, uDense, uGlow, uLightA;
 void main(){
   vec4 sc = texture(uScene, vUv);
-  vec3 c = sc.rgb + (texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.65)*(1. - .6*uDense*(1. - uOpaque));
+  vec3 c = sc.rgb + (texture(uB1, vUv).rgb*.55 + texture(uB2, vUv).rgb*.65)*(1. - .6*uDense*(1. - uOpaque))*uGlow;
   c = 1. - exp(-c*1.15);
   float m = max(c.r, max(c.g, c.b));
   /* 밝은 배경 위(투명 모드): 중간 밝기는 호박빛 유리처럼, 밝은 곳은 흰 빛 그대로 */
   vec3 onLight = c*mix(vec3(1., .84, .56), vec3(1.), smoothstep(.4, .85, m));
   /* uDense = 1 이면 날개가 덮은 곳만 배경을 가리고, 빛 번짐과 가루는 빛으로만 더해진다 (어두운 테두리 없음) */
   float aGlass = clamp(m*1.2, 0., 1.), aSolid = clamp(sc.a, 0., 1.)*.9;
-  float a = mix(mix(aGlass, aSolid, uDense), 1., uOpaque);
+  float a = mix(mix(aGlass, max(aSolid, aGlass*uLightA), uDense), 1., uOpaque);
+  /* uLightA = 1: 빛가루·빛 번짐에도 알파를 줌. 아이폰 사파리 등은 알파 0인 곳의 빛을 지워 버려서, 카메라 위 AR에서는 꼭 필요 */
   /* 불투명 모드: 밝은 배경에서도 보이도록 날개 면을 옅은 금빛으로 */
   vec3 solid = c*mix(vec3(1., .9, .68), vec3(1.), smoothstep(.72, .98, m)*.8 + .2*(1. - clamp(sc.a, 0., 1.)));
   o = vec4(mix(mix(onLight, solid, uDense), c, uOpaque), a);
@@ -336,7 +337,7 @@ function spawn(b, m, prevM, dt, n) {
       pPos[i*3+a] = w[a];
       pVel[i*3+a] = (w[a] - w0[a])/Math.max(dt, .008)*.05 + tail[a]*(.16 + Math.random()*.32) + (Math.random() - .5)*.05;
     }
-    pLife[i] = 0; pDur[i] = 2. + Math.random()*4.;
+    pLife[i] = 0; pDur[i] = (2. + Math.random()*4.)*api.dustLife;
     pInfo[i*3+1] = (Math.random() < .04 ? 5 : 1.5) + Math.random()*1.8;
     pInfo[i*3+2] = Math.random();
     pTint[i] = b.ti;
@@ -345,6 +346,7 @@ function spawn(b, m, prevM, dt, n) {
 /* 날개 끝에서 가늘게 이어지는 가루 줄기 */
 const WISPS = [[.50, 0, .97], [.30, 0, .98], [-1.02, 1, .97], [-.72, 1, .98]];  /* [각도, 0=앞날개 1=뒷날개, 반지름 비율] */
 function spawnWisps(b, m, dt) {
+  if (b.dust === 0) return; /* 빛가루 0이면 날개 끝 가루 줄기도 없음 */
   const tail = M.dir(m, 0, -1, -.3), n = Math.max(1, Math.round(3*dt*60*(b.dust === undefined ? 1 : b.dust)));
   for (const [th, hind, k] of WISPS) for (const side of [-1, 1]) for (let j = 0; j < n; j++) {
     const i = pNext; pNext = (pNext + 1) % NP;
@@ -352,7 +354,7 @@ function spawnWisps(b, m, dt) {
     const l = wingLocal(r*Math.cos(th), (hind ? -.02 : .10) + r*Math.sin(th), side, b.phase - Math.random()*.25);
     const w = M.pt(m, l[0], l[1], l[2]);
     for (let a = 0; a < 3; a++) { pPos[i*3+a] = w[a] + (Math.random() - .5)*.012; pVel[i*3+a] = tail[a]*(.34 + Math.random()*.06) + (Math.random() - .5)*.012; }
-    pLife[i] = 0; pDur[i] = 3. + Math.random()*2.5;
+    pLife[i] = 0; pDur[i] = (3. + Math.random()*2.5)*api.dustLife;
     pInfo[i*3+1] = 1.5 + Math.random()*1.0; pInfo[i*3+2] = .3 + Math.random()*.7; pTint[i] = b.ti;
   }
 }
@@ -441,7 +443,7 @@ function draw() {
   gl.useProgram(pPt.p); gl.bindVertexArray(ptVAO);
   gl.bindBuffer(gl.ARRAY_BUFFER, ptPosBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, pPos);
   gl.bindBuffer(gl.ARRAY_BUFFER, ptInfoBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, pInfo);
-  gl.uniformMatrix4fv(pPt.u.uVP, false, VP); gl.uniform1f(pPt.u.uPx, H/720*4.6);
+  gl.uniformMatrix4fv(pPt.u.uVP, false, VP); gl.uniform1f(pPt.u.uPx, H/720*4.6*api.dustSize); gl.uniform1f(pPt.u.uBright, api.dustBright);
   const T0 = TINTS[butterflies.length > 1 ? 'white' : butterflies[0].tint] || TINTS.gold;
   gl.uniform3fv(pPt.u.uWarm, T0.warm); gl.uniform3fv(pPt.u.uCool, T0.cool);
   gl.drawArrays(gl.POINTS, 0, NP);
@@ -454,12 +456,17 @@ function draw() {
   blur(fbB2, fbA2, 2.6/fbA2.w, 0);    blur(fbA2, fbB2, 0, 2.6/fbB2.h);
   fsPass(pComp, null, () => {
     bindTex(0, fbScene.tex, pComp.u.uScene); bindTex(1, fbB1.tex, pComp.u.uB1); bindTex(2, fbB2.tex, pComp.u.uB2);
-    gl.uniform1f(pComp.u.uOpaque, OPT.sky ? 0 : 1); gl.uniform1f(pComp.u.uDense, api.dense);
+    gl.uniform1f(pComp.u.uOpaque, OPT.sky ? 0 : 1); gl.uniform1f(pComp.u.uDense, api.dense); gl.uniform1f(pComp.u.uGlow, api.glow); gl.uniform1f(pComp.u.uLightA, api.lightAlpha);
   });
 }
 const api = {
   dense: OPT.dense || 0,   /* 0 = 투명한 유리, 1 = 불투명에 가까운 날개 */
   wind: [0, 0, 0],          /* 가루 전체를 밀어내는 바람 */
+  glow: 1,                  /* 나비 둘레 빛 번짐 세기 (1 = 기본, 클수록 더 환하게 빛남) */
+  dustBright: 1,            /* 빛가루 밝기 (1 = 기본) */
+  dustSize: 1,              /* 빛가루 알갱이 크기 (1 = 기본) */
+  lightAlpha: 0,            /* 1 = 빛가루·빛 번짐이 날개 밖에서도 확실히 보이게 (아이폰 사파리용. AR 페이지에서 켬) */
+  dustLife: 1,              /* 빛가루가 남아 있는 시간 (1 = 기본, 클수록 지나간 자리에 잔상이 오래 남음) */
   butterflies, simulate, draw, resize,
   /* 화면 픽셀 좌표를 나비가 있는 평면(z=0)의 좌표로 바꾼다 */
   toWorld(px, py) { const hh = cam.z*Math.tan(cam.fov/2), cw = canvas.clientWidth || innerWidth, ch = canvas.clientHeight || innerHeight;

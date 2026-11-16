@@ -11,16 +11,21 @@ if (out === src || src.startsWith(out)) { console.error('만들 폴더가 저장
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
 const rel = (f) => path.relative(src, f).split(path.sep).join('/');
 
-const html = fs.readFileSync(path.join(src, 'index.html'), 'utf8');
-const loaded = new Set(['index.html']);
-for (const m of html.matchAll(/(?:src|href)="((?:js|css)\/[^"?]+)/g)) loaded.add(m[1]);
+// 올릴 페이지: 사이트 본체 + 포스터 QR로 여는 폰용 나비 페이지(butterfly.html)
+const PAGES = ['index.html', 'butterfly.html'];
+const loaded = new Set(PAGES);
+for (const pg of PAGES) {
+  const html = fs.readFileSync(path.join(src, pg), 'utf8');
+  for (const m of html.matchAll(/(?:src|href)="((?:js|css)\/[^"?]+)/g)) loaded.add(m[1]);
+}
 let corpus = ''; for (const f of loaded) { const p = path.join(src, f); if (fs.existsSync(p)) corpus += '\n' + fs.readFileSync(p, 'utf8'); }
 
 const DROP = [/\.model\.js$/, /^assets\/video\/intro-scroll(-720)?\.mp4$/, /^assets\/video\/intro-scroll-poster\.jpg$/];
 const keep = [], skip = [];
-for (const f of ['index.html', ...['css', 'js', 'assets'].flatMap((d) => walk(path.join(src, d)).map(rel))]) {
+for (const f of [...PAGES, ...['css', 'js', 'assets'].flatMap((d) => walk(path.join(src, d)).map(rel))]) {
   let ok = loaded.has(f);
   if (!ok) { const base = path.basename(f); ok = corpus.includes(f) || corpus.includes(encodeURI(f)) || corpus.includes(base) || corpus.includes(encodeURIComponent(base)); }
+  if (/^assets\/vendor\/mediapipe\//.test(f)) ok = true; // 폰 AR 나비의 손 알아보기 파일
   if (/^assets\/images\/busts\/\d+\.webp$/.test(f) || /^assets\/models\/\d+\.glb$/.test(f)) ok = true;
   if (DROP.some((r) => r.test(f))) ok = false;
   (ok ? keep : skip).push(f);
