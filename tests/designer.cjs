@@ -55,7 +55,7 @@ const base=process.env.TEST_URL || 'http://127.0.0.1:8765/';
  assert.equal(await p.locator('.dg-cap').count(),await p.locator('.dg-cap .dg-slogan').count(),'모든 이름표에 슬로건');
  assert.match(await p.locator('.dg-cap[data-i="0"] .dg-slogan').textContent(),/디자이너$/);
  assert.equal(await p.locator('.dg-info, .dg-go').count(),0,'아래 소개·포트폴리오 버튼 없음');
- const pf=p.locator('.dg-cap[data-i="6"] a.dg-plaque');assert.equal(await pf.getAttribute('href'),'https://vin-portfolio-swart.vercel.app/');assert.equal(await pf.getAttribute('target'),'_blank');
+ const pf=p.locator('.dg-cap[data-i="6"] a.dg-plaque');assert.equal(await pf.getAttribute('href'),'https://vinportfolio-desk-flow.vercel.app');assert.equal(await pf.getAttribute('target'),'_blank');
  assert.equal(await p.locator('.dg-cap a.dg-plaque').count(),await p.evaluate(()=>dg.people.filter(q=>q.s.portfolio).length),'포트폴리오가 있는 학생만 링크 (2026-11-16: 14명 모두 있음)');
  assert.equal(await p.locator('.dg-fork, .dg-plate, .dg-amb, .dg-work, #designer img').count(),0,'예전 장식·대표작 이미지 없음');
  console.log('desktop layout ok');
