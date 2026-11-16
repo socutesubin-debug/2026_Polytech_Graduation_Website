@@ -13,7 +13,7 @@ const BF_AR = {
   near: 0.25,        // 이보다 가까이는 안 옴 (m)
   dist: [0.55, 1.2], // 혼자 날 때 나와의 거리 (가까울 때, 멀 때) (m)
   height: 0.3,       // 위아래로 오르내리는 폭 (m)
-  wander: 1.25,      // 좌우로 돌아다니는 폭 (라디안, 1.57이면 양옆 90도까지)
+  wander: 0.5,       // 좌우로 돌아다니는 폭 (라디안. 0.5면 화면 밖으로 살짝 나갔다 들어옴, 1.57이면 양옆 90도까지 — 폰 세로 화면은 좌우로 좁게 보여서 크게 하면 자주 안 보임)
   speed: 0.17,       // 돌아다니는 빠르기
   pull: 1.35,        // 가려는 곳으로 끌리는 힘
   comeClose: 0.42,   // 톡 치면 내 앞 몇 m까지 오는지
@@ -59,7 +59,7 @@ function startButterflyAR(opt) {
   addEventListener('deviceorientation', onOri);
   /* 센서가 없을 때(PC 등): 화면을 끌어서 둘러보기 */
   const look = { yaw: 0, pitch: 0 };
-  let camQ = null, cam = [1, 0, 0, 0, 1, 0, 0, 0, 1], camPrev = null, yaw0 = null;
+  let usedOri = false, camQ = null, cam = [1, 0, 0, 0, 1, 0, 0, 0, 1], camPrev = null, yaw0 = null;
 
   /* ---- 나비 상태 (m) ---- */
   const s = { p: [0, 0.05, -1.1], v: [0, 0, 0], f: [1, 0, 0], bank: 0, t: 0, come: -99, now: 0 };
@@ -73,6 +73,7 @@ function startButterflyAR(opt) {
     const W = innerWidth, H = innerHeight;
 
     /* 1) 카메라 방향 (센서 → 부드럽게) */
+    if (hasOri && !usedOri) { usedOri = true; camQ = null; yaw0 = null; s.v = [0, 0, 0]; } // 센서가 처음 들어오면 그때 폰이 보는 쪽 앞에 나비를 다시 놓음
     const raw = hasOri && oriRaw ? oriMatrix(oriRaw) : mul(ry(look.yaw), rx(look.pitch));
     const q = toQ(raw);
     if (!camQ) camQ = q;
