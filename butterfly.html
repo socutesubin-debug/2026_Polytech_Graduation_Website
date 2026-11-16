@@ -4,251 +4,94 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#140e09">
-<title>BEYOND THE FRAME — 나비</title>
-<meta name="description" content="2026 한국폴리텍 서울정수캠퍼스 시각디자인과 졸업전시 BEYOND THE FRAME. 손가락으로 금빛 나비를 불러 보세요.">
-<!-- 포스터 QR로 들어오는 폰 전용 페이지 (2026-11-16)
-     - 사이트 인트로와 같은 금빛 나비(js/butterfly-gl.js)가 화면 위를 날아다님
-     - 화면을 만지면 나비가 손가락 쪽으로 날아오고, 톡 치면 빛가루가 터짐. 손을 떼면 잠시 뒤 다시 혼자 날아다님
-     - '움직임 줄이기'를 켠 폰: 나비가 가운데에서 천천히 날갯짓만 하고, 빛가루 없음
-     - 3D(WebGL2)가 안 되는 폰: 나비 대신 메인 포스터 그림을 보여 줌
-     - 'AR로 나비 만나기': 카메라 화면 위에 나비가 진짜 공간에 떠 있는 것처럼 날아다님 (js/butterfly-ar.js, 숫자는 그 파일 맨 위 BF_AR)
-     - 아래 버튼을 누르면 전시 웹사이트(index.html)로 감
-     숫자를 바꾸고 싶으면 아래 <script> 맨 위의 BF_PHONE만 고치면 됩니다 -->
+<title>BEYOND THE FRAME — AR 나비</title>
+<meta name="description" content="2026 한국폴리텍 서울정수캠퍼스 시각디자인과 졸업전시 BEYOND THE FRAME. 내 주위를 날아다니는 금빛 AR 나비.">
+<!-- 포스터 QR로 들어오는 폰 전용 AR 나비 페이지 (2026-11-16)
+     - 열자마자 뒤 카메라가 켜지고, 그 위에 금빛 나비(js/butterfly-gl.js)가 내 주위 공간을 날아다님 (AR 계산: js/butterfly-ar.js, 숫자는 그 파일 맨 위 BF_AR)
+     - 화면 아래 버튼은 '웹사이트 구경하기' 하나뿐 (전시 웹사이트 index.html로 감)
+     - 화면을 톡 치면 나비가 가까이 옴. 아이폰은 이 첫 톡에서 '동작 센서' 허락을 물어봄 (아이폰 규칙상 누르기 전에는 물을 수 없음)
+     - 카메라를 거절하거나 없으면: 어두운 배경 위에서 같은 나비 (화면을 끌어서 둘러보기)
+     - 3D(WebGL2)가 안 되는 폰: 메인 포스터 그림
+     - 카메라는 https 주소에서만 켜져서, http 주소로 들어오면 바로 아래 PAGE_HTTPS 주소로 옮겨 감 -->
 <style>
-  :root { --ink: #f1e6d2; --dim: rgba(241,230,210,.62); --gold: #e7c98f; --bg: #140e09; }
+  :root { --ink: #f1e6d2; --gold: #e7c98f; --bg: #140e09; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden;
     font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
-    -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
-  body { overscroll-behavior: none; }
-  /* 배경: 어두운 갈색 밤 + 아래쪽 따뜻한 빛 (포스터 색에서 따옴) */
+    -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
   .bg { position: fixed; inset: 0; background:
       radial-gradient(120% 70% at 50% 108%, rgba(214,160,92,.30), rgba(214,160,92,0) 60%),
-      radial-gradient(90% 55% at 50% 40%, rgba(120,86,52,.22), rgba(0,0,0,0) 70%),
       linear-gradient(#0d0906, #1a120b 55%, #24180e); }
-  .grain { position: fixed; inset: 0; opacity: .08; mix-blend-mode: screen; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  #cam { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: transparent; opacity: 0; transition: opacity .6s; }
+  body.cam-on #cam { opacity: 1; }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-
-  .ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
-    padding: calc(22px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); }
-  .top { display: flex; justify-content: space-between; font-size: 11px; line-height: 1.6; letter-spacing: .08em; color: var(--dim); }
-  .top b { font-weight: 500; color: var(--ink); letter-spacing: .02em; }
-  .bottom { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
-  .logo { width: min(46vw, 220px); aspect-ratio: 240 / 160; background: var(--gold);
-    -webkit-mask: url(assets/images/logo.webp) left bottom / contain no-repeat; mask: url(assets/images/logo.webp) left bottom / contain no-repeat;
-    filter: drop-shadow(0 0 18px rgba(231,201,143,.25)); }
-  .slogan { margin: 0; font-size: 15px; letter-spacing: .02em; }
-  .when { margin: -6px 0 0; font-size: 12px; line-height: 1.6; color: var(--dim); }
-  .go { pointer-events: auto; display: inline-flex; align-items: center; gap: 10px; margin-top: 4px; padding: 13px 20px;
-    border: 1px solid rgba(231,201,143,.55); border-radius: 999px; color: var(--ink); text-decoration: none; font-size: 14px;
-    background: rgba(20,14,9,.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-  .go:active { background: rgba(231,201,143,.18); }
-  .go:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-  .hint { position: fixed; left: 0; right: 0; top: calc(96px + env(safe-area-inset-top)); text-align: center; font-size: 13px; letter-spacing: .04em;
-    color: var(--dim); pointer-events: none; transition: opacity .8s; animation: breathe 2.6s ease-in-out infinite; }
-  .hint.off { opacity: 0; }
-  @keyframes breathe { 50% { opacity: .45; } }
-
-  /* 3D가 안 될 때: 포스터 그림 */
-  .fallback { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; padding: 84px 28px 230px; }
-  .fallback img { max-width: 100%; max-height: 100%; border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
-  body.no-gl canvas, body.no-gl .hint, body.no-gl .logo { display: none; }
-  body.no-gl .fallback { display: flex; }
-  .retry { pointer-events: auto; background: none; border: 0; color: var(--dim); font: inherit; font-size: 12px; text-decoration: underline; padding: 6px 0; display: none; }
-  body.no-gl .retry { display: inline-block; }
-
-  /* AR 버튼 + AR 화면 */
-  .ar-btn { pointer-events: auto; display: inline-flex; align-items: center; gap: 10px; padding: 13px 20px; border: 0; border-radius: 999px;
-    background: linear-gradient(135deg, #f3dcab, #c99a55); color: #24170c; font: inherit; font-size: 14px; font-weight: 600;
-    box-shadow: 0 0 24px rgba(231,201,143,.35); }
-  .ar-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-  .btns { display: flex; flex-wrap: wrap; gap: 10px; }
-  .btns .go { margin-top: 0; }
-  #cam { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; background: #000; }
-  .ar-ui { position: fixed; inset: 0; display: none; pointer-events: none; }
-  .ar-close { pointer-events: auto; position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; padding: 10px 16px; border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.5); background: rgba(0,0,0,.35); color: #fff; font: inherit; font-size: 13px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-  .ar-tip { position: absolute; left: 0; right: 0; bottom: calc(26px + env(safe-area-inset-bottom)); text-align: center; color: #fff; font-size: 13px; line-height: 1.6;
-    text-shadow: 0 1px 6px rgba(0,0,0,.7); transition: opacity .8s; }
-  .ar-arrow { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; opacity: 0; transition: opacity .3s; }
-  .ar-arrow.on { opacity: 1; }
-  .ar-arrow::before { content: ""; position: absolute; inset: 6px; background: #f3dcab; clip-path: polygon(100% 50%, 0 0, 25% 50%, 0 100%);
+  .arrow { position: fixed; left: -18px; top: -18px; width: 36px; height: 36px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .arrow.on { opacity: 1; }
+  .arrow::before { content: ""; position: absolute; inset: 6px; background: #f3dcab; clip-path: polygon(100% 50%, 0 0, 25% 50%, 0 100%);
     filter: drop-shadow(0 0 6px rgba(243,220,171,.9)); }
-  .note { position: fixed; left: 22px; right: 22px; top: 40%; padding: 16px 18px; border-radius: 14px; background: rgba(20,14,9,.92); border: 1px solid rgba(231,201,143,.4);
-    font-size: 14px; line-height: 1.6; text-align: center; display: none; }
-  .note.on { display: block; }
-  body.ar .bg, body.ar .grain, body.ar .ui, body.ar .hint { display: none; }
-  body.ar #cam, body.ar .ar-ui { display: block; }
-  body.ar canvas { touch-action: none; }
-  body.ar-start .ar-btn { animation: glow 1.6s ease-in-out infinite; }
-  @keyframes glow { 50% { box-shadow: 0 0 40px rgba(243,220,171,.75); } }
-
-  @media (min-width: 700px) { .ui { padding: 36px 44px; } .top { font-size: 12px; } .slogan { font-size: 17px; } }
-  @media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
+  .tip { position: fixed; left: 16px; right: 16px; top: calc(20px + env(safe-area-inset-top)); margin: 0; text-align: center; font-size: 13px; line-height: 1.6;
+    color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.7); pointer-events: none; transition: opacity .8s; }
+  .tip.off { opacity: 0; }
+  .go { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 999px; white-space: nowrap;
+    background: linear-gradient(135deg, #f3dcab, #c99a55); color: #24170c; text-decoration: none; font-size: 15px; font-weight: 600;
+    box-shadow: 0 6px 28px rgba(0,0,0,.35), 0 0 24px rgba(231,201,143,.35); }
+  .go:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  /* 3D가 안 될 때: 포스터 그림 */
+  .fallback { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; padding: 40px 28px 110px; }
+  .fallback img { max-width: 100%; max-height: 100%; border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  body.no-gl canvas, body.no-gl .tip, body.no-gl #cam { display: none; }
+  body.no-gl .fallback { display: flex; }
 </style>
+<script>
+  /* 카메라는 https에서만 켜져요. http(닷홈 기본 주소)로 들어오면 https 주소로 바로 옮겨 감. 닷홈에 SSL을 켜면 아래 주소를 같은 페이지의 https 주소로 바꾸면 돼요 */
+  var PAGE_HTTPS = 'https://socutesubin-debug.github.io/2026_Polytech_Graduation_Website/butterfly.html';
+  if (location.protocol === 'http:' && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) location.replace(PAGE_HTTPS);
+</script>
 </head>
 <body>
 <div class="bg" aria-hidden="true"></div>
-<video id="cam" playsinline muted aria-hidden="true"></video>
+<video id="cam" playsinline muted autoplay aria-hidden="true"></video>
 <div class="fallback"><img src="assets/images/intro-webgl/main-poster.webp" alt="BEYOND THE FRAME 졸업전시 메인 포스터"></div>
-<canvas id="bf" aria-label="화면을 만지면 금빛 나비가 손가락을 따라 날아와요" role="img"></canvas>
-<div class="grain" aria-hidden="true"></div>
-<p class="hint" id="hint">화면을 만져 나비를 불러 보세요</p>
-<div class="ui">
-  <div class="top">
-    <span><b>한국폴리텍 서울정수캠퍼스</b><br>시각디자인과 졸업전시</span>
-    <span style="text-align:right">2026<br>GRADUATION</span>
-  </div>
-  <div class="bottom">
-    <h1 class="logo" role="img" aria-label="BEYOND THE FRAME" style="margin:0"></h1>
-    <p class="slogan">프레임을 넘어, 우리를 만나다</p>
-    <p class="when">11.17 – 11.18 · 제3공학관 2층 시각디자인과</p>
-    <div class="btns">
-      <button class="ar-btn" id="arBtn" type="button">AR로 나비 만나기 <span aria-hidden="true">✦</span></button>
-      <a class="go" href="./">전시 웹사이트 <span aria-hidden="true">→</span></a>
-    </div>
-    <button class="retry" type="button" onclick="location.reload()">나비가 안 보이나요? 다시 시도</button>
-  </div>
-</div>
-
-<div class="ar-ui" id="arUi">
-  <button class="ar-close" id="arClose" type="button">✕ 나가기</button>
-  <div class="ar-arrow" id="arArrow" aria-hidden="true"></div>
-  <p class="ar-tip" id="arTip">폰을 들고 천천히 주위를 둘러보세요<br>화면을 톡 치면 나비가 가까이 와요</p>
-</div>
-<p class="note" id="note" role="status"></p>
+<canvas id="bf" role="img" aria-label="내 주위를 날아다니는 금빛 나비. 화면을 톡 치면 가까이 와요"></canvas>
+<div class="arrow" id="arrow" aria-hidden="true"></div>
+<p class="tip" id="tip">폰을 들고 주위를 둘러보세요 · 톡 치면 나비가 가까이 와요</p>
+<a class="go" href="./">웹사이트 구경하기 <span aria-hidden="true">→</span></a>
 
 <script src="js/butterfly-gl.js?v=20261117b"></script>
-<script src="js/butterfly-ar.js?v=20261117c"></script>
+<script src="js/butterfly-ar.js?v=20261117e"></script>
 <script>
-/* ===== 숫자 설정 (여기만 고치면 됨) ===== */
-const BF_PHONE = {
-  size: 64,          // 나비 크기 (px 기준. 날개 폭이 대략 이 값의 2.2배)
-  sizeWide: 84,      // 넓은 화면(태블릿·PC)에서 나비 크기
-  wanderSpeed: 0.11, // 혼자 날 때 길을 도는 빠르기 (클수록 빨리 돌아다님)
-  follow: 5.5,       // 손가락을 따라오는 힘 (클수록 바짝 따라옴)
-  fingerGap: 70,     // 손가락에 가리지 않게 손가락보다 이만큼(px) 위에서 날기
-  idleBack: 1.6,     // 손을 떼고 몇 초 뒤에 다시 혼자 날기 시작할지
-  dust: 0.35,        // 평소 빛가루 양
-  dustMove: 1.2,     // 빨리 날 때 더해지는 빛가루 양
-  burst: 2.6,        // 톡 쳤을 때 잠깐 터지는 빛가루 양
-  flapHz: 2.6,       // 날갯짓 빠르기 (1초에 몇 번)
-  maxDpr: 2,         // 선명도 상한 (폰이 느리면 1.5로)
-  // AR(카메라)은 https 주소에서만 켜져요. 지금 주소가 http면 'AR로 나비 만나기'를 눌렀을 때 아래 https 주소로 옮겨 가서 AR을 시작해요.
-  // 닷홈에 https(SSL)를 켜면 이 줄은 지워도 돼요 (빈 '' 이면 같은 주소의 https로 감)
-  arHttpsUrl: 'https://socutesubin-debug.github.io/2026_Polytech_Graduation_Website/butterfly.html?ar=1',
-};
-
 (() => {
-  const C = BF_PHONE, cv = document.getElementById('bf'), hint = document.getElementById('hint');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const noGL = () => document.body.classList.add('no-gl');
-  let GL = null;
-  try { GL = window.createButterflyGL ? createButterflyGL(cv, { sky: true, dense: 1, maxDpr: C.maxDpr, flapHz: C.flapHz }) : null; } catch (e) { GL = null; }
-  if (!GL) { noGL(); return; }
-  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); noGL(); cancelAnimationFrame(raf); });
-  const B = GL.butterflies[0];
+  const cv = document.getElementById('bf'), video = document.getElementById('cam'), tip = document.getElementById('tip');
+  let GL = null, ar = null;
+  try { GL = window.createButterflyGL ? createButterflyGL(cv, { sky: true, dense: 1, maxDpr: 2 }) : null; } catch (e) { GL = null; }
+  if (!GL) { document.body.classList.add('no-gl'); return; }
+  cv.addEventListener('webglcontextlost', (e) => { e.preventDefault(); document.body.classList.add('no-gl'); if (ar) ar.stop(); });
 
-  /* 나비 상태 (화면 px 좌표) */
-  const s = { x: innerWidth / 2, y: innerHeight * 0.42, vx: 0, vy: 0, head: 0, bank: 0, t: Math.random() * 100,
-              touch: false, tx: 0, ty: 0, lastTouch: -99, burst: 0, wx: 0, wy: 0 };
-  let raf = 0, last = performance.now(), now = 0;
+  /* 1) 나비는 바로 날기 시작 */
+  ar = startButterflyAR({ GL, root: cv, video, canvas: cv, arrow: document.getElementById('arrow') });
 
-  /* 혼자 날 때 따라가는 점: 화면 안에서 부드럽게 도는 곡선 (사인 여러 개를 섞음) */
-  function wanderPoint(t) {
-    const w = innerWidth, h = innerHeight, mx = Math.min(90, w * 0.2), top = h * 0.16, bot = h * 0.62;
-    const u = 0.5 + 0.32 * Math.sin(t * 1.0) + 0.14 * Math.sin(t * 2.3 + 1.7) + 0.04 * Math.sin(t * 5.1);
-    const v = 0.5 + 0.30 * Math.sin(t * 1.37 + 0.6) + 0.15 * Math.sin(t * 2.9 + 2.1) + 0.05 * Math.cos(t * 4.3);
-    return [mx + u * (w - 2 * mx), top + v * (bot - top)];
+  /* 2) 카메라 바로 켜기 (허락 창이 뜸). 거절·실패하면 어두운 배경 그대로 */
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } })
+      .then((stream) => { video.srcObject = stream; return video.play().catch(() => {}); })
+      .then(() => { if (video.srcObject && !video.paused) document.body.classList.add('cam-on'); })
+      .catch(() => {});
   }
 
-  function frame(t) {
-    raf = requestAnimationFrame(frame);
-    if (document.body.classList.contains('ar')) return; // AR 중에는 AR이 나비를 움직임
-    const dt = Math.min(0.05, Math.max(0.001, (t - last) / 1000)); last = t; now = t / 1000;
-    if (document.hidden) return;
-    GL.resize();
-    const W = innerWidth, H = innerHeight;
-
-    /* 1) 어디로 갈지 */
-    let gx, gy, pull;
-    if (s.touch || now - s.lastTouch < C.idleBack) { gx = s.tx; gy = s.ty; pull = C.follow; }
-    else if (reduce) { gx = W / 2; gy = H * 0.4; pull = 1.2; }
-    else { s.t += dt * C.wanderSpeed * 6; [gx, gy] = wanderPoint(s.t); pull = 1.6; }
-
-    /* 2) 스프링처럼 다가가기 (살짝 출렁이며 따라옴) */
-    const k = pull * pull, damp = 2 * pull * 0.72;
-    s.vx += ((gx - s.x) * k - s.vx * damp) * dt;
-    s.vy += ((gy - s.y) * k - s.vy * damp) * dt;
-    if (reduce) { s.vx *= 0.9; s.vy *= 0.9; }
-    s.x += s.vx * dt; s.y += s.vy * dt;
-    s.x = Math.max(-40, Math.min(W + 40, s.x)); s.y = Math.max(-40, Math.min(H + 40, s.y));
-
-    /* 3) 머리 방향: 날아가는 쪽을 봄 (느릴 때는 천천히 위쪽으로 돌아옴) */
-    const sp = Math.hypot(s.vx, s.vy), fast = Math.min(1, sp / 900);
-    const want = sp > 40 && !reduce ? Math.atan2(-s.vx, -s.vy) : 0.25 * Math.sin(now * 0.7);
-    let d = want - s.head; d = Math.atan2(Math.sin(d), Math.cos(d));
-    const turn = d * (1 - Math.exp(-dt * (2 + 4 * fast)));
-    s.head += turn;
-    s.bank += (Math.max(-0.8, Math.min(0.8, -turn / dt * 0.18)) - s.bank) * (1 - Math.exp(-dt * 5));
-    s.burst *= Math.exp(-dt * 3);
-
-    /* 4) 나비에게 자세 넘기기 */
-    const wpt = GL.toWorld(s.x, s.y), u = GL.unitsPerPx(), size = Math.min(W, H) > 600 ? C.sizeWide : C.size;
-    B.pose = { x: wpt[0], y: wpt[1], z: 0, scale: size * u * (1 + 0.15 * s.burst), roll: s.head, yaw: s.bank, pitch: 0.28 };
-    B.hzMul = reduce ? 0.7 : 1 + 0.9 * fast + 0.6 * s.burst;
-    B.dust = reduce ? 0 : C.dust + C.dustMove * fast + C.burst * s.burst;
-    GL.simulate(dt); GL.draw();
-  }
-
-  /* 손가락 (마우스도 같이) */
-  const set = (e) => { s.tx = e.clientX; s.ty = e.clientY - (e.pointerType === 'mouse' ? 0 : C.fingerGap); };
-  cv.addEventListener('pointerdown', (e) => {
-    set(e); s.touch = true; s.lastTouch = now; s.burst = 1; hint.classList.add('off');
-    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+  /* 3) 아이폰: 동작 센서는 '누르기' 안에서만 허락을 물을 수 있음 → 첫 톡에서 물어봄 */
+  const needAsk = window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function';
+  setTimeout(() => { if (needAsk && !ar.hasSensor) tip.textContent = '화면을 한 번 톡 치면 나비가 공간에 머물러요'; }, 1000); // 아이폰: 아직 센서 허락 전
+  cv.addEventListener('pointerdown', function first() {
+    cv.removeEventListener('pointerdown', first);
+    if (needAsk) DeviceOrientationEvent.requestPermission().catch(() => {}).then(() => { tip.textContent = '폰을 들고 주위를 둘러보세요'; });
+    if (video.srcObject && video.paused) video.play().then(() => document.body.classList.add('cam-on')).catch(() => {});
   });
-  cv.addEventListener('pointermove', (e) => {
-    if (s.touch) { set(e); s.lastTouch = now; }
-    else if (e.pointerType === 'mouse') { set(e); s.lastTouch = now; hint.classList.add('off'); } // PC: 마우스를 따라옴
-  });
-  const up = () => { if (s.touch) { s.touch = false; s.lastTouch = now; } };
-  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up);
-  setTimeout(() => hint.classList.add('off'), 9000);
-
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) last = performance.now(); });
-  raf = requestAnimationFrame(frame);
-  window.__bf = { s, GL }; // 검사용
-
-  /* ===== AR ===== */
-  const btn = document.getElementById('arBtn'), video = document.getElementById('cam'), note = document.getElementById('note');
-  let ar = null, stream = null;
-  const say = (msg, ms) => { note.textContent = msg; note.classList.add('on'); clearTimeout(say.t); say.t = setTimeout(() => note.classList.remove('on'), ms || 4000); };
-  async function startAR() {
-    if (!window.isSecureContext) { // http 주소 → https 주소로 옮겨서 시작
-      location.href = C.arHttpsUrl || location.href.replace(/^http:/, 'https:').replace(/[?#].*$/, '') + '?ar=1'; return;
-    }
-    btn.disabled = true;
-    const r = await askButterflyAR(video);
-    btn.disabled = false;
-    if (r.error) { say(r.error === 'camera' ? '카메라를 켤 수 없어요. 카메라를 허용하면 AR로 볼 수 있어요. (설정 → 브라우저 → 카메라)' : '이 브라우저에서는 AR을 쓸 수 없어요.', 6000); return; }
-    stream = r.stream;
-    document.body.classList.add('ar'); document.body.classList.remove('ar-start');
-    s.lastTouch = -99;
-    ar = startButterflyAR({ GL, root: cv, video, canvas: cv, arrow: document.getElementById('arArrow') });
-    setTimeout(() => { if (ar && !ar.hasSensor) document.getElementById('arTip').innerHTML = '화면을 끌어서 둘러보세요<br>(이 기기는 기울기 센서가 없어요)'; }, 1500);
-    setTimeout(() => { document.getElementById('arTip').style.opacity = '0'; }, 9000);
-  }
-  function stopAR() {
-    if (ar) ar.stop(); ar = null;
-    if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; video.srcObject = null;
-    document.body.classList.remove('ar'); document.getElementById('arTip').style.opacity = '1';
-  }
-  btn.addEventListener('click', startAR);
-  document.getElementById('arClose').addEventListener('click', stopAR);
-  window.__bfAR = { get ar() { return ar; } }; // 검사용
-  // ?ar=1 로 들어오면(http에서 옮겨 온 경우 등) 버튼을 반짝여서 누르게 함 (아이폰은 누르기 전에 카메라를 켤 수 없음)
-  if (/[?&]ar=1/.test(location.search)) { document.body.classList.add('ar-start'); hint.textContent = '아래 ‘AR로 나비 만나기’를 눌러 주세요'; }
+  /* 센서가 없는 기기(PC 등): 끌어서 둘러보기 안내 */
+  setTimeout(() => { if (!ar.hasSensor && !needAsk) tip.textContent = '화면을 끌어서 둘러보세요 · 톡 치면 나비가 가까이 와요'; }, 1500);
+  setTimeout(() => tip.classList.add('off'), 10000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && video.srcObject) video.play().catch(() => {}); });
+  window.__bfAR = { ar }; // 검사용
 })();
 </script>
 </body>

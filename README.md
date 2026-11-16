@@ -23,24 +23,17 @@ Intro (스크롤: 하늘의 나비 → 포스터 벽 → 나비가 포스터 속
 | Project 방 | `#project` | `⑩ Project 방` | `css/project.css` | `js/project.js` | 맨 위 `PROJECT` (그림 수, 카드 움직임) |
 | Designer | `#designer` | `⑪ Designer` | `css/designer.css` | `js/designer.js` | 맨 위 `DG` (간격·받침대 크기·화각·벽 색·색 진하기, `hub` 가운데 이정표에서 첫 학생까지 거리, `sign` 이정표·입구 아치 크기, `endGap` 양 끝 옆벽, `light` 빛줄기·먼지·마우스 밝기, `turn` 3D 돌기, `turnShade`·`turnGlow`·`turnMix` 3D 석고상 밝기·색 맞춤 — 사진과 같은 색이 되게 화면 색을 재서 맞춘 값, `colors.plaster` 석고상 색 기준) |
 
-## 포스터 QR → 폰 나비 페이지 (2026-11-16) — `butterfly.html`
+## 포스터 QR → 폰 AR 나비 페이지 (2026-11-16) — `butterfly.html`
 
-포스터의 QR을 폰으로 찍으면 열리는 **폰 전용 페이지**예요. 사이트 Intro와 같은 금빛 나비(`js/butterfly-gl.js`)가 어두운 갈색 화면 위를 혼자 날아다녀요.
+포스터의 QR을 폰으로 찍으면 열리는 **폰 전용 AR 페이지**예요. 화면에는 나비와 아래 `웹사이트 구경하기` 버튼 하나만 있어요.
 
-- 화면을 만지면 나비가 손가락 쪽으로 날아와요 (손가락에 가리지 않게 손가락보다 조금 위). 톡 치면 빛가루가 터지고, 손을 떼면 1.6초 뒤 다시 혼자 날아요. PC에서는 마우스를 따라와요
-- 아래 `전시 웹사이트 →` 버튼 = 사이트 첫 화면(`index.html`)
-- **`AR로 나비 만나기` (2026-11-16)**: 뒤 카메라 화면 위에 나비가 진짜 방 안에 떠 있는 것처럼 날아다녀요 (`js/butterfly-ar.js`, 숫자는 맨 위 `BF_AR`: 나비 크기 `span`, 거리 `dist`, 돌아다니는 폭 `wander` 등)
-  - 폰 기울기 센서로 폰이 보는 방향을 알아내서, 폰을 돌리면 나비가 공간에 그대로 남아 있어요. 가까우면 크게, 멀면 작게, 몸 방향도 3D로 계산
-  - 톡 치면 나비가 내 앞으로 가까이 와요. 화면 밖으로 나가면 가장자리에 금색 화살표
-  - 아이폰·안드로이드 둘 다 됨(앱 설치 없음). 처음에 카메라·동작 센서 허락을 물어봐요. 카메라를 거절하면 원래 화면 그대로, 센서가 없으면 화면을 끌어서 둘러보기
-  - **카메라는 https 주소에서만 켜져요.** 지금 주소가 http(닷홈 기본)면 버튼을 눌렀을 때 `BF_PHONE.arHttpsUrl`(GitHub Pages https 주소)로 옮겨 가서 AR을 시작해요. 닷홈에 SSL(https)을 켜면 이 주소를 지워도 돼요
-- 예쁜 QR: `docs/qr/butterfly-qr-design-github.*`(GitHub Pages https 주소, AR 바로 됨), `docs/qr/butterfly-qr-design-dothome.*`(닷홈 주소). 다시 만들기: `python tools/make-qr-design.py`
-- 움직임 줄이기를 켠 폰: 나비가 가운데에서 천천히 날갯짓만, 빛가루 없음
-- 3D(WebGL2)가 안 되는 폰: 나비 대신 메인 포스터 그림 + '다시 시도'
-- 숫자(나비 크기·빠르기·손가락 따라오는 힘·빛가루 양)는 `butterfly.html` 아래쪽 `<script>` 맨 위 `BF_PHONE`
-- 용량: 페이지 + 나비 코드 + 로고 합쳐 약 60KB (글꼴도 폰 기본 글꼴이라 따로 안 받음)
-- QR 그림: `docs/qr/butterfly-qr.png`(인쇄용 큰 그림), `docs/qr/butterfly-qr.svg`(크기를 키워도 안 깨짐). 담긴 주소 `http://polyjungsudesign.com/butterfly.html`. 주소가 바뀌면 QR도 새로 만들어야 해요
-- 확인: `npm start` 후 `http://localhost:8765/butterfly.html` (PC 브라우저 개발자 도구에서 휴대폰 화면으로 바꿔 보기)
+- 열자마자 뒤 카메라가 켜지고(허락 창), 그 위에 사이트 Intro와 같은 금빛 나비(`js/butterfly-gl.js`)가 내 주위 공간을 날아다녀요 (`js/butterfly-ar.js`, 숫자는 맨 위 `BF_AR`: 나비 크기 `span`, 거리 `dist`, 좌우로 돌아다니는 폭 `wander` 등)
+- 폰 기울기 센서로 폰이 보는 방향을 알아내서, 폰을 돌려도 나비가 공간에 그대로 있어요. 가까우면 크게, 멀면 작게, 몸 방향도 3D. 화면 밖으로 나가면 가장자리에 금색 화살표. 톡 치면 가까이 와요
+- 아이폰: 동작 센서는 규칙상 '누른 뒤'에만 허락을 물을 수 있어서, 처음 한 번 화면을 톡 치면 물어봐요 (그 전에는 나비가 화면에 붙어 날아요)
+- 카메라를 거절하면 어두운 배경 위의 나비, 3D(WebGL2)가 안 되면 메인 포스터 그림
+- **카메라는 https 주소에서만 켜져요.** http(닷홈 기본 주소)로 들어오면 바로 GitHub Pages https 주소로 옮겨 가요 (`butterfly.html` 위쪽 `PAGE_HTTPS`). 닷홈에 SSL(https)을 켜면 그 주소를 바꾸면 돼요
+- QR: 기본 QR `docs/qr/butterfly-qr.*`(닷홈 주소), 꾸민 QR `docs/qr/butterfly-qr-design-*.*` (다시 만들기: `python tools/make-qr-design.py`). GitHub Pages 주소 QR은 프로젝트 파일 `qr/butterfly-qr-plain.png`
+- 확인: `npm start` 후 `http://localhost:8765/butterfly.html` (localhost는 http여도 카메라가 켜짐) · 검사 `node tests/butterfly-phone.cjs`
 
 ## 새 WebGL 인트로 미리보기 (2026-11-15) — `intro-webgl.html`
 
